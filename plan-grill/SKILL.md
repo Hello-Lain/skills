@@ -85,6 +85,22 @@ Use subagents when the environment supports them.
 - The main agent performs the final file write after acceptance.
 - No agent should commit changes unless the user explicitly asks.
 
+## Subagent Lifecycle
+
+Subagents are disposable for each `plan-grill` run.
+
+Rules:
+
+- Launch only the minimum subagents needed, normally Planner, Grill, and Synthesizer.
+- Do not leave completed subagents alive after their outputs are collected.
+- After collecting a subagent's final result, archive or kill it when the environment provides such a control.
+- If a subagent stalls, times out, or requests unrelated permissions, cancel it and use fallback rather than accumulating idle agents.
+- Do not reuse stale subagents across separate `plan-grill` runs; create fresh ones with a fresh task packet.
+- Keep a short local summary of each subagent result before releasing it.
+- If the environment has a subagent limit or visible live-agent list, check it before launching more agents.
+
+If agents cannot be released explicitly, note the limitation in the final response and avoid spawning optional review agents.
+
 ## Planning Artifact Contract
 
 Use `.plan-grill/<task-slug>/` only when intermediate artifacts help reviewability or context hygiene.
@@ -108,6 +124,23 @@ Suggested artifact files:
 ```
 
 Do not create artifacts for trivial plans.
+
+## Scratch And Plan Lifecycle
+
+`.plan-grill/` is temporary scratch state for the current planning run.
+
+Start-of-run rules:
+
+- Reset `.plan-grill/` at the start of each new `plan-grill` run unless the user explicitly asks to preserve prior scratch artifacts.
+- Never use stale `.plan-grill/` artifacts as evidence for a new plan unless the user points to them.
+- If the user wants to continue the previous plan, use the final `plan.md` or user-provided plan path as the input, not stale scratch files.
+
+Final-plan persistence:
+
+- The refined `plan.md` is not scratch.
+- Keep the final plan until the user executes it, clears it, asks to replace it, or starts a new `plan-grill` run that intentionally creates a fresh plan.
+- On a new run, reset scratch first, then apply the output path rules for the final plan.
+- If replacing an existing final plan, preserve the previous plan's important risks, assumptions, and open questions in the new plan's diff sections.
 
 ### 1. Task Packet
 
