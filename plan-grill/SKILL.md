@@ -28,7 +28,7 @@ Use automatically for:
 - Dependency upgrades with runtime risk.
 - Refactors with unclear blast radius.
 - Work touching user data or destructive writes.
-- User asks for "plan", "design", "migration", "rollout", "architecture", "safe", "production", "review my approach", or "think first".
+- User asks for "safe plan", "production plan", "migration", "rollout", "architecture", "review my approach", "stress-test this", or "think first" in a context with meaningful blast radius.
 
 Do not use automatically for:
 
@@ -161,4 +161,8 @@ When done:
 
 ## Delegation
 
-If `$grill-me` is available, use its style and question format. Do not require the user to invoke it separately.
+Use the grill-pass question format directly. Do not require a separate `$grill-me` skill.
+
+## Limits
+
+This skill cannot change Codex's built-in Plan mode globally. It works when invoked explicitly as `$plan-grill` or when the skill selector loads it from task context. For ordinary low-risk planning, prefer the built-in Plan mode without the grill pass.
