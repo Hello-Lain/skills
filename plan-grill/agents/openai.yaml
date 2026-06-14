@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan Grill"
-  short_description: "Plan, stress-test, revise, then execute."
-  default_prompt: "Use $plan-grill to draft a plan, stress-test it, revise it, then execute safely."
+  short_description: "Generate and harden production plan.md."
+  default_prompt: "Use $plan-grill to generate or improve a production-grade plan.md without executing it."
