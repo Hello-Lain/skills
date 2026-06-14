@@ -1,0 +1,6 @@
+interface:
+  display_name: "Hugging Face Local Cache"
+  short_description: "Route HF models and datasets to local cache"
+  default_prompt: "Use $huggingface-local-cache to download Hugging Face model weights or datasets into the local cache."
+policy:
+  allow_implicit_invocation: true

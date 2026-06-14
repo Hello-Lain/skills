@@ -1,0 +1,4 @@
+interface:
+  display_name: "GPU Experiment Scheduler"
+  short_description: "GPU experiment device scheduling"
+  default_prompt: "Use $gpu-scheduler to choose GPUs for a real experiment run."

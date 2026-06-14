@@ -1,0 +1,4 @@
+name: uv-mirror-env
+display_name: uv Mirror Env
+short_description: Manage uv Python envs through domestic mirrors without proxy traffic.
+default_prompt: Use uv with no proxy, domestic PyPI mirrors, cache-first installs for large packages, Docker wheel builds for fragile CUDA deps, and run project code through the uv-managed .venv by activating it first or invoking .venv/bin/python.

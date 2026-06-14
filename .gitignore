@@ -1,0 +1,68 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node/package caches
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Build/temp output
+build/
+dist/
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+
+# Local env/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Generated model/data caches: keep outside this skills backup.
+cache/
+caches/
+downloads/
+models/
+datasets/
+checkpoints/
+outputs/
+runs/
+wandb/
+mlruns/
+
+# Large binaries should use Git LFS or external storage.
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.gguf
+*.bin
+*.parquet
+*.arrow
+*.mp4
+*.mov
+*.avi
+*.mkv

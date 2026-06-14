@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+set -eu
+
+limit=$((50 * 1024 * 1024))
+
+oversized=$(git diff --cached --name-only --diff-filter=ACM | while IFS= read -r path; do
+  [ -f "$path" ] || continue
+  size=$(wc -c < "$path")
+  if [ "$size" -gt "$limit" ]; then
+    printf "%s (%s bytes)\n" "$path" "$size"
+  fi
+done)
+
+if [ -n "$oversized" ]; then
+  echo "Commit rejected. Move large artifacts to external storage or Git LFS:" >&2
+  printf "%s\n" "$oversized" >&2
+  exit 1
+fi
