@@ -52,6 +52,11 @@ runs/
 wandb/
 mlruns/
 
+# Headroom local runtime state/logs.
+.headroom/
+headroom-cache/
+headroom-logs/
+
 # Large binaries should use Git LFS or external storage.
 *.safetensors
 *.ckpt
