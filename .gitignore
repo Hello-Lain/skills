@@ -57,6 +57,9 @@ mlruns/
 headroom-cache/
 headroom-logs/
 
+# Plan Grill scratch artifacts.
+.plan-grill/
+
 # Large binaries should use Git LFS or external storage.
 *.safetensors
 *.ckpt

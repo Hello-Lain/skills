@@ -20,7 +20,8 @@ Use this skill to create a new plan document or improve an existing one. The use
 ## Core Contract
 
 - Produce or update a `plan.md` document.
-- Do not execute the plan unless the user separately asks to execute it after reviewing the document.
+- Do not perform implementation or operational execution unless the user separately asks after reviewing the document.
+- Planning files may be created or updated as part of the workflow; implementation files must not be changed.
 - Prefer subagents for planning, critique, and synthesis.
 - Keep the main agent's context clean: the main agent should only inspect task framing, final `plan.md`, concise subagent summaries, and diffs.
 - If an existing `plan.md` is provided, treat it as an input draft and produce a stronger revision.
@@ -84,6 +85,30 @@ Use subagents when the environment supports them.
 - The main agent performs the final file write after acceptance.
 - No agent should commit changes unless the user explicitly asks.
 
+## Planning Artifact Contract
+
+Use `.plan-grill/<task-slug>/` only when intermediate artifacts help reviewability or context hygiene.
+
+Rules:
+
+- The main agent owns artifact file writes; subagents return text.
+- Artifacts are optional scratch files, safe to delete, and should not be committed.
+- Artifacts must contain summaries and source references, not raw secret values, env dumps, full logs, or large excerpts.
+- Redact tokens, credentials, private keys, cookies, and personal data.
+- Keep final user-facing output as `plan.md` unless overwrite rules require another path.
+
+Suggested artifact files:
+
+```text
+.plan-grill/<task-slug>/task-packet.md
+.plan-grill/<task-slug>/planner-summary.md
+.plan-grill/<task-slug>/review-findings.md
+.plan-grill/<task-slug>/synthesizer-changelog.md
+.plan-grill/<task-slug>/diff-summary.md
+```
+
+Do not create artifacts for trivial plans.
+
 ### 1. Task Packet
 
 Prepare a compact packet:
@@ -97,6 +122,8 @@ Current git status summary:
 Known constraints:
 Likely relevant files/directories:
 Output path:
+Artifact path, if used:
+Redaction constraints:
 Do not execute implementation changes.
 ```
 
@@ -111,7 +138,7 @@ Prompt shape:
 ```text
 You are the planner. Inspect the repo as needed and produce a production-grade plan.md draft.
 Do not implement code changes.
-Include goal, context, assumptions, approach, steps, affected files, validation, rollback, risks, open questions, and execution decision.
+Include goal, non-goals, evidence inspected, context, assumptions, approach, steps, affected files, owners, validation, rollout, monitoring, rollback, abort criteria, risks, risk level, confidence, open questions, and execution decision.
 Return the plan document and a concise evidence summary.
 ```
 
@@ -125,6 +152,8 @@ Prompt shape:
 You are the reviewer. Review only the draft plan and necessary evidence.
 Do not rewrite the whole plan.
 Find missing assumptions, weak validation, rollback gaps, blast-radius issues, data/security risks, operational gaps, and unclear ownership.
+Check that risk level and confidence follow the rubric.
+Flag any unsupported facts, fake owners, fake precision, missing evidence, unredacted sensitive data, or unsafe overwrite behavior.
 Return prioritized findings with severity and concrete fixes.
 ```
 
@@ -138,6 +167,7 @@ Prompt shape:
 You are the synthesizer. Merge the planner draft and reviewer findings into a final plan.md.
 Do not implement code changes.
 Preserve useful detail, remove speculation, mark unresolved questions explicitly, and include changes from previous draft if applicable.
+Use Unknown or TBD rather than inventing evidence, owners, dates, metrics, or guarantees.
 Return only the final plan document plus a short changelog.
 ```
 
@@ -184,6 +214,8 @@ If `plan.md` already exists:
 - If the user asked to "iterate", "update", "improve", or "rewrite" it, update that file.
 - If overwrite intent is unclear, write `plan.updated.md`.
 - If the existing plan contains important history, preserve it in `Changes From Previous Plan` instead of deleting it.
+- Require a `Previous Plan Diff Summary` for every existing-plan revision.
+- Do not delete prior risks, assumptions, or open questions unless the new plan explains why they are resolved or obsolete.
 
 ## Required plan.md Structure
 
@@ -193,6 +225,10 @@ Use this structure unless the user requests another format:
 # Plan
 
 ## Goal
+
+## Non-Goals
+
+## Evidence Inspected
 
 ## Current Context
 
@@ -204,9 +240,17 @@ Use this structure unless the user requests another format:
 
 ## Files / Components Likely Affected
 
+## Owners / Responsibilities
+
 ## Validation Plan
 
+## Rollout Plan
+
+## Monitoring / Observability
+
 ## Rollback / Recovery Plan
+
+## Abort Criteria
 
 ## Risks
 
@@ -214,7 +258,9 @@ Use this structure unless the user requests another format:
 
 ## Execution Decision
 
-- Recommendation: Execute / Wait / Needs Answer
+- Recommendation: Ready for user-approved execution / Wait / Needs answers
+- Risk Level: Low / Medium / High / Critical
+- Confidence: Low / Medium / High
 - Reason:
 ```
 
@@ -223,8 +269,25 @@ When iterating an existing plan, also include:
 ```markdown
 ## Issues Found In Previous Plan
 
+## Previous Plan Diff Summary
+
+- Kept:
+- Changed:
+- Removed:
+- Unresolved:
+
 ## Changes From Previous Plan
 ```
+
+If a section is not applicable, write `Not applicable` with a one-line reason. For production, deploy, data, auth, billing, or security plans, `Not applicable` in validation, rollback, monitoring, rollout, or abort criteria requires reviewer scrutiny.
+
+Owner fields must use one of:
+
+- `Known`: cite evidence.
+- `Inferred`: cite evidence and mark as inference.
+- `TBD`: add an open question.
+
+Do not invent owners.
 
 ## Acceptance Checklist
 
@@ -235,14 +298,34 @@ A final plan is acceptable only if it answers:
 - What assumptions could invalidate the plan?
 - What is the smallest safe implementation path?
 - What files/components are likely affected?
+- Who owns execution, review, validation, and rollback?
 - How will success be validated?
+- How will rollout be staged or limited?
+- What monitoring or observability proves runtime behavior?
 - What can fail silently?
+- What abort criteria stop execution?
 - What is the rollback or recovery path?
 - What user data, secrets, auth, billing, or security risk exists?
 - What open questions block execution?
 - Is the execution recommendation explicit?
+- Are risk level and confidence justified by evidence?
 
 If any item is missing, revise or mark it as an explicit open question.
+
+## Risk And Confidence Rubric
+
+Risk Level:
+
+- `Low`: local or easily reversible change; no user data, auth, billing, deploy, or broad runtime impact.
+- `Medium`: moderate blast radius, limited runtime impact, or partial rollback uncertainty.
+- `High`: production, user data, auth, billing, migrations, security, destructive writes, or weak rollback.
+- `Critical`: irreversible data/security impact, broad outage risk, compliance risk, or no credible recovery path.
+
+Confidence:
+
+- `High`: evidence inspected, low unresolved ambiguity, clear validation, clear rollback.
+- `Medium`: some assumptions remain but validation and recovery are plausible.
+- `Low`: key evidence missing, unknown owners, weak validation, weak rollback, or unresolved blockers.
 
 ## Production Defaults
 
@@ -261,13 +344,14 @@ Keep the final response short:
 
 ```text
 Generated/updated: <path>
+Planning artifacts: <path or none>
 Status: Acceptable / Needs revision / Unsafe
 Key risks:
 - ...
 Open questions:
 - ...
 
-I did not execute the plan.
+I did not execute implementation or operational steps.
 ```
 
 Do not paste the entire `plan.md` unless the user asks.
