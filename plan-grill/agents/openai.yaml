@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Grill"
+  short_description: "Plan, stress-test, revise, then execute."
+  default_prompt: "Use $plan-grill to draft a plan, stress-test it, revise it, then execute safely."
