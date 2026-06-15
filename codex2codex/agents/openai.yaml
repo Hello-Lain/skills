@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex2Codex"
+  short_description: "Delegate Codex work through Meight"
+  default_prompt: "Use $codex2codex to delegate this task to Codex workers with independent review."
+
+policy:
+  allow_implicit_invocation: false

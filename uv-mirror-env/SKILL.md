@@ -1,11 +1,34 @@
 ---
 name: uv-mirror-env
-description: Use when creating, repairing, syncing, or managing Python environments with uv in no-proxy or VPN-saving networks; use domestic PyPI mirrors, prefer existing compatible uv cache hits for large dependencies such as torch, torchvision, xformers, triton, opencv, decord, vllm, flash-attn, and build special binary packages in one-shot Docker containers using domestic Docker/image/package mirrors.
+description: Use whenever Codex encounters Python environment or dependency problems while coding, testing, or running scripts, including ModuleNotFoundError, ImportError, missing packages, uv/pip resolver failures, broken .venv activation, version conflicts, CUDA/Torch/ABI mismatches, build failures, or missing binary wheels. Also use when creating, repairing, syncing, or managing Python environments with uv in no-proxy or VPN-saving networks; use domestic PyPI mirrors, prefer existing compatible uv cache hits for large dependencies such as torch, torchvision, xformers, triton, opencv, decord, vllm, flash-attn, and build special binary packages in one-shot Docker containers using domestic Docker/image/package mirrors.
 ---
 
 # uv Mirror Env
 
-Use this skill for Python env work when proxy/VPN traffic should be avoided.
+Use this skill whenever Python execution is blocked by environment or dependency state, especially when proxy/VPN traffic should be avoided.
+
+## Dependency-Blocker Protocol
+
+When a coding, test, or runtime command fails because of environment state, immediately switch into this skill before continuing the original task.
+
+Treat these as environment blockers:
+
+- `ModuleNotFoundError`, `ImportError`, missing CLI commands, or missing project extras.
+- `uv`, `pip`, `setuptools`, wheel, build isolation, or resolver failures.
+- Broken `.venv`, wrong interpreter, commands resolving to system Python, or mismatched `python`/`pip`.
+- Package version conflicts, `uv pip check` failures, or incompatible dependency pins.
+- Torch/CUDA/driver/ABI errors, missing CUDA extension wheels, `flash-attn`/`xformers` build failures, or binary import errors such as undefined symbols.
+
+Recovery loop:
+
+1. Preserve the failed command and the exact error that indicates a dependency blocker.
+2. Stop retrying project code until the environment issue is fixed or clearly impossible to fix locally.
+3. Repair or create the uv-managed `.venv` using the cache-first, no-proxy, mirror-first policy below.
+4. Validate the environment with targeted imports and `uv pip check`.
+5. Re-run the original failed command from the same `.venv`.
+6. Continue the original coding task only after the dependency blocker is resolved.
+
+If a command may be failing because of both code and dependencies, fix the dependency blocker first, then re-run to expose any remaining code issue.
 
 ## Defaults
 

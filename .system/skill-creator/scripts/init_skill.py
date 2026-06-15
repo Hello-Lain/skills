@@ -9,7 +9,7 @@ Examples:
     init_skill.py my-new-skill --path skills/public
     init_skill.py my-new-skill --path skills/public --resources scripts,references
     init_skill.py my-api-helper --path skills/private --resources scripts --examples
-    init_skill.py custom-skill --path /custom/location
+    init_skill.py custom-skill --path ~/custom/location
     init_skill.py my-skill --path skills/public --interface short_description="Short UI label"
 """
 

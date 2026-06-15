@@ -1,0 +1,3 @@
+_target_: methods.standard.StandardInferMethod
+max_new_tokens: 16
+temperature: 0.0

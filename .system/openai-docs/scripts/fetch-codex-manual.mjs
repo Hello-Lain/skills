@@ -11,6 +11,7 @@ import {
 import { constants as fsConstants } from "node:fs";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
+import { homedir } from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
@@ -276,8 +277,7 @@ const defaultCacheDirCandidates = () => {
   });
 
   if (process.platform !== "win32") {
-    pushCandidate(`/private/tmp/${DEFAULT_CACHE_DIR_NAME}`);
-    pushCandidate(`/tmp/${DEFAULT_CACHE_DIR_NAME}`);
+    pushCandidate(`${homedir()}/tmp/${DEFAULT_CACHE_DIR_NAME}`);
   }
 
   return candidates;

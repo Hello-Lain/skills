@@ -1,0 +1,7 @@
+_target_: models.hf.HFMLLMWrapper
+path: ~/path/to/mllm
+torch_dtype: bfloat16
+attn_implementation: flash_attention_2
+low_cpu_mem_usage: true
+device_map: null
+trust_remote_code: true

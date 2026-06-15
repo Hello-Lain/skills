@@ -5,10 +5,10 @@ description: Use when configuring or using Headroom with Codex, Claude Code, Cur
 
 # Headroom
 
-Headroom compresses agent context, tool outputs, logs, files, RAG chunks, and proxy traffic before it reaches the model. For Codex, prefer the official CLI wrapper:
+Headroom compresses agent context, tool outputs, logs, files, RAG chunks, and proxy traffic before it reaches the model. For Codex, prefer this skill's stable launcher:
 
 ```bash
-headroom wrap codex
+codex-headroom
 ```
 
 Use this skill when the user wants Codex token/context compression, Headroom setup, proxy mode, MCP mode, or portable machine setup.
@@ -25,6 +25,8 @@ What it does:
 - Installs or upgrades `headroom-ai[all]` using `pipx`, `uv tool`, or `python -m pip --user`.
 - Verifies `headroom` is available.
 - Runs `headroom wrap codex --prepare-only` so Codex config is prepared without launching an interactive Codex session.
+- Creates `~/.local/bin/codex-headroom`, a stable launcher that runs `headroom wrap codex -- "$@"`.
+- The launcher backs up `~/.codex/config.toml` before wrap and restores it after exit, so bare `codex` remains the fallback path.
 - Leaves Headroom's own Codex config backup/restore behavior in charge.
 
 For China/no-proxy environments:
@@ -38,13 +40,13 @@ For China/no-proxy environments:
 Start Codex through Headroom:
 
 ```bash
-headroom wrap codex
+codex-headroom
 ```
 
 Pass Codex args after `--`:
 
 ```bash
-headroom wrap codex -- --model gpt-5
+codex-headroom --model gpt-5
 ```
 
 Show savings/stats when available:
@@ -64,6 +66,26 @@ Or via the setup script:
 ```bash
 ~/.codex/skills/headroom/scripts/setup-headroom-codex.sh --unwrap
 ```
+
+## Portable Setup
+
+After moving this `headroom/` skill directory to another machine, run:
+
+```bash
+~/.codex/skills/headroom/scripts/setup-headroom-codex.sh --yes --prepare-only
+```
+
+China/no-proxy:
+
+```bash
+~/.codex/skills/headroom/scripts/setup-headroom-codex.sh --yes --prepare-only --mirror tuna --no-proxy
+```
+
+Production expectation:
+- `headroom` installed and on PATH.
+- Codex Headroom integration prepared.
+- `codex-headroom` launcher installed under `~/.local/bin`.
+- Original `codex` remains untouched for fallback/debugging.
 
 ## Proxy Mode
 

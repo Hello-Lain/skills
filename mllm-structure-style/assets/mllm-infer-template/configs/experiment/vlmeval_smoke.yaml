@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - override /model: mock
+  - override /method: standard
+  - override /env: default
+  - override /eval_tasks: default
+
+task_name: eval
+tags: ["vlmeval", "smoke"]
+model_name: custom_mllm
+api_nproc: 1
+retry_failed: true
+verbose: false
+mode: eval

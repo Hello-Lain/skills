@@ -1,0 +1,6 @@
+interface:
+  display_name: "MLLM Structure Style"
+  short_description: "MLLM inference/eval scaffolding and Hydra config style"
+  default_prompt: "Use $mllm-structure-style to scaffold or review a Hydra + torchrun MLLM inference/evaluation project with strategy methods and Lightning-Hydra-style config groups."
+policy:
+  allow_implicit_invocation: true

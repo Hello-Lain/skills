@@ -1,0 +1,7 @@
+root_dir: ${oc.env:PROJECT_ROOT,.}
+data_dir: ${paths.root_dir}/data
+log_dir: ${paths.root_dir}/logs
+output_dir: ${hydra:runtime.output_dir}
+work_dir: ${hydra:runtime.cwd}
+infer_output_file: ${paths.output_dir}/predictions.jsonl
+eval_output_dir: ${paths.output_dir}/eval
