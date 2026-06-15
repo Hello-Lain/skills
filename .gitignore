@@ -61,6 +61,8 @@ headroom-logs/
 .plan-grill/
 
 # Large binaries should use Git LFS or external storage.
+codex2codex/.venv/lib/python3.10/site-packages/codex_cli_bin/bin/codex
+codex2codex/.wheelhouse/*.whl
 *.safetensors
 *.ckpt
 *.pt
