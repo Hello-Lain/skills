@@ -36,7 +36,7 @@ reasons=()
 decision="do-not-delegate"
 approval="not-required"
 
-if [[ "$lower" =~ (large|complex|refactor|migration|multi-file|architecture|plan|long-running|massive|broad) ]]; then
+if [[ "$lower" =~ (large|complex|refactor|migration|multi-file|many-files|architecture|plan|long-running|massive|broad|context-heavy|context|high-effort) ]]; then
   score=$((score + 2))
   reasons+=("complexity keywords present")
 fi
@@ -46,7 +46,8 @@ if [[ "$files" =~ ^[0-9]+$ ]] && (( files >= 5 )); then
   reasons+=("file count >= 5")
 fi
 
-if [[ "$lower" =~ (secret|token|password|credential|prod|production|billing|payment|destructive|delete|drop) ]]; then
+sensitive_pattern='(secret|password|credential|api[ _-]?key|access[ _-]?token|auth[ _-]?token|prod|production|billing|payment|destructive|delete|drop)'
+if [[ "$lower" =~ $sensitive_pattern ]]; then
   score=$((score - 3))
   reasons+=("sensitive or destructive keywords present")
 fi

@@ -1,6 +1,10 @@
 # Delegation Policy
 
-OpenHand delegation is opt-in and approval-gated.
+OpenHand delegation is recommendation-capable and execution approval-gated.
+
+Codex may proactively recommend this workflow when task scale, ambiguity, or
+runtime cost is high. Backend use remains opt-in: do not start OpenHandsMCP,
+Docker, Podman, or live MCP tasks until the user approves that step.
 
 ## Positive Triggers
 
@@ -16,6 +20,17 @@ OpenHand delegation is opt-in and approval-gated.
 - Tasks needing secrets before the secret policy is accepted.
 - Tasks where Docker/Podman socket exposure is unacceptable.
 - Tasks that cannot be reviewed as a diff before application.
+
+## Recommendation Gate
+
+Before asking to use the backend, report:
+
+- Why the task looks large or context-heavy.
+- Why local Codex-only execution may be inefficient or risky.
+- What OpenHandsMCP would do in proposal-only mode.
+- What stays under lead Codex control.
+
+If the user declines, continue locally.
 
 ## Approval Gate
 

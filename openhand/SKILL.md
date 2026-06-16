@@ -1,17 +1,17 @@
 ---
 name: openhand
-description: Use when the user explicitly invokes $openhand or /openhand, or asks Codex to prepare an OpenHandsMCP-backed delegation workflow for complex plans, large-scale implementation, long-running refactors, or high-effort tasks. Provides explicit-first adaptive delegation, dry-run task classification, preflight checks, OpenHandsMCP setup guidance, safe task lifecycle rules, status polling guidance, cleanup, rollback, and secrets controls. Do not use for small edits or to silently auto-run Docker/OpenHands.
+description: Use when the user explicitly invokes $openhand or /openhand, asks Codex to prepare an OpenHandsMCP-backed delegation workflow, or when Codex detects a complex plan, large-scale implementation, long-running refactor, high-effort task, or context-heavy task that may benefit from isolated OpenHandsMCP delegation. Provides adaptive delegation recommendation, dry-run task classification, approval-gated preflight checks, OpenHandsMCP setup guidance, safe task lifecycle rules, status polling guidance, cleanup, rollback, and secrets controls. Do not use for small edits or to silently auto-run Docker/OpenHands.
 ---
 
 # OpenHand
 
-Use this skill to decide, prepare, and supervise an opt-in OpenHandsMCP-backed workflow. It is explicit-first: prefer `$openhand` or `/openhand`, classify the task, ask before delegation, then use OpenHandsMCP only after preflight and approval.
+Use this skill to decide, prepare, and supervise an opt-in OpenHandsMCP-backed workflow. It may proactively recommend OpenHandsMCP when a task is large or context-heavy, but backend execution remains approval-gated: classify the task, explain the recommendation, ask before delegation, then use OpenHandsMCP only after preflight and approval.
 
 This skill wraps `danshardware/OpenHandsMCP`; do not reimplement its session, git, Docker, or container backend.
 
 ## Operating Rules
 
-- Start in dry-run mode. Never launch OpenHandsMCP, Docker, Podman, or live MCP tasks unless the user explicitly approves that step.
+- Start in dry-run/advisory mode. For detected large tasks, you may recommend OpenHandsMCP and ask for approval. Never launch OpenHandsMCP, Docker, Podman, or live MCP tasks unless the user explicitly approves that step.
 - Use OpenHandsMCP for proposal-only delegated work by default. Review diffs and tests before applying changes to the live workspace.
 - Treat Docker/Podman socket access as high risk. Prefer disposable clones or worktrees and repo allowlists.
 - Do not forward secrets by default. Require explicit per-key approval for `OPENHANDS_SECRET_*`.
@@ -33,7 +33,7 @@ This skill wraps `danshardware/OpenHandsMCP`; do not reimplement its session, gi
 
 ## When To Delegate
 
-Delegate only when several are true:
+Recommend delegation when several are true, then ask for approval before backend use:
 
 - The task spans many files or unclear architecture boundaries.
 - The task benefits from isolated workspace exploration.

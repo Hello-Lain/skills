@@ -11,6 +11,8 @@ Use `danshardware/OpenHandsMCP` as the backend. Do not copy or reimplement its s
 - Entrypoint: `openhands-mcp-server = openhands_mcp_server.server:main`
 - Python: `>=3.8`
 - Dependencies: `mcp`, `docker`, `gitpython`, `pydantic`
+- Upstream `main()` starts `streamable-http` at `/mcp` (default
+  `localhost:6363`), not stdio.
 
 ## Observed Tool Surface
 
@@ -35,8 +37,29 @@ openhand/scripts/check-openhands-mcp-tools.sh --source ~/path/to/OpenHandsMCP
 2. Pin the commit or version used for the run.
 3. Run `openhand/scripts/preflight.sh --source ~/path/to/OpenHandsMCP`.
 4. Verify tool surface with `check-openhands-mcp-tools.sh`.
-5. Propose Codex MCP config to the user before writing it.
-6. Start the MCP server only after explicit approval.
+5. Validate runtime with
+   `openhand/scripts/smoke-openhands-mcp-runtime.sh --source ~/path/to/OpenHandsMCP`.
+6. Propose Codex MCP config to the user before writing it.
+7. For Codex config, prefer the local stdio wrapper
+   `openhand/scripts/run-openhands-mcp-stdio.sh`; it reuses upstream's `mcp`
+   object and avoids requiring a persistent HTTP server.
+8. Start HTTP MCP server smoke or live backend tasks only after explicit
+   approval.
+
+## Codex MCP Config
+
+Recommended local config:
+
+```toml
+[mcp_servers.openhands]
+command = "/data/lcq/.codex/skills/openhand/scripts/run-openhands-mcp-stdio.sh"
+startup_timeout_sec = 60
+tool_timeout_sec = 600
+enabled = true
+```
+
+The wrapper defaults to `/data/lcq/.codex/tools/OpenHandsMCP`. Override with
+`OPENHANDS_MCP_SOURCE=/path/to/OpenHandsMCP` if the checkout lives elsewhere.
 
 ## Runtime Notes
 

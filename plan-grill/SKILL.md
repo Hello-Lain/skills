@@ -83,6 +83,7 @@ The main agent should not:
 - Dump all subagent reasoning into the conversation.
 - Let one subagent both create and approve its own plan.
 - Treat a plan as accepted without validation, rollback, and open-question sections.
+- Treat a completed subagent turn as usable unless its returned text satisfies that subagent's output contract.
 
 ## Subagent-First Workflow
 
@@ -146,6 +147,32 @@ Cancel or fallback when one or more is true:
 - The user asks to stop.
 
 If the agent is active but slow, keep it running and provide a short user update. If its work is useful but incomplete, ask for a concise checkpoint summary instead of killing it.
+
+## Subagent Output Contract Gate
+
+After every Planner, Grill, or Synthesizer result:
+
+1. Read the result artifact, not only the terminal state.
+2. Check it against the role's output contract.
+3. Reject progress-only answers such as "I will inspect..." or "I am collecting evidence..." when the required artifact is a plan, findings list, or synthesized final plan.
+4. Send one targeted follow-up to produce exactly the missing artifact.
+5. If the follow-up is still invalid, mark that subagent blocked in `.plan-grill/<task-slug>/subagent-status.md`, stop the plan-grill run, and report `Status: Needs revision` or `Unsafe`.
+
+Do not silently fall back to single-agent synthesis when subagents are available but return invalid artifacts. Fallback is allowed only when subagents are unavailable, the backend is broken after recovery attempts, or the user explicitly permits fallback.
+
+When using `codex2codex-meight`, validate role outputs with the bundled contract validator when practical:
+
+```bash
+python ~/.codex/skills/codex2codex/scripts/validate_result_contract.py \
+  .meight/workers/<name>/result.md \
+  --min-chars 1000 \
+  --reject-progress-only \
+  --min-heading-count 2 \
+  --must-contain "## 目标" \
+  --must-contain "## 验证计划"
+```
+
+Use semantic progress-only detection, not global forbidden phrase matching. A valid plan may mention phrases such as "I will inspect" or "正在检查" while documenting rejection rules; do not reject such artifacts only because the phrase appears outside a progress-only answer.
 
 ## Planning Artifact Contract
 

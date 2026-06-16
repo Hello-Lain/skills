@@ -1,4 +1,4 @@
-name: uv-mirror-env
-display_name: uv Mirror Env
-short_description: Fix Python dependency blockers with uv, cache-first installs, and domestic mirrors.
-default_prompt: When Python code, tests, or scripts fail from ModuleNotFoundError, ImportError, uv/pip resolver errors, broken .venv activation, version conflicts, CUDA/Torch ABI mismatches, build failures, or missing wheels, switch to this skill first. Repair the uv-managed .venv with no proxy, domestic PyPI mirrors, cache-first installs for large packages, and Docker wheel builds for fragile CUDA deps; validate with targeted imports and uv pip check before rerunning the original command.
+name: "uv-mirror-env"
+display_name: "uv Mirror Env"
+short_description: "Stop and fix Python env blockers with uv."
+default_prompt: "When Python code, tests, or scripts fail from ModuleNotFoundError, ImportError, uv/pip resolver errors, broken .venv activation, wrong interpreter, version conflicts, CUDA/Torch ABI mismatches, build failures, or missing wheels, immediately switch to $uv-mirror-env before continuing. Repair locally with a uv-managed .venv, no proxy, domestic PyPI mirrors, cache-first large dependency installs, and Docker wheel builds for fragile CUDA deps; ask the user only if local recovery is exhausted or unsafe, then rerun the original command."

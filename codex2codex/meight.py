@@ -1227,12 +1227,18 @@ def start_request(args, home: Path) -> dict:
 
 
 def cmd_start(args, home: Path) -> int:
+    if not ensure_daemon(home):
+        print("error: daemon auto-start failed — check daemon.log", file=sys.stderr)
+        return 4
     resp = expect_ok(start_request(args, home))
     print(f"started worker '{args.name}' thread={resp.get('thread_id')}")
     return 0
 
 
 def cmd_follow(args, home: Path) -> int:
+    if not ensure_daemon(home):
+        print("error: daemon auto-start failed — check daemon.log", file=sys.stderr)
+        return 4
     resp = expect_ok(send_request(home, {
         "cmd": "follow", "name": args.name, "brief": read_brief(args),
         "no_preamble": args.no_preamble,
@@ -1242,12 +1248,18 @@ def cmd_follow(args, home: Path) -> int:
 
 
 def cmd_steer(args, home: Path) -> int:
+    if not ensure_daemon(home):
+        print("error: daemon auto-start failed — check daemon.log", file=sys.stderr)
+        return 4
     expect_ok(send_request(home, {"cmd": "steer", "name": args.name, "text": args.text}))
     print(f"steered '{args.name}'")
     return 0
 
 
 def cmd_interrupt(args, home: Path) -> int:
+    if not ensure_daemon(home):
+        print("error: daemon auto-start failed — check daemon.log", file=sys.stderr)
+        return 4
     expect_ok(send_request(home, {"cmd": "interrupt", "name": args.name}))
     print(f"interrupt requested for '{args.name}'")
     return 0
@@ -1447,6 +1459,9 @@ def cmd_dispatch(args, home: Path) -> int:
 
 def cmd_reply(args, home: Path) -> int:
     """One-shot reply: follow -> wait -> print only the latest turn result. For QUESTION (exit 3)."""
+    if not ensure_daemon(home):
+        print("error: daemon auto-start failed — check daemon.log", file=sys.stderr)
+        return 4
     resp = expect_ok(send_request(home, {
         "cmd": "follow", "name": args.name, "brief": read_brief(args),
         "no_preamble": args.no_preamble,

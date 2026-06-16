@@ -57,17 +57,13 @@ If the split is unclear and stakes are high, start with a read-only consult work
 ## Supervised Workflow
 
 Use `start` + `wait` for anything substantial so the lead can observe, steer, or answer questions.
+`start`, `follow`, `reply`, `steer`, and `interrupt` auto-start the daemon when the socket is absent or stale. Prefer this auto-start path over manually backgrounding `meight daemon`, because some terminal/tool runners kill background children and leave stale sockets.
 
 ```bash
 REPO="$HOME/path/to/target-repo"
 export MEIGHT_HOME="$REPO/.meight"
 mkdir -p "$MEIGHT_HOME"
 cd "$REPO"
-
-"${MEIGHT[@]}" ping >/dev/null 2>&1 || {
-  nohup "${MEIGHT[@]}" daemon >>"$MEIGHT_HOME/daemon.log" 2>&1 &
-  sleep 1
-}
 
 "${MEIGHT[@]}" start <name> --brief-file - --cwd "$REPO" \
   [--sandbox ws|ro|full] [--model MODEL] [--effort low|medium|high|xhigh] <<'EOF'
@@ -89,6 +85,23 @@ On exit `1`, inspect once and decide:
 
 On exit `0`, read `"${MEIGHT[@]}" result <name>` and verify before accepting. On exit `3`, read the question and reply on the same thread.
 On exit `1`, treat it as a checkpoint, not a failure. If status age is suspicious, use `wait --stall-timeout <seconds>` or inspect with `doctor`.
+On immediate daemon errors such as `ConnectionRefusedError`, `daemon socket not found`, or `daemon-dead`, run `doctor`, then `recover --dry-run`; if `doctor` reports `socket_live: False` and `lock_state: free`, run `recover --force` and retry `start` once. Do not use shell builtins through wrappers such as `rtk proxy command -v`; wrap them in `bash -lc`.
+
+Validate completed worker results against the brief's output contract before treating them as usable. A worker can exit `completed` after only emitting a progress note; that is an invalid result, not a successful delegation. For structured outputs, use the bundled validator:
+
+```bash
+python "$SKILL_DIR/scripts/validate_result_contract.py" \
+  "$MEIGHT_HOME/workers/<name>/result.md" \
+  --min-chars 1000 \
+  --reject-progress-only \
+  --min-heading-count 2 \
+  --must-contain "## 目标" \
+  --must-contain "## 验证计划"
+```
+
+Use `--reject-progress-only` for progress/status filtering. Do not use `--must-not-contain` for phrases such as "I will inspect" or "正在检查"; real artifacts may quote those phrases while explaining the gate. Reserve `--must-not-contain` for secrets, unsafe actions, or task-specific forbidden content.
+
+If validation fails, send one targeted `follow` asking for the exact missing artifact and wait again. If the second result is still invalid, mark the worker as failed/blocked and do not silently replace it with lead-only work.
 
 ## One-Shot Dispatch
 
@@ -113,7 +126,7 @@ EOF
 - `meight recover --dry-run` reports stale daemon artifacts without mutation.
 - `meight recover --force` snapshots recoverable metadata then removes stale daemon artifacts; do not use it when `doctor` reports a live socket or held lock.
 - `wait --stall-timeout SEC` returns a checkpoint when a running worker has not updated status for `SEC`; it never interrupts automatically.
-- Prefer foreground daemon plus explicit `MEIGHT_HOME` while debugging daemon issues.
+- Prefer foreground daemon plus explicit `MEIGHT_HOME` while debugging daemon issues. Use manual foreground `meight daemon` only for diagnosis, not normal supervised workflow.
 
 ## Brief Template
 
@@ -169,6 +182,7 @@ Use at most two `reply` or `follow` turns per thread; then start a fresh worker 
 - Worker edits require lead review plus targeted tests or checks when available.
 - Lead edits require fresh worker review for non-trivial changes.
 - `NO-GO` means fix and re-review, not stop.
+- `completed` is not sufficient. Check `result.md` against the output contract; progress-only, too-short, or missing-section outputs are invalid.
 - Push back on worker findings only with concrete code or runtime evidence.
 - Summarize final worker roles, changed artifacts, verification evidence, unresolved risks, and any user decision needed.
 

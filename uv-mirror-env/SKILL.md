@@ -1,20 +1,23 @@
 ---
 name: uv-mirror-env
-description: Use whenever Codex encounters Python environment or dependency problems while coding, testing, or running scripts, including ModuleNotFoundError, ImportError, missing packages, uv/pip resolver failures, broken .venv activation, version conflicts, CUDA/Torch/ABI mismatches, build failures, or missing binary wheels. Also use when creating, repairing, syncing, or managing Python environments with uv in no-proxy or VPN-saving networks; use domestic PyPI mirrors, prefer existing compatible uv cache hits for large dependencies such as torch, torchvision, xformers, triton, opencv, decord, vllm, flash-attn, and build special binary packages in one-shot Docker containers using domestic Docker/image/package mirrors.
+description: Mandatory interrupt protocol whenever Codex encounters Python environment or dependency problems while coding, testing, or running scripts. Immediately switch to this skill before continuing the original task for ModuleNotFoundError, ImportError, missing packages or CLIs, uv/pip resolver failures, broken .venv activation, wrong interpreter, version conflicts, CUDA/Torch/ABI mismatches, build failures, or missing binary wheels. Do not ask the user first; repair locally with uv-managed .venv, no-proxy domestic PyPI mirrors, cache-first large dependency installs, and one-shot Docker wheel builds for fragile CUDA deps. Ask the user only after local recovery paths are exhausted or unsafe. Also use when creating, repairing, syncing, or managing Python environments with uv in no-proxy or VPN-saving networks.
 ---
 
 # uv Mirror Env
 
 Use this skill whenever Python execution is blocked by environment or dependency state, especially when proxy/VPN traffic should be avoided.
 
+Hard rule: a Python environment/dependency failure is a stop-the-line blocker, not a normal code/test failure. Immediately switch into this skill, repair the env, validate it, then resume the original task. Do not continue code edits, rerun failing project commands repeatedly, or ask the user for direction before attempting the local recovery workflow below.
+
 ## Dependency-Blocker Protocol
 
-When a coding, test, or runtime command fails because of environment state, immediately switch into this skill before continuing the original task.
+When a coding, test, or runtime command fails because of environment state, immediately switch into this skill before continuing the original task. This trigger is mandatory even if the original task did not mention environments, uv, Python, dependencies, mirrors, or this skill.
 
 Treat these as environment blockers:
 
 - `ModuleNotFoundError`, `ImportError`, missing CLI commands, or missing project extras.
 - `uv`, `pip`, `setuptools`, wheel, build isolation, or resolver failures.
+- Any `pip install`, `pip uninstall`, upgrade, or downgrade that reports resolver conflicts, incompatible requirements, or "pip's dependency resolver does not currently take into account all the packages that are installed".
 - Broken `.venv`, wrong interpreter, commands resolving to system Python, or mismatched `python`/`pip`.
 - Package version conflicts, `uv pip check` failures, or incompatible dependency pins.
 - Torch/CUDA/driver/ABI errors, missing CUDA extension wheels, `flash-attn`/`xformers` build failures, or binary import errors such as undefined symbols.
@@ -22,13 +25,16 @@ Treat these as environment blockers:
 Recovery loop:
 
 1. Preserve the failed command and the exact error that indicates a dependency blocker.
-2. Stop retrying project code until the environment issue is fixed or clearly impossible to fix locally.
+2. Stop retrying project code and stop making unrelated code changes until the environment issue is fixed or clearly impossible to fix locally.
 3. Repair or create the uv-managed `.venv` using the cache-first, no-proxy, mirror-first policy below.
-4. Validate the environment with targeted imports and `uv pip check`.
-5. Re-run the original failed command from the same `.venv`.
-6. Continue the original coding task only after the dependency blocker is resolved.
+4. After any package install/uninstall/upgrade/downgrade, immediately run both `.venv/bin/python -m pip check` and `uv pip check --python .venv/bin/python` before retrying project code.
+5. Validate the environment with targeted imports and `uv pip check`.
+6. Re-run the original failed command from the same `.venv`.
+7. Continue the original coding task only after the dependency blocker is resolved and the original failed command has been rerun from the repaired environment.
 
 If a command may be failing because of both code and dependencies, fix the dependency blocker first, then re-run to expose any remaining code issue.
+
+Escalate to the user only after at least one appropriate local repair path has failed and the remaining action is unsafe, destructive, requires credentials, requires choosing incompatible dependency versions without project evidence, or cannot be completed with available network/cache/tooling. Report the preserved command, exact blocker, attempted repair path, and the concrete decision needed.
 
 ## Defaults
 
@@ -201,6 +207,7 @@ Docker rules:
 Always run:
 
 ```bash
+.venv/bin/python -m pip check
 uv pip check --python .venv/bin/python
 .venv/bin/python - <<'PY'
 import torch
