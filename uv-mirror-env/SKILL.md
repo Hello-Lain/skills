@@ -27,7 +27,7 @@ Recovery loop:
 1. Preserve the failed command and the exact error that indicates a dependency blocker.
 2. Stop retrying project code and stop making unrelated code changes until the environment issue is fixed or clearly impossible to fix locally.
 3. Repair or create the uv-managed `.venv` using the cache-first, no-proxy, mirror-first policy below.
-4. After any package install/uninstall/upgrade/downgrade, immediately run both `.venv/bin/python -m pip check` and `uv pip check --python .venv/bin/python` before retrying project code.
+4. After any package install/uninstall/upgrade/downgrade, ensure pip exists (`.venv/bin/python -m ensurepip --upgrade` if `.venv/bin/python -m pip --version` fails), then run both `.venv/bin/python -m pip check` and `uv pip check --python .venv/bin/python` before retrying project code.
 5. Validate the environment with targeted imports and `uv pip check`.
 6. Re-run the original failed command from the same `.venv`.
 7. Continue the original coding task only after the dependency blocker is resolved and the original failed command has been rerun from the repaired environment.
@@ -204,9 +204,10 @@ Docker rules:
 
 ## Validation
 
-Always run:
+`uv venv` may create a pipless environment. Before `pip check`, install pip into the venv only when missing:
 
 ```bash
+.venv/bin/python -m pip --version || .venv/bin/python -m ensurepip --upgrade
 .venv/bin/python -m pip check
 uv pip check --python .venv/bin/python
 .venv/bin/python - <<'PY'

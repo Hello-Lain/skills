@@ -16,7 +16,7 @@ This document is the implementation contract and verification record for
 ## Stack
 
 - Python 3.13 with a repository-local `.venv/`.
-- Installer is `uv`-first and must validate `uv pip check`, `import openai_codex`, and `meight.py --help`.
+- Installer is `uv`-first and must handle pipless `uv venv`, then validate `pip check`, `uv pip check`, `import openai_codex`, and `meight.py --help`.
 - `openai-codex==0.1.0b3` beta SDK. Keep the version pinned.
 - SDK internals: the client spawns `codex app-server --listen stdio://` and
   talks JSON-RPC over stdio. One process multiplexes multiple threads through
@@ -66,7 +66,7 @@ codex.thread_resume(thread_id)        # exists; introspect signature in code if 
 - `meight.py`: single-file implementation using only the Python standard library
   plus `openai-codex`.
 - `meight`: CLI shim for invoking `meight.py`.
-- Supported invocation shape: `meight <cmd>` or `.venv/bin/python meight.py <cmd>`.
+- Supported invocation shape: `meight <cmd>`, `.venv/bin/python meight.py <cmd>`, or `python3 meight.py <cmd>` with auto-reexec into `.venv` when `openai_codex` is absent from the caller Python.
 
 ## State Directory
 

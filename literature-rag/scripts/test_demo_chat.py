@@ -37,7 +37,7 @@ def write_valid_markdown(path: Path) -> None:
      return best output
      ```
      Formula:
-     $$ s = f(x) $$
+     $$ c_t = \\cos(e_t, v_t) - \\lambda \\max(0, h_{lang} - h_{vis}) $$
      Formula source: derived formula
      Formula evidence: derived from Method section and Algorithm 1 description on the verified paper page.
    - Verification source: https://example.com/a
@@ -234,7 +234,7 @@ class DemoChatTests(unittest.TestCase):
      return best output
      ```
      Formula:
-     $$ s = f(x) $$
+     $$ c_t = \\cos(e_t, v_t) - \\lambda \\max(0, h_{lang} - h_{vis}) $$
      Formula source: derived formula
      Formula evidence: derived from Method section and Algorithm 1 description on the verified paper page.
    - Verification source: https://example.com/a
@@ -331,6 +331,86 @@ class DemoChatTests(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0)
             self.assertIn("evidence anchor", proc.stdout)
 
+    def test_validate_final_rejects_missing_linked_paper_title(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            final.write_text(
+                final.read_text(encoding="utf-8").replace(
+                    "1. **[Paper A](https://example.com/a)**",
+                    "1. **Paper A**",
+                ),
+                encoding="utf-8",
+            )
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("validate_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("link format", proc.stdout)
+
+    def test_validate_final_rejects_more_than_15_pseudocode_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            text = final.read_text(encoding="utf-8")
+            long_code = "\n".join(f"     step {index}" for index in range(1, 17))
+            text = text.replace(
+                """     input x
+     encode evidence e
+     compute signal s
+     apply method-specific update u
+     rank candidate outputs
+     return best output""",
+                long_code,
+            )
+            final.write_text(text, encoding="utf-8")
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("validate_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("more than 15", proc.stdout)
+
+    def test_validate_final_rejects_generic_formula(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            final.write_text(
+                final.read_text(encoding="utf-8").replace(
+                    "$$ c_t = \\cos(e_t, v_t) - \\lambda \\max(0, h_{lang} - h_{vis}) $$",
+                    "$$ score = g(x) $$",
+                ),
+                encoding="utf-8",
+            )
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("validate_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("too generic", proc.stdout)
+
     def test_audit_final_accepts_valid_markdown_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -406,6 +486,49 @@ class DemoChatTests(unittest.TestCase):
             )
             self.assertNotEqual(proc.returncode, 0)
             self.assertIn("derived_from", proc.stdout)
+
+    def test_audit_final_rejects_markdown_paper_without_link(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            final.write_text(
+                final.read_text(encoding="utf-8").replace(
+                    "1. **[Paper A](https://example.com/a)**",
+                    "1. **Paper A**",
+                ),
+                encoding="utf-8",
+            )
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("audit_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("linked", proc.stdout)
+
+    def test_audit_final_rejects_wrong_audit_prefix(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "other.audit.json"
+            write_valid_markdown(final)
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("audit_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("same-prefix", proc.stdout)
 
     def test_audit_final_rejects_dropped_paper_in_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

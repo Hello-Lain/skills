@@ -55,7 +55,7 @@ git clone <repo-url> codex2codex
 cd codex2codex && ./install.sh   # uv-managed .venv + ~/.local/bin/meight
 ```
 
-`install.sh` uses `uv`, allows prerelease resolution for the pinned beta SDK, and validates `openai_codex` import plus `uv pip check`. In proxy/mirror environments, pass the environment explicitly, for example:
+`install.sh` uses `uv`, allows prerelease resolution for the pinned beta SDK, ensures pip when `uv venv` creates a pipless environment, and validates `openai_codex` import plus `pip check`/`uv pip check`. In proxy/mirror environments, pass the environment explicitly, for example:
 
 ```bash
 UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple \
@@ -63,7 +63,7 @@ HTTP_PROXY=http://127.0.0.1:7890 HTTPS_PROXY=http://127.0.0.1:7890 \
 ALL_PROXY=socks5://127.0.0.1:7890 ./install.sh
 ```
 
-If `meight` is not on `PATH`, invoke the bundled script directly from this directory:
+If `meight` is not on `PATH`, invoke the bundled script directly from this directory. `python3 ./meight.py ...` auto-reexecs into `./.venv/bin/python` when `openai_codex` is only installed in the skill venv:
 
 ```bash
 python3 ./meight.py --help

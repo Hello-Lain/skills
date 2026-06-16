@@ -1,4 +1,4 @@
 interface:
   display_name: "Literature RAG"
-  short_description: "Subagent-run demo.rag.ac.cn literature retrieval"
-  default_prompt: "Use $literature-rag to run a subagent-led DeepXiv demo search for papers related to ResNet from 2024 to 2026, then return the verified Markdown path."
+  short_description: "Verified demo.rag.ac.cn paper search"
+  default_prompt: "Use $literature-rag to run a subagent-led DeepXiv search and return the verified Markdown path."

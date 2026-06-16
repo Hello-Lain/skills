@@ -42,6 +42,9 @@ echo "→ installing $SDK_PIN (prerelease enabled)"
 UV_DEFAULT_INDEX="$UV_INDEX" uv pip install --python "$REPO_DIR/.venv/bin/python" \
   --prerelease allow "$SDK_PIN"
 echo "→ validating environment"
+"$REPO_DIR/.venv/bin/python" -m pip --version >/dev/null 2>&1 || \
+  "$REPO_DIR/.venv/bin/python" -m ensurepip --upgrade
+"$REPO_DIR/.venv/bin/python" -m pip check
 uv pip check --python "$REPO_DIR/.venv/bin/python"
 "$REPO_DIR/.venv/bin/python" -c 'import openai_codex; print("openai_codex import ok")'
 "$REPO_DIR/.venv/bin/python" "$REPO_DIR/meight.py" --help >/dev/null

@@ -1,7 +1,0 @@
-interface:
-  display_name: "OpenHand"
-  short_description: "Safe OpenHandsMCP task delegation"
-  default_prompt: "Use $openhand to classify this task for safe OpenHandsMCP-backed delegation."
-
-policy:
-  allow_implicit_invocation: false

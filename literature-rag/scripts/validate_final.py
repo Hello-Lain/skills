@@ -22,9 +22,11 @@ REQUIRED_SECTIONS = [
 ]
 
 QUALITY_RE = re.compile(r"quality[- ]?gate|retry|重试|质量门|质量检查", re.IGNORECASE)
-PAPER_RE = re.compile(r"^\s*\d+\.\s+\*\*", re.MULTILINE)
-PAPER_HEADING_RE = re.compile(r"(?m)^\s*(\d+)\.\s+\*\*")
+PAPER_RE = re.compile(r"^[ \t]*\d+\.\s+\*\*", re.MULTILINE)
+PAPER_HEADING_RE = re.compile(r"(?m)^[ \t]*(\d+)\.\s+\*\*")
+PAPER_LINK_RE = re.compile(r"^[ \t]*\d+\.\s+\*\*\[[^\]]+\]\(https?://[^)\s]+\)\*\*", re.MULTILINE)
 CODE_FENCE_RE = re.compile(r"```(?:text|python|pseudo|pseudocode)?\n(.*?)```", re.DOTALL | re.IGNORECASE)
+DISPLAY_FORMULA_RE = re.compile(r"\$\$(.*?)\$\$", re.DOTALL)
 FORMULA_SOURCE_RE = re.compile(r"Formula source:\s*(.+)", re.IGNORECASE)
 FORMULA_EVIDENCE_RE = re.compile(r"Formula evidence:\s*(.+)", re.IGNORECASE)
 USEFUL_RE = re.compile(r"Why useful / transferable insight:\s*(.+)", re.IGNORECASE)
@@ -33,7 +35,12 @@ EVIDENCE_ANCHOR_RE = re.compile(
     re.IGNORECASE,
 )
 BAD_PLACEHOLDER_RE = re.compile(
-    r"not verifiable|needs_agent|待核验|无法核验|generic|score\s*=\s*f\(x\)|method\s*\(\)|todo",
+    r"not verifiable|needs_agent|待核验|无法核验|generic|method\s*\(\)|todo",
+    re.IGNORECASE,
+)
+GENERIC_FORMULA_RE = re.compile(
+    r"^\s*[A-Za-z_][\w{}\\]*\s*=\s*[A-Za-z_]\w*\s*\([^)]*\)\s*$"
+    r"|^\s*(?:score|loss|objective|signal)\s*=\s*[A-Za-z_]\w*\s*\([^)]*\)\s*$",
     re.IGNORECASE,
 )
 
@@ -47,6 +54,10 @@ def paper_blocks(text: str) -> list[tuple[int, str]]:
 
 def validate_paper_block(index: int, block: str) -> list[str]:
     errors: list[str] = []
+    heading = next((line for line in block.splitlines() if line.strip()), "")
+    if not PAPER_LINK_RE.match(heading):
+        errors.append(f"paper {index}: heading must use **[title](https://...)** link format")
+
     if BAD_PLACEHOLDER_RE.search(block):
         errors.append(f"paper {index}: contains unverifiable/generic placeholder")
 
@@ -57,12 +68,21 @@ def validate_paper_block(index: int, block: str) -> list[str]:
         lines = [line for line in code_match.group(1).splitlines() if line.strip() and not line.strip().startswith("#")]
         if len(lines) < 6:
             errors.append(f"paper {index}: pseudocode has fewer than 6 substantive lines")
-        if len(lines) > 20:
-            errors.append(f"paper {index}: pseudocode is too long for compact method abstraction")
+        if len(lines) > 15:
+            errors.append(f"paper {index}: pseudocode has more than 15 substantive lines")
 
-    formula_count = block.count("$$")
-    if formula_count < 2:
+    if block.count("$$") % 2:
+        errors.append(f"paper {index}: unbalanced display formula delimiters")
+    formulas = [formula.strip() for formula in DISPLAY_FORMULA_RE.findall(block)]
+    if not formulas:
         errors.append(f"paper {index}: missing display formula")
+    if len(formulas) > 3:
+        errors.append(f"paper {index}: more than 3 display formula blocks")
+    for formula in formulas:
+        normalized_formula = re.sub(r"\s+", " ", formula).strip()
+        if GENERIC_FORMULA_RE.search(normalized_formula):
+            errors.append(f"paper {index}: formula is too generic or placeholder-like")
+            break
 
     source_match = FORMULA_SOURCE_RE.search(block)
     evidence_match = FORMULA_EVIDENCE_RE.search(block)
@@ -93,6 +113,7 @@ def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str
     errors: list[str] = []
     text = path.read_text(encoding="utf-8", errors="replace")
     paper_count = len(PAPER_RE.findall(text))
+    linked_paper_count = len(PAPER_LINK_RE.findall(text))
     blocks = paper_blocks(text)
     counts = {section: text.count(section) for section in REQUIRED_SECTIONS}
 
@@ -102,6 +123,8 @@ def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str
         errors.append("missing quality-gate/retry note")
     if paper_count > 5:
         errors.append("more than 5 numbered paper entries")
+    if linked_paper_count < paper_count:
+        errors.append("every numbered paper entry must use **[title](https://...)** link format")
     if "Excluded candidates" not in text:
         errors.append("missing Excluded candidates summary")
     for section, count in counts.items():
@@ -114,6 +137,7 @@ def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str
 
     details: dict[str, int | bool | str] = {
         "paper_count": paper_count,
+        "linked_paper_count": linked_paper_count,
         "paper_blocks": len(blocks),
         "has_query": "**Query:**" in text,
         "has_quality_note": bool(QUALITY_RE.search(text)),
@@ -144,6 +168,8 @@ def main() -> int:
         errors.append(f"manifest must register exactly one audit JSON file, found {len(audit_files)}")
     elif not audit_files[0].exists():
         errors.append(f"audit JSON missing: {audit_files[0]}")
+    if len(md_files) == 1 and len(audit_files) == 1 and audit_files[0] != md_files[0].with_suffix(".audit.json"):
+        errors.append("audit JSON must be the same-prefix .audit.json for the final Markdown")
     if not selected:
         errors.append("no final Markdown file selected")
     elif root not in selected.parents and root != selected:

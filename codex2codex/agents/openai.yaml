@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex2Codex"
-  short_description: "Delegate Codex work through Meight"
-  default_prompt: "Use $codex2codex to delegate this task to Codex workers with independent review."
+  short_description: "Meight teammate loops"
+  default_prompt: "Use $codex2codex to coordinate Codex teammates for review, verification, or Decision Council work."
 
 policy:
   allow_implicit_invocation: false

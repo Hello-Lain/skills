@@ -21,7 +21,8 @@ LOCATOR_RE = re.compile(
     re.IGNORECASE,
 )
 URL_RE = re.compile(r"https?://\S+")
-PAPER_RE = re.compile(r"(?m)^\s*(\d+)\.\s+\*\*(?:\[([^\]]+)\]\(([^)]+)\)|([^*]+))\*\*")
+PAPER_ENTRY_RE = re.compile(r"(?m)^[ \t]*(\d+)\.\s+\*\*")
+PAPER_RE = re.compile(r"(?m)^[ \t]*(\d+)\.\s+\*\*\[([^\]]+)\]\((https?://[^)\s]+)\)\*\*")
 NO_MATCH_RE = re.compile(r"no valid|no matching|未找到|无匹配|没有符合", re.IGNORECASE)
 
 REQUIRED_BOOL_TRUE = [
@@ -45,12 +46,14 @@ def manifest_pair(workdir: str) -> tuple[Path | None, Path | None, list[str], li
         errors.append(f"manifest must register exactly one Markdown file, found {len(md_files)}")
     if len(audit_files) != 1:
         errors.append(f"manifest must register exactly one audit JSON file, found {len(audit_files)}")
+    if len(md_files) == 1 and len(audit_files) == 1 and audit_files[0] != md_files[0].with_suffix(".audit.json"):
+        errors.append("audit JSON must be the same-prefix .audit.json for the final Markdown")
     return (md_files[0] if len(md_files) == 1 else None, audit_files[0] if len(audit_files) == 1 else None, errors, files)
 
 def parse_markdown_papers(text: str) -> list[dict[str, Any]]:
     papers: list[dict[str, Any]] = []
     for match in PAPER_RE.finditer(text):
-        title = (match.group(2) or match.group(4) or "").strip()
+        title = match.group(2).strip()
         url = (match.group(3) or "").strip()
         papers.append({"index": int(match.group(1)), "title": title, "url": url})
     return papers
@@ -84,7 +87,9 @@ def validate_paper(item: dict[str, Any], md_by_index: dict[int, dict[str, Any]])
     else:
         if str(item.get("title", "")).strip() != md_item["title"]:
             errors.append(f"{prefix}: audit title does not match Markdown title")
-        if str(item.get("url", "")).strip() and md_item["url"] and str(item.get("url", "")).strip() != md_item["url"]:
+        if not md_item["url"]:
+            errors.append(f"{prefix}: Markdown paper must have a linked http(s) title")
+        if str(item.get("url", "")).strip() != md_item["url"]:
             errors.append(f"{prefix}: audit URL does not match Markdown URL")
 
     for field in ["title", "url", "venue", "year"]:
@@ -148,13 +153,20 @@ def validate(markdown_path: Path, audit_path: Path) -> dict[str, Any]:
         excluded = []
         errors.append("audit.excluded_candidates must be a list")
 
+    for field in ["query", "final_markdown", "selection_policy"]:
+        if not str(audit.get(field, "")).strip():
+            errors.append(f"audit.{field} is required")
+
     if str(audit.get("query", "")).strip() and str(audit.get("query", "")).strip() not in text:
         errors.append("audit.query is not present in Markdown")
     final_markdown = str(audit.get("final_markdown", "")).strip()
     if final_markdown and Path(final_markdown).resolve() != markdown_path.resolve():
         errors.append("audit.final_markdown does not match Markdown path")
 
+    loose_paper_count = len(PAPER_ENTRY_RE.findall(text))
     md_papers = parse_markdown_papers(text)
+    if loose_paper_count != len(md_papers):
+        errors.append("every Markdown paper must use linked **[title](https://...)** format")
     md_by_index = {item["index"]: item for item in md_papers}
     kept = [item for item in papers if isinstance(item, dict) and item.get("keep") is True]
     if len(kept) != len(md_papers):

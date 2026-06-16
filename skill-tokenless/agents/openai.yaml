@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Tokenless"
+  short_description: "Shrink skills without behavior loss"
+  default_prompt: "Use $skill-tokenless with $skill-creator to keep skills lean, preserve behavior, and validate the result."

@@ -14,6 +14,7 @@ Configure the lead model and reasoning strength in the Codex session that loads 
 |---|---|
 | Bounded implementation with a clear spec; code review; browser/runtime checks | Codex worker (supervised dispatch) |
 | Exploration fan-out, codebase mapping; fresh-context verification of worker output | Fresh Codex worker or Codex subagent |
+| High-stakes decisions with multiple viable paths, hard constraints, rollback concerns, or unclear global optimum | Decision Council: proposer + red-team reviewer + constraint auditor, with optional rollback planner / ADR synthesizer |
 | High-stakes or irreversible changes | Either worker — but runtime evidence + your explicit sign-off before completion claims |
 
 ## Dispatch protocol
@@ -47,6 +48,7 @@ meight result <name>
 - exit `3` = the worker raised something — blocked, or (under the preamble) flagging a better path, a wrong assumption, or a tradeoff that needs your call. Answer *or discuss back* with `meight reply <name> --brief "..."` (same thread); it's a conversation, not just an unblock.
 - Stuck yourself? Run it the other way - `meight start consult-x --sandbox ro` with a "here's my thinking, what am I missing?" brief, then `follow` to shape direction together. The sibling of independent review: review checks a finished artifact, consult shapes the thinking. Codex is a teammate, not just a delegate.
 - One-shot `meight dispatch <name> ...` (ensure daemon → start → wait → result, in one background call) is fine for trivial, short, low-risk work — not for anything that may need observation or steering.
+- For high-stakes decisions, run a Decision Council instead of treating workers as votes: use independent roles, compare evidence and constraints, reuse an arbiter only for disputed claims, and have the lead synthesize the final ADR/decision record.
 - Worker model/reasoning by task: omit `--model` to inherit config; use `--model` for a cheaper, faster, or stronger worker; `medium` effort for routine work, `high` for tricky implementation/reviews/debugging, `xhigh` for precision verification (concurrency, critical paths).
 - Parallel workers with overlapping file scopes get separate git worktrees (`--cwd`).
 - At most ~2 `follow`/`reply` turns per thread, then reset with a fresh brief.

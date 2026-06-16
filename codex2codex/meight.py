@@ -53,6 +53,26 @@ SANDBOX_MAP = {
     "full-access": "full_access",
 }
 
+SKILL_DIR = Path(__file__).resolve().parent
+BUNDLED_PYTHON = SKILL_DIR / ".venv" / "bin" / "python"
+
+
+def maybe_reexec_with_bundled_python() -> None:
+    """Let `python3 meight.py ...` reuse the skill venv that install.sh creates."""
+    if os.environ.get("MEIGHT_NO_BUNDLED_PYTHON") == "1" or not BUNDLED_PYTHON.is_file():
+        return
+    if Path(sys.executable).resolve() == BUNDLED_PYTHON.resolve():
+        return
+    try:
+        __import__("openai_codex")
+        return
+    except Exception:
+        pass
+    os.execv(str(BUNDLED_PYTHON), [str(BUNDLED_PYTHON), str(Path(__file__).resolve()), *sys.argv[1:]])
+
+
+maybe_reexec_with_bundled_python()
+
 
 # ── Common Utilities ───────────────────────────────────────────────────────
 
@@ -1001,6 +1021,11 @@ def send_request(home: Path, req: dict, timeout: float = SOCKET_TIMEOUT_SEC) -> 
         return json.loads(buf.split(b"\n", 1)[0].decode("utf-8"))
     except socket.timeout:
         raise SystemExit(f"daemon response timed out after {timeout}s")
+    except (ConnectionRefusedError, FileNotFoundError):
+        raise SystemExit(
+            f"daemon socket is stale or not accepting connections: {sock_path} "
+            "(run `meight doctor`, then `meight recover --dry-run`)"
+        )
     finally:
         s.close()
 
@@ -1151,6 +1176,13 @@ def doctor_report(home: Path) -> dict:
         "lock_state": daemon_lock_state(home),
         "heartbeat": heartbeat,
         "heartbeat_age_sec": file_age_seconds(home / "daemon.heartbeat.json"),
+        "python_executable": sys.executable,
+        "bundled_python": str(BUNDLED_PYTHON),
+        "bundled_python_exists": BUNDLED_PYTHON.is_file(),
+        "using_bundled_python": (
+            Path(sys.executable).resolve() == BUNDLED_PYTHON.resolve()
+            if BUNDLED_PYTHON.is_file() else False
+        ),
         "codex_cli_found": shutil.which("codex") is not None,
         "openai_codex_import": sdk_import,
         "openai_codex_error": sdk_error,
@@ -1170,6 +1202,10 @@ def print_doctor_report(report: dict) -> None:
     print(f"pid_alive: {report['pid_alive']}")
     print(f"lock_state: {report['lock_state']}")
     print(f"heartbeat_age_sec: {report['heartbeat_age_sec']}")
+    print(f"python_executable: {report['python_executable']}")
+    print(f"bundled_python: {report['bundled_python']}")
+    print(f"bundled_python_exists: {report['bundled_python_exists']}")
+    print(f"using_bundled_python: {report['using_bundled_python']}")
     print(f"codex_cli_found: {report['codex_cli_found']}")
     print(f"openai_codex_import: {report['openai_codex_import']}")
     if report.get("openai_codex_error"):

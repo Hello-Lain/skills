@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan Grill"
-  short_description: "Generate localized production plans."
-  default_prompt: "Use $plan-grill to generate or improve a production-grade plan under a task-specific .plan-grill directory, in the user's language, with concrete user-input questions, subagent review, and no implementation execution."
+  short_description: "Production plan hardening"
+  default_prompt: "Use $plan-grill to harden or improve a production plan.md without executing it."
