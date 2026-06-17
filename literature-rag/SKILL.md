@@ -5,7 +5,7 @@ description: "Use when the user wants the original demo.rag.ac.cn literature-sea
 
 # Literature RAG
 
-Use `scripts/demo_chat.py`; it calls the demo chat stream with `effort=thorough` by default.
+Use `scripts/demo_chat.py`; it calls the demo chat stream with `effort=thorough` by default. Final Markdown and audit JSON must include handoff data.
 
 ## Auth
 
@@ -22,7 +22,7 @@ Use `scripts/demo_chat.py`; it calls the demo chat stream with `effort=thorough`
 - After completion, run `scripts/validate_final.py --workdir "$PWD"` and `scripts/audit_final.py --workdir "$PWD"` and read only their JSON reports plus the final Markdown.
 - Accept only if validation passes and the final Markdown meets the checklist in `references/final_contract.md`.
 - If needed, send one correction request to the same subagent and wait again.
-- Report only the final Markdown path, retry count or gate status, and residual limitations.
+- Report only the final Markdown path, audit JSON path, retry count or gate status, handoff next action, and residual limitations.
 
 ## Subagent
 
@@ -32,7 +32,7 @@ Use `scripts/demo_chat.py`; it calls the demo chat stream with `effort=thorough`
 - Call `scripts/demo_chat.py`, then `scripts/assess_response.py`; retry only when quality fails.
 - Only after the raw answer passes, run `scripts/clean_literature.py`.
 - Verify every selected paper from original sources before final Markdown.
-- Save exactly one final Markdown and one same-prefix `.audit.json`, register both, then run validate/audit.
+- Save exactly one final Markdown and one same-prefix `.audit.json`, both with handoff data, register both, then run validate/audit.
 - Keep the user's working directory free of stale literature-rag outputs except the final pair.
 
 ## Token Extraction

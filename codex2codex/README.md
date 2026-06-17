@@ -69,57 +69,89 @@ If `meight` is not on `PATH`, invoke the bundled script directly from this direc
 python3 ./meight.py --help
 ```
 
-For substantial work, use supervised dispatch (from any git repo — state is isolated per repo under `.meight/`). `start` expects the per-repo daemon to be running; if it is not, start it once separately with `meight daemon`.
-When debugging or hardening daemon issues, prefer an explicit temporary `MEIGHT_HOME` and foreground daemon.
+For substantial work, use supervised dispatch. The Codex skill uses a fresh `MEIGHT_HOME` per request so old workers never bleed into a new run. Bare CLI use without `MEIGHT_HOME` still falls back to per-repo `.meight/`.
 
 ```bash
-meight start impl-1 --brief-file - --cwd ~/my-repo <<'EOF'
+RUN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")"
+```
+
+Reuse that same path for every command in the request:
+
+```bash
+MEIGHT_HOME="$RUN_HOME" meight start impl-1 --brief-file - --cwd ~/my-repo <<'EOF'
 Implement X in src/foo.py. Existing pattern: see src/bar.py:42.
 Verify with: pytest tests/test_foo.py. Report changed files + test output.
 EOF
 
-meight wait impl-1 --timeout 300
+MEIGHT_HOME="$RUN_HOME" meight wait impl-1 --timeout 300
 # exit 0=completed · 2=failed/interrupted · 3=worker asked a question · 4=daemon dead · 1=checkpoint timeout
 ```
+
+After reading terminal results, stop the isolated daemon and remove its temp state:
+
+```bash
+MEIGHT_HOME="$RUN_HOME" meight shutdown || true
+rm -rf -- "$RUN_HOME"
+```
+
+When debugging or hardening daemon issues, keep the temp `MEIGHT_HOME` and run a foreground daemon.
 
 On exit `1`, the worker is still running. Inspect once, then either wait again or steer:
 
 ```bash
-meight status impl-1
-meight steer impl-1 "Stop refactoring the helper — only fix the bug."
-meight wait impl-1 --timeout 300
+MEIGHT_HOME="$RUN_HOME" meight status impl-1
+MEIGHT_HOME="$RUN_HOME" meight steer impl-1 "Stop refactoring the helper — only fix the bug."
+MEIGHT_HOME="$RUN_HOME" meight wait impl-1 --timeout 300
 ```
 
 If status has not updated for too long, use a passive stall checkpoint:
 
 ```bash
-meight wait impl-1 --timeout 300 --stall-timeout 600
+MEIGHT_HOME="$RUN_HOME" meight wait impl-1 --timeout 300 --stall-timeout 600
 ```
 
 On exit `0`, `2`, or `3`, `wait` prints a status summary. Read the full message from disk:
 
 ```bash
-meight result impl-1
+MEIGHT_HOME="$RUN_HOME" meight result impl-1
 ```
+
+New substantive worker reports should end with a handoff block so a later lead can continue without re-reading raw logs:
+
+```md
+## Handoff Capsule
+
+- Goal:
+- Current state:
+- Authoritative artifacts:
+- Decisions:
+- Verification:
+- Remaining risks:
+- Next action:
+- Suggested skills:
+- Redactions / omitted raw data:
+```
+
+Validate new result artifacts with `python scripts/validate_result_contract.py "$RUN_HOME/workers/<name>/result.md"`. Use `--allow-missing-handoff` only when inspecting old results.
 
 The worker asked a question (exit 3)? The question is also visible in `meight status impl-1` as `needs_input_detail`. Answer in one shot, same thread:
 
 ```bash
-meight reply impl-1 --brief "Use config-a.json, and keep the legacy field."
+MEIGHT_HOME="$RUN_HOME" meight reply impl-1 --brief "Use config-a.json, and keep the legacy field."
 ```
 
 You're the one who's stuck? Run the loop the other way — dispatch a read-only worker to think a problem through *with* you, then `follow` to refine the direction together:
 
 ```bash
-meight start consult-1 --sandbox ro --brief "My plan is X but I'm unsure about Y. Read src/ and tell me what I'm missing — and a better approach if you see one."
-meight wait consult-1 --timeout 300
-meight follow consult-1 --brief "Good point on Y. If we go that way, how does Z hold up?"
+MEIGHT_HOME="$RUN_HOME" meight start consult-1 --sandbox ro --brief "My plan is X but I'm unsure about Y. Read src/ and tell me what I'm missing — and a better approach if you see one."
+MEIGHT_HOME="$RUN_HOME" meight wait consult-1 --timeout 300
+MEIGHT_HOME="$RUN_HOME" meight follow consult-1 --brief "Good point on Y. If we go that way, how does Z hold up?"
 ```
 
 For trivial, short, low-risk tasks, one-shot dispatch is still available:
 
 ```bash
-meight dispatch tiny-1 --brief "Check whether README mentions LICENSE." --sandbox ro
+MEIGHT_HOME="$RUN_HOME" meight dispatch tiny-1 --brief "Check whether README mentions LICENSE." --sandbox ro
 ```
 
 ## Using it from Codex
@@ -127,16 +159,16 @@ meight dispatch tiny-1 --brief "Check whether README mentions LICENSE." --sandbo
 This is the intended consumer. For real work, run `wait --timeout` as the **background Bash call**. Codex wakes at the checkpoint, reads one `status`, and either waits again or sends a targeted `steer`:
 
 ```
-Bash(command: "meight start review-1 --sandbox ro --effort high --brief-file - <<'EOF' ... EOF")
-Bash(command: "meight wait review-1 --timeout 300",
+Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight start review-1 --sandbox ro --effort high --brief-file - <<'EOF' ... EOF")
+Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight wait review-1 --timeout 300",
      run_in_background: true)
 -> ... Codex keeps working ...
 → <task-notification> exit 1 checkpoint timeout
-→ meight status review-1
-→ healthy: wait again · drifting: meight steer review-1 "..."
+→ MEIGHT_HOME="$RUN_HOME" meight status review-1
+→ healthy: wait again · drifting: MEIGHT_HOME="$RUN_HOME" meight steer review-1 "..."
 ```
 
-When the worker reaches a terminal state, the notification is `0` (completed), `2` (failed/interrupted), or `3` (worker question). Use `meight result review-1` for the full report. On `0`, verify the work before accepting it. On `3`, answer with `meight reply`.
+When the worker reaches a terminal state, the notification is `0` (completed), `2` (failed/interrupted), or `3` (worker question). Use `MEIGHT_HOME="$RUN_HOME" meight result review-1` for the full report. On `0`, verify the work before accepting it. On `3`, answer with `MEIGHT_HOME="$RUN_HOME" meight reply`.
 
 Every brief is automatically prefixed with a harness preamble that (a) forbids `git commit`/`push` — git stays owned by the orchestrator — and (b) frames the worker as a teammate: rather than guessing or silently complying, end with a `QUESTION:` paragraph when blocked *or* to flag a better approach, a wrong assumption, or a decision that could shift direction. Disable with `--no-preamble`.
 
@@ -172,7 +204,7 @@ Small decisions everywhere assume the user is an LLM agent, not a person at a te
 
 Options: `--cwd` (worker workdir - use separate git worktrees for overlapping file scopes), `--sandbox ws|ro|full` (default `ws` = workspace-write; reviews run `ro`), `--model MODEL` (worker model; omit to inherit `~/.codex/config.toml`), `--effort low|medium|high|xhigh` (worker reasoning effort; default `medium`), `--fast`/`--no-fast` (per-worker toggle for Codex Fast/priority tier; omit to inherit config), `--timeout`.
 
-Worker state lives in `<repo>/.meight/workers/<name>/`: `brief.md`, `status.json` (state machine + tokens + files changed + last activity), `events.log` (one line per meaningful event), `result.md` (final message per turn). Add `.meight/` to your global gitignore.
+Worker state lives in `$MEIGHT_HOME/workers/<name>/`: `brief.md`, `status.json` (state machine + tokens + files changed + last activity), `events.log` (one line per meaningful event), `result.md` (final message per turn). Without `MEIGHT_HOME`, the CLI uses `<repo>/.meight/`; add `.meight/` to your global gitignore.
 
 ## Good to know
 

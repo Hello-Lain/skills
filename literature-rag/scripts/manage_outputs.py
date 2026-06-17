@@ -18,6 +18,7 @@ OWNED_MARKERS = (
     "Why useful / transferable insight:",
     "Formula evidence:",
     "Verification source:",
+    "## Handoff",
     "# Candidate Literature From demo.rag.ac.cn",
 )
 

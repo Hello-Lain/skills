@@ -45,6 +45,18 @@ def write_valid_markdown(path: Path) -> None:
 ## Excluded candidates
 
 - None.
+
+## Handoff
+
+- Goal: Produce a verified literature summary.
+- Current state: One validated paper selected.
+- Authoritative artifacts: final.md, final.audit.json.
+- Decisions: Keep only the verified paper.
+- Verification: validate_final.py and audit_final.py pass.
+- Remaining risks: None.
+- Next action: Use this Markdown and audit pair as the continuation artifact.
+- Suggested skills: literature-rag, conductor.
+- Redactions / omitted raw data: Raw demo transcript and SSE events stay in tmp.
 """,
         encoding="utf-8",
     )
@@ -84,6 +96,17 @@ def write_valid_audit(path: Path, markdown: Path, *, source_type: str = "derived
                 "selection_policy": "at_most_5_relevance_constraints_quality_reference_value",
                 "papers": [paper],
                 "excluded_candidates": [],
+                "handoff": {
+                    "goal": "Produce a verified literature summary.",
+                    "current_state": "One validated paper selected.",
+                    "authoritative_artifacts": [str(markdown), str(markdown.with_suffix(".audit.json"))],
+                    "decisions": ["Keep only the verified paper."],
+                    "verification": ["validate_final.py", "audit_final.py"],
+                    "remaining_risks": ["None."],
+                    "next_action": "Use this Markdown and audit pair as the continuation artifact.",
+                    "suggested_skills": ["literature-rag", "conductor"],
+                    "redactions_or_omitted_raw_data": ["Raw demo transcript and SSE events stay in tmp."],
+                },
             },
             ensure_ascii=False,
             indent=2,
@@ -212,39 +235,7 @@ class DemoChatTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             final = root / "final.md"
-            final.write_text(
-                """# VCD Defect Verified Literature
-
-**Query:** q
-**Quality gate:** initial raw answer passed after 1 retry.
-**Selection rule:** at most 5 papers.
-
-1. **[Paper A](https://example.com/a)**
-   - Venue/year: CVPR 2024
-   - Core mechanism: 方法说明。
-   - Core contribution: 贡献说明。
-   - Why useful / transferable insight: 这个方法给用户的可迁移启发是把核心信号抽成可替换模块，能直接启发后续实验设计。
-   - Pseudocode and formula design:
-     ```text
-     input x
-     encode evidence e
-     compute signal s
-     apply method-specific update u
-     rank candidate outputs
-     return best output
-     ```
-     Formula:
-     $$ c_t = \\cos(e_t, v_t) - \\lambda \\max(0, h_{lang} - h_{vis}) $$
-     Formula source: derived formula
-     Formula evidence: derived from Method section and Algorithm 1 description on the verified paper page.
-   - Verification source: https://example.com/a
-
-## Excluded candidates
-
-- None.
-""",
-                encoding="utf-8",
-            )
+            write_valid_markdown(final)
             audit = root / "final.audit.json"
             write_valid_audit(audit, final)
             register(tmp, [str(final), str(audit)])
@@ -257,6 +248,25 @@ class DemoChatTests(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
             self.assertTrue(json.loads(proc.stdout)["passed"])
+
+    def test_validate_final_rejects_missing_handoff(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            final.write_text(final.read_text(encoding="utf-8").split("\n## Handoff\n", 1)[0], encoding="utf-8")
+            write_valid_audit(audit, final)
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("validate_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("Handoff", proc.stdout)
 
     def test_validate_final_rejects_missing_quality_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -429,6 +439,27 @@ class DemoChatTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
             self.assertTrue(json.loads(proc.stdout)["passed"])
 
+    def test_audit_final_rejects_missing_handoff(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            final = root / "final.md"
+            audit = root / "final.audit.json"
+            write_valid_markdown(final)
+            write_valid_audit(audit, final)
+            data = json.loads(audit.read_text(encoding="utf-8"))
+            data.pop("handoff")
+            audit.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            register(tmp, [str(final), str(audit)])
+            script = Path(__file__).with_name("audit_final.py")
+            proc = subprocess.run(
+                [sys.executable, str(script), "--workdir", tmp],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("audit.handoff", proc.stdout)
+
     def test_validate_final_rejects_missing_audit_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -559,7 +590,25 @@ class DemoChatTests(unittest.TestCase):
             final = root / "final.md"
             audit = root / "final.audit.json"
             final.write_text(
-                "# No Match\n\n**Query:** q\n**Quality gate:** passed after retry.\n\n无匹配文献。\n",
+                """# No Match
+
+**Query:** q
+**Quality gate:** passed after retry.
+
+无匹配文献。
+
+## Handoff
+
+- Goal: Produce a verified literature summary.
+- Current state: No kept papers.
+- Authoritative artifacts: final.md, final.audit.json.
+- Decisions: Drop all candidates.
+- Verification: audit_final.py pending expected rejection.
+- Remaining risks: No excluded candidate details.
+- Next action: Add concrete exclusions.
+- Suggested skills: literature-rag.
+- Redactions / omitted raw data: Raw demo transcript and SSE events stay in tmp.
+""",
                 encoding="utf-8",
             )
             audit.write_text(
@@ -570,6 +619,17 @@ class DemoChatTests(unittest.TestCase):
                         "selection_policy": "at_most_5_relevance_constraints_quality_reference_value",
                         "papers": [],
                         "excluded_candidates": [],
+                        "handoff": {
+                            "goal": "Produce a verified literature summary.",
+                            "current_state": "No kept papers.",
+                            "authoritative_artifacts": [str(final), str(audit)],
+                            "decisions": ["Drop all candidates."],
+                            "verification": ["audit_final.py pending expected rejection."],
+                            "remaining_risks": ["No excluded candidate details."],
+                            "next_action": "Add concrete exclusions.",
+                            "suggested_skills": ["literature-rag"],
+                            "redactions_or_omitted_raw_data": ["Raw demo transcript and SSE events stay in tmp."],
+                        },
                     },
                     ensure_ascii=False,
                     indent=2,

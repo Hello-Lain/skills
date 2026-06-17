@@ -37,6 +37,7 @@ Required:
 - `paper formula` only if directly present in the paper; cite Eq./Algorithm/Section/page/source URL.
 - `derived formula` if abstracted from verified method text; cite exact basis.
 - `## Excluded candidates` section with concrete reasons.
+- `## Handoff` section with goal, current state, authoritative artifacts, decisions, verification, remaining risks, next action, suggested skills, and redactions / omitted raw data.
 
 ## Audit JSON
 
@@ -79,7 +80,18 @@ Minimum schema:
       "url": "https://...",
       "reason": "concrete exclusion reason"
     }
-  ]
+  ],
+  "handoff": {
+    "goal": "",
+    "current_state": "",
+    "authoritative_artifacts": [],
+    "decisions": [],
+    "verification": [],
+    "remaining_risks": [],
+    "next_action": "",
+    "suggested_skills": [],
+    "redactions_or_omitted_raw_data": []
+  }
 }
 ```
 

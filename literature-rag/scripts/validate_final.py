@@ -43,6 +43,17 @@ GENERIC_FORMULA_RE = re.compile(
     r"|^\s*(?:score|loss|objective|signal)\s*=\s*[A-Za-z_]\w*\s*\([^)]*\)\s*$",
     re.IGNORECASE,
 )
+HANDOFF_LABELS = (
+    "Goal",
+    "Current state",
+    "Authoritative artifacts",
+    "Decisions",
+    "Verification",
+    "Remaining risks",
+    "Next action",
+    "Suggested skills",
+    "Redactions / omitted raw data",
+)
 
 def paper_blocks(text: str) -> list[tuple[int, str]]:
     matches = list(PAPER_HEADING_RE.finditer(text))
@@ -109,7 +120,16 @@ def validate_paper_block(index: int, block: str) -> list[str]:
 def visible_owned_markdown(workdir: str) -> list[Path]:
     return [path for path in owned_markdown_files(workdir) if path.name != "SKILL.md"]
 
-def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str]]:
+def validate_handoff(text: str) -> list[str]:
+    errors: list[str] = []
+    if not re.search(r"(?m)^##\s+Handoff\s*$", text):
+        return ["missing ## Handoff section"]
+    for label in HANDOFF_LABELS:
+        if not re.search(rf"(?mi)^\s*-\s*{re.escape(label)}\s*:", text):
+            errors.append(f"handoff missing label: {label}")
+    return errors
+
+def validate_markdown(path: Path, allow_missing_handoff: bool = False) -> tuple[list[str], dict[str, int | bool | str]]:
     errors: list[str] = []
     text = path.read_text(encoding="utf-8", errors="replace")
     paper_count = len(PAPER_RE.findall(text))
@@ -127,6 +147,8 @@ def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str
         errors.append("every numbered paper entry must use **[title](https://...)** link format")
     if "Excluded candidates" not in text:
         errors.append("missing Excluded candidates summary")
+    if not allow_missing_handoff:
+        errors.extend(validate_handoff(text))
     for section, count in counts.items():
         if paper_count and count < paper_count:
             errors.append(f"section count too low: {section} ({count} < {paper_count})")
@@ -141,6 +163,7 @@ def validate_markdown(path: Path) -> tuple[list[str], dict[str, int | bool | str
         "paper_blocks": len(blocks),
         "has_query": "**Query:**" in text,
         "has_quality_note": bool(QUALITY_RE.search(text)),
+        "has_handoff": bool(re.search(r"(?m)^##\s+Handoff\s*$", text)),
     }
     details.update({section: count for section, count in counts.items()})
     return errors, details
@@ -151,6 +174,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--file", help="Specific final Markdown path. Defaults to registered manifest file.")
     parser.add_argument("--strict-owned-md", action="store_true", default=True)
     parser.add_argument("--no-strict-owned-md", action="store_false", dest="strict_owned_md")
+    parser.add_argument("--allow-missing-handoff", action="store_true", help="Compatibility mode for old outputs.")
     return parser.parse_args()
 
 def main() -> int:
@@ -187,7 +211,7 @@ def main() -> int:
 
     details: dict[str, int | bool | str] = {}
     if selected and selected.exists() and selected.suffix.lower() == ".md":
-        md_errors, details = validate_markdown(selected)
+        md_errors, details = validate_markdown(selected, allow_missing_handoff=args.allow_missing_handoff)
         errors.extend(md_errors)
 
     report = {

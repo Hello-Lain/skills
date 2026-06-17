@@ -36,6 +36,18 @@ Summarize the completed branch outcome in 3-6 sentences.
 
 - ...
 
+## Handoff Capsule
+
+- Goal:
+- Current state:
+- Authoritative artifacts:
+- Decisions:
+- Verification:
+- Remaining risks:
+- Next action:
+- Suggested skills:
+- Redactions / omitted raw data:
+
 ## Suggested Merge Note
 
-Write 150 words or fewer. This is the default and normally only text that returns to the master session. Full report or raw history returns only for audit/debug or another hard gate.
+Write 150 words or fewer. This is the default and normally only text that returns to the master session. Keep the full Handoff Capsule in this report for continuation or audit. Full report or raw history returns only for audit/debug or another hard gate.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Literature RAG"
-  short_description: "Verified demo.rag.ac.cn paper search"
-  default_prompt: "Use $literature-rag to run a subagent-led DeepXiv search and return the verified Markdown path."
+  short_description: "Verified paper search with handoff"
+  default_prompt: "Use $literature-rag to run a subagent-led DeepXiv search and return verified Markdown, audit JSON, and handoff status."

@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan Grill"
-  short_description: "Production plan hardening"
-  default_prompt: "Use $plan-grill to harden or improve a production plan.md without executing it."
+  short_description: "Validated plans with execution handoff"
+  default_prompt: "Use $plan-grill to harden a production plan.md, validate the contract, and include an Execution Handoff without executing it."

@@ -32,6 +32,17 @@ REQUIRED_BOOL_TRUE = [
     "mechanism_verified",
     "contribution_verified",
 ]
+HANDOFF_REQUIRED_FIELDS = {
+    "goal": str,
+    "current_state": str,
+    "authoritative_artifacts": list,
+    "decisions": list,
+    "verification": list,
+    "remaining_risks": list,
+    "next_action": str,
+    "suggested_skills": list,
+    "redactions_or_omitted_raw_data": list,
+}
 
 def load_json(path: Path) -> Any:
     with path.open(encoding="utf-8") as handle:
@@ -127,7 +138,23 @@ def validate_paper(item: dict[str, Any], md_by_index: dict[int, dict[str, Any]])
             errors.append(f"{prefix}: derived formula missing derived_from")
     return errors
 
-def validate(markdown_path: Path, audit_path: Path) -> dict[str, Any]:
+def validate_handoff(audit: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    handoff = audit.get("handoff")
+    if not isinstance(handoff, dict):
+        return ["audit.handoff must be an object"]
+    for field, expected_type in HANDOFF_REQUIRED_FIELDS.items():
+        value = handoff.get(field)
+        if not isinstance(value, expected_type):
+            errors.append(f"audit.handoff.{field} must be {expected_type.__name__}")
+            continue
+        if expected_type is str and not value.strip():
+            errors.append(f"audit.handoff.{field} is required")
+        elif expected_type is list and not value:
+            errors.append(f"audit.handoff.{field} must be non-empty")
+    return errors
+
+def validate(markdown_path: Path, audit_path: Path, allow_missing_handoff: bool = False) -> dict[str, Any]:
     errors: list[str] = []
     if not markdown_path.exists():
         errors.append(f"Markdown missing: {markdown_path}")
@@ -156,6 +183,8 @@ def validate(markdown_path: Path, audit_path: Path) -> dict[str, Any]:
     for field in ["query", "final_markdown", "selection_policy"]:
         if not str(audit.get(field, "")).strip():
             errors.append(f"audit.{field} is required")
+    if not allow_missing_handoff:
+        errors.extend(validate_handoff(audit))
 
     if str(audit.get("query", "")).strip() and str(audit.get("query", "")).strip() not in text:
         errors.append("audit.query is not present in Markdown")
@@ -209,6 +238,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workdir", default=os.getcwd())
     parser.add_argument("--markdown")
     parser.add_argument("--audit")
+    parser.add_argument("--allow-missing-handoff", action="store_true", help="Compatibility mode for old outputs.")
     return parser.parse_args()
 
 def main() -> int:
@@ -226,7 +256,7 @@ def main() -> int:
         markdown, audit, manifest_errors, manifest_files = manifest_pair(args.workdir)
 
     if markdown and audit:
-        report = validate(markdown, audit)
+        report = validate(markdown, audit, allow_missing_handoff=args.allow_missing_handoff)
         report["manifest_files"] = [str(path) for path in manifest_files]
         report["errors"] = manifest_errors + report["errors"]
         report["passed"] = not report["errors"]

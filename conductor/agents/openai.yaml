@@ -1,7 +1,7 @@
 interface:
   display_name: "Conductor"
-  short_description: "Autopilot context firewall for clean master sessions"
-  default_prompt: "Use $conductor as an Autopilot context firewall: handle soft gates automatically, route specialized work outward, and ask the user only at hard gates."
+  short_description: "Context firewall with handoff capsules"
+  default_prompt: "Use $conductor as an Autopilot context firewall: route specialized work outward, require Handoff Capsules, and ask only at hard gates."
 
 policy:
   allow_implicit_invocation: true

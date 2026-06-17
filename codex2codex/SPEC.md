@@ -70,13 +70,19 @@ codex.thread_resume(thread_id)        # exists; introspect signature in code if 
 
 ## State Directory
 
-If `$MEIGHT_HOME` is set, use it. Otherwise use
+The `codex2codex` skill must create a fresh temporary `$MEIGHT_HOME` for every
+top-level request and reuse it for all commands in that request. This prevents
+old worker status, daemon sockets, and result files from affecting a new run.
+After terminal results are read, the orchestrator should shut down the isolated
+daemon and remove the temp directory.
+
+At the CLI level, if `$MEIGHT_HOME` is set, use it. Otherwise use
 `<repo root>/.meight/`, where `<repo root>` is resolved from the daemon
 startup cwd through `git rev-parse --show-toplevel`; if that fails, use
 `<cwd>/.meight/`.
 
 ```text
-.meight/
+$MEIGHT_HOME/
   meight.sock          # Unix domain socket
   daemon.pid
   daemon.log         # daemon lifecycle log only; do not dump raw events
@@ -87,7 +93,9 @@ startup cwd through `git rev-parse --show-toplevel`; if that fails, use
     result.md        # final agent message at turn completion
 ```
 
-The repository `.gitignore` should ignore `.meight/` and `.venv/`.
+The repository `.gitignore` should ignore `.meight/`, `.meight-runs/`, and
+`.venv/` for manual/debug runs; default skill runs use temp state outside the
+repo unless the lead chooses a repo-local temp path.
 
 ### status.json Schema
 
@@ -178,6 +186,27 @@ promotes the worker to:
 
 `wait` returns exit `3` for this state. `follow` and `reply` are allowed to
 continue from this state on the same Codex thread.
+
+## Result Handoff Contract
+
+Every new substantive worker `result.md` should end with:
+
+```md
+## Handoff Capsule
+
+- Goal:
+- Current state:
+- Authoritative artifacts:
+- Decisions:
+- Verification:
+- Remaining risks:
+- Next action:
+- Suggested skills:
+- Redactions / omitted raw data:
+```
+
+`scripts/validate_result_contract.py` enforces this by default. Pass
+`--allow-missing-handoff` only for old artifacts or compatibility diagnosis.
 
 ## Daemon Internals
 

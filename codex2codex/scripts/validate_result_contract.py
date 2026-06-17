@@ -31,6 +31,19 @@ PROGRESS_CUES = (
 )
 
 HEADING_RE = re.compile(r"(?m)^#{1,6}\s+\S+")
+HEADING_TEXT_RE = re.compile(r"(?m)^#{1,6}\s+(.+?)\s*$")
+HANDOFF_HEADING_RE = re.compile(r"(?mi)^##\s+Handoff Capsule\s*$")
+HANDOFF_LABELS = (
+    "Goal",
+    "Current state",
+    "Authoritative artifacts",
+    "Decisions",
+    "Verification",
+    "Remaining risks",
+    "Next action",
+    "Suggested skills",
+    "Redactions / omitted raw data",
+)
 
 
 def _looks_progress_only(text: str, required_markers: list[str], window_chars: int) -> bool:
@@ -60,6 +73,20 @@ def _looks_progress_only(text: str, required_markers: list[str], window_chars: i
 
     return False
 
+def _validate_handoff(text: str) -> list[str]:
+    if not HANDOFF_HEADING_RE.search(text):
+        return ["missing ## Handoff Capsule"]
+    missing = []
+    for label in HANDOFF_LABELS:
+        pattern = rf"(?mi)^\s*-\s*{re.escape(label)}\s*:"
+        if not re.search(pattern, text):
+            missing.append(label)
+    errors = [f"handoff missing label: {label}" for label in missing]
+    headings = HEADING_TEXT_RE.findall(text)
+    if headings and headings[-1] != "Handoff Capsule":
+        errors.append("Handoff Capsule must be the final heading")
+    return errors
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a worker result against a simple text contract.")
@@ -83,6 +110,11 @@ def main() -> int:
         type=int,
         default=0,
         help="Require at least this many Markdown headings.",
+    )
+    parser.add_argument(
+        "--allow-missing-handoff",
+        action="store_true",
+        help="Compatibility mode for old worker results that predate Handoff Capsule.",
     )
     args = parser.parse_args()
 
@@ -114,6 +146,12 @@ def main() -> int:
     if args.reject_progress_only and _looks_progress_only(text, args.must_contain, args.progress_window_chars):
         print("INVALID: result looks like a progress/status note, not the requested artifact", file=sys.stderr)
         return 1
+
+    if not args.allow_missing_handoff:
+        handoff_errors = _validate_handoff(text)
+        if handoff_errors:
+            print("INVALID: " + "; ".join(handoff_errors), file=sys.stderr)
+            return 1
 
     forbidden = [needle for needle in args.must_not_contain if needle in text]
     if forbidden:

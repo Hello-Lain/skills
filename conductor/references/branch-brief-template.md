@@ -92,4 +92,5 @@ When the branch appears done, produce a completion report automatically in Autop
 - proposed global decisions
 - validation or checks
 - risks
+- handoff capsule with goal, current state, authoritative artifacts, decisions, verification, remaining risks, next action, suggested skills, and redactions / omitted raw data
 - suggested merge note

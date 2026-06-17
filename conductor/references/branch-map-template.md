@@ -77,7 +77,7 @@ flowchart TD
 
 ## Default Merge Budget
 
-- Master receives `Suggested Merge Note` only unless audit/debug or another hard gate requires more.
+- Master receives `Suggested Merge Note` only unless audit/debug or another hard gate requires more. Full `Handoff Capsule` stays in the completion report for continuation, audit, or stale-branch refresh.
 
 ## Next Recommended Step
 
