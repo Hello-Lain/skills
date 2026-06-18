@@ -1,0 +1,7 @@
+interface:
+  display_name: "Ponytail"
+  short_description: "Lazy senior dev mode — YAGNI, stdlib, native, one-line, minimal"
+  default_prompt: "Use $ponytail to enforce the simplest solution: YAGNI → stdlib → native → one line → minimum. Intensity via ~/.config/ponytail/config.json or PONYTAIL_DEFAULT_MODE env."
+
+policy:
+  allow_implicit_invocation: true

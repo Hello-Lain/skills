@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan Grill"
-  short_description: "Validated plans with execution handoff"
-  default_prompt: "Use $plan-grill to harden a production plan.md, validate the contract, and include an Execution Handoff without executing it."
+  short_description: "Evidence-grounded plans with handoff"
+  default_prompt: "Use $plan-grill to harden a production plan.md with mandatory planner/grill/synthesizer subagents, validated artifacts, domain gates, and Execution Handoff without executing it."

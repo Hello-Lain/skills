@@ -8,16 +8,19 @@ Use this for every new or hardened `.plan-grill/<task-slug>/plan.md`.
 - `## Goal`
 - `## Non-Goals`
 - `## Evidence Inspected`
+- `## Domain Language Check`
 - `## Current Context`
 - `## Assumptions`
 - `## User Inputs Needed`
 - `## Proposed Approach`
+- `## Scenario Probes`
 - `## Step-by-Step Plan`
 - `## Files / Components Likely Affected`
 - `## Owners / Responsibilities`
 - `## Validation Plan`
 - `## Rollout Plan`
 - `## Monitoring / Observability`
+- `## Documentation / ADR Updates`
 - `## Rollback / Recovery Plan`
 - `## Abort Criteria`
 - `## Risks`
@@ -30,6 +33,12 @@ If iterating an existing plan, also include issues found, previous-plan diff, an
 ## Quality Gates
 
 - User-input questions must be concrete, answerable, and include recommended defaults when possible.
+- Ask user only for questions that cannot be answered from repo code/docs; cite what was inspected.
+- Use canonical terms from `CONTEXT.md`, `CONTEXT-MAP.md`, ADRs, and code; flag conflicts or fuzzy terms.
+- Include scenario probes for edge cases, counterexamples, blast radius, ownership, validation, and rollback.
+- Put doc/ADR changes in `Documentation / ADR Updates`; do not write docs unless explicitly requested.
+- Include `ADR: Needed|Not needed|Existing`; recommend a new ADR only when the decision is hard to reverse, future readers would be surprised, and there is a real trade-off.
+- Generated plans must have validated sibling artifacts at `.plan-grill/<task-slug>/subagents/planner.md`, `grill.md`, and `synthesizer.md`; `plan.md` must match the synthesizer artifact body exactly.
 - Include `Risk level: Low|Medium|High|Critical`.
 - Include `Confidence: Low|Medium|High`.
 - Prefer boring, observable, reversible plans.

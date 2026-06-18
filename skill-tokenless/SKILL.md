@@ -54,6 +54,7 @@ When `$skill-creator` creates or updates a skill, run this skill as a final desi
    - `agents/openai.yaml`: short `short_description` and one-sentence `default_prompt` mentioning `$skill-name`.
 5. Validate and compare:
    - run `.system/skill-creator/scripts/quick_validate.py <skill-dir>`
+   - for established dotted canonical IDs, run `.system/skill-creator/scripts/quick_validate.py --allow-dotted-name <skill-dir>`
    - compare line/word counts before/after
    - grep key gates from the new files
    - inspect diff for accidental behavior loss
@@ -87,12 +88,15 @@ Before finishing, confirm the new skill still states:
 
 ```bash
 python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
+# Use only for established external runtime IDs, e.g. Harness dotted canonical skills:
+python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py --allow-dotted-name <skill-dir>
 wc -l <skill-dir>/SKILL.md <skill-dir>/agents/openai.yaml
 wc -w <skill-dir>/SKILL.md
 git diff --stat -- <skill-dir>
 git diff -- <skill-dir>/SKILL.md <skill-dir>/agents/openai.yaml
 ```
 
+Default validator mode remains required for normal hyphen-case skills.
 Use `rg` to verify key terms/gates survived.
 
 ## Hard Stops
