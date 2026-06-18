@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deprecation Migration"
+  short_description: "Retire old systems safely"
+  default_prompt: "Use $deprecation-and-migration to plan a safe migration or deprecation path."
+policy:
+  allow_implicit_invocation: true

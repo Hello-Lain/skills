@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apply Patch"
+  short_description: "Precise apply_patch editing workflow"
+  default_prompt: "Use $apply-patch to make a precise file edit with a minimal, verifiable patch."

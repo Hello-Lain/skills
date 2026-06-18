@@ -141,8 +141,8 @@ def _mode_for_savings(value: int) -> str:
 
 
 def resolve_mode() -> tuple[str, int]:
-    mode = "full"
-    savings = 50
+    mode = "ultra"
+    savings = 75
     path = _config_file()
     if path.exists():
         try:
@@ -166,7 +166,7 @@ def resolve_mode() -> tuple[str, int]:
         except ValueError:
             pass
     if mode not in MODES:
-        mode = "full"
+        mode = "ultra"
     return mode, savings
 
 

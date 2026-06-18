@@ -1,0 +1,6 @@
+interface:
+  display_name: "Test Driven Development"
+  short_description: "Use tests as proof for changes"
+  default_prompt: "Use $test-driven-development to drive a bug fix or behavior change with tests first."
+policy:
+  allow_implicit_invocation: true

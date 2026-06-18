@@ -6,9 +6,9 @@ import re
 import sys
 from pathlib import Path
 
-START = "PLAN_GRILL_ARTIFACT_V1"
-END = "PLAN_GRILL_ARTIFACT_END"
-PHASES = {"planner", "grill", "synthesizer"}
+START = "SPEC2PLAN_ARTIFACT_V1"
+END = "SPEC2PLAN_ARTIFACT_END"
+PHASES = {"planner", "reviewer", "synthesizer"}
 STATUSES = {"complete", "needs_revision", "unsafe"}
 PROGRESS_ONLY = (
     "i will",
@@ -52,7 +52,7 @@ def parse(text: str) -> tuple[str, str, str] | str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a plan-grill subagent artifact envelope.")
+    parser = argparse.ArgumentParser(description="Validate a spec2plan subagent artifact envelope.")
     parser.add_argument("phase", choices=sorted(PHASES))
     parser.add_argument("artifact_path", type=Path)
     args = parser.parse_args()
@@ -90,17 +90,17 @@ def main() -> int:
         if not re.search(r"(?m)^##\s+Goal\s*$", artifact):
             return invalid("plan artifact missing ## Goal")
 
-    if phase == "grill":
+    if phase == "reviewer":
         bullet_count = len(re.findall(r"(?m)^\s*[-*]\s+\S+", artifact))
         if bullet_count < 3:
-            return invalid("grill artifact needs at least three findings or explicit checks")
+            return invalid("reviewer artifact needs at least three findings or explicit checks")
         for label in (
             "Scenario Probes",
             "Code/doc contradictions",
             "Repo-unanswerable user questions",
         ):
             if not re.search(rf"(?mi)^\s*#+\s*{re.escape(label)}\s*$|^\s*[-*]\s*{re.escape(label)}\s*:", artifact):
-                return invalid(f"grill artifact missing {label}")
+                return invalid(f"reviewer artifact missing {label}")
 
     print("VALID")
     return 0

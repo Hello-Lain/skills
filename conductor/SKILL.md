@@ -1,6 +1,6 @@
 ---
 name: conductor
-description: "Use proactively for long, noisy, multi-turn, or multi-branch work that needs an Autopilot context firewall, clean master session, dependency-aware routing, sidecars/branches, short merge notes, Handoff Capsules, and hard-gate user decisions only. Route plan.md work to $plan-grill and explicit worker delegation to $codex2codex."
+description: "Use proactively, without waiting for the user to name it, when work becomes long, noisy, multi-turn, parallel, risky, dependency-heavy, or multi-branch and needs an Autopilot context firewall, clean master session, routing, sidecars/branches, merge notes, Handoff Capsules, or hard-gate user decisions only. Route plan.md work to $plan-grill, explicit worker delegation to $codex2codex, and real Git branch/commit/PR/release/history work to $git-workflow-and-versioning."
 ---
 
 # Conductor
@@ -25,6 +25,7 @@ Keep one master session clean. Act only as router, context firewall, and gatekee
 
 - `$plan-grill`: production `plan.md`, safer plan artifact, or plan hardening.
 - `$codex2codex`: explicit meight worker delegation, worker review, or Decision Council.
+- `$git-workflow-and-versioning`: real Git branches, worktrees, commits, PRs, tags, releases, conflict/history hygiene.
 - `$skill-tokenless`: skill shrinking/refactor/validation.
 - `$caveman`: terse style, commit messages, compact delegation formats.
 

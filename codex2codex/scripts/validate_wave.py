@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+BLOCKED_RE = re.compile(r"(?mi)^\s*(Blocked|Cannot complete|Unable to write|could not write)\b")
+SKILL_MONITOR_RE = re.compile(r"(?mi)^Skill Monitor:")
+VERDICT_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
+SALVAGED_REVIEW_RE = re.compile(r"(?mi)^Salvaged-From-Worker:\s+\S+")
+
+
+def _load_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise SystemExit(f"ERROR: cannot read {path}: {exc}") from exc
+
+
+def _worker_status(status_root: Path, name: str) -> dict:
+    path = status_root / "workers" / name / "status.json"
+    if not path.exists():
+        return {"state": "missing", "path": str(path)}
+    return _load_json(path)
+
+
+def _worker_result(status_root: Path, name: str) -> str:
+    path = status_root / "workers" / name / "result.md"
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _validate_review_artifact(validator: Path, artifact: Path) -> list[str]:
+    if not artifact.exists():
+        return [f"missing review artifact: {artifact}"]
+    proc = subprocess.run(
+        [sys.executable, str(validator), "--require-review", str(artifact)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout).strip()
+        return [f"invalid review artifact: {artifact}: {detail}"]
+    text = artifact.read_text(encoding="utf-8")
+    verdict = _review_verdict(text)
+    if verdict == "FAIL":
+        return [f"review verdict FAIL: {artifact}"]
+    return []
+
+
+def _review_verdict(text: str) -> str:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        match = VERDICT_RE.match(line)
+        if not match:
+            continue
+        if match.group(1):
+            return match.group(1).upper()
+        for next_line in lines[index + 1 :]:
+            value = next_line.strip().strip("`").rstrip(".").upper()
+            if value in {"PASS", "FAIL"}:
+                return value
+            if value:
+                break
+    return ""
+
+
+def _review_artifact_salvaged(repo_root: Path, output: str) -> bool:
+    artifact = Path(output)
+    if not artifact.is_absolute():
+        artifact = (repo_root / artifact).resolve()
+    if not artifact.exists():
+        return False
+    try:
+        return bool(SALVAGED_REVIEW_RE.search(artifact.read_text(encoding="utf-8")))
+    except OSError:
+        return False
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate a completed codex2codex wave against manifest artifacts.")
+    parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument("--meight-home", required=True, type=Path)
+    parser.add_argument(
+        "--validator",
+        type=Path,
+        default=Path(__file__).with_name("validate_result_contract.py"),
+    )
+    args = parser.parse_args()
+
+    manifest = _load_json(args.manifest)
+    spec_dir = Path(manifest["spec_dir"])
+    repo_root = spec_dir.parents[2] if len(spec_dir.parents) >= 3 and spec_dir.parent.name == "specs" else Path.cwd()
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    for worker in manifest.get("workers", []):
+        name = worker["name"]
+        status = _worker_status(args.meight_home, name)
+        state = status.get("state")
+        review_salvaged = bool(
+            worker.get("mode") == "review"
+            and worker.get("output")
+            and _review_artifact_salvaged(repo_root, worker["output"])
+        )
+        if state != "completed" and not (state == "needs_input" and review_salvaged):
+            errors.append(f"{name}: state is {state}, expected completed")
+
+        result = _worker_result(args.meight_home, name)
+        if not result.strip():
+            errors.append(f"{name}: missing result.md")
+        if BLOCKED_RE.search(result) and not (
+            review_salvaged
+        ):
+            errors.append(f"{name}: result reports blocked despite terminal state")
+        if SKILL_MONITOR_RE.search(result):
+            warnings.append(f"{name}: result contains Skill Monitor section; consider filtering worker output")
+
+        if worker.get("mode") == "review":
+            output = worker.get("output") or ""
+            artifact = Path(output)
+            if not artifact.is_absolute():
+                artifact = (repo_root / artifact).resolve()
+            errors.extend(_validate_review_artifact(args.validator, artifact))
+
+    if warnings:
+        for warning in warnings:
+            print(f"WARNING: {warning}", file=sys.stderr)
+    if errors:
+        for error in errors:
+            print(f"INVALID: {error}", file=sys.stderr)
+        return 1
+    print("VALID")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -4,8 +4,9 @@ description: >
   Unified Caveman toolkit for Codex. Use for terse token-saving replies, /caveman
   on/off/status/help, setting target token savings, compressing memory files, terse
   commit messages, terse code-review comments, and context-saving delegation guidance.
-  Supports lite/full/ultra/wenyan modes, local config, and one-command restore after
-  moving this skill directory to another computer.
+  Defaults to ultra compression, temporarily relaxes compression when explaining
+  concepts, and supports lite/full/ultra/wenyan modes, local config, and
+  one-command restore after moving this skill directory to another computer.
 ---
 
 # Caveman
@@ -15,6 +16,7 @@ Single local skill. Do not look for separate `caveman-*` skills.
 This skill is also installed as a global default by `setup.sh`, via
 `~/.codex/instructions.md`. When config has `"enabled": true`, apply Caveman
 reply style to ordinary conversations even if user did not mention `/caveman`.
+Default mode is `ultra` unless config or env explicitly says otherwise.
 
 ## Control
 
@@ -24,14 +26,14 @@ Commands:
 ```bash
 cd ~/.codex/skills/caveman
 python3 scripts/config.py status
-python3 scripts/config.py on full
+python3 scripts/config.py on ultra
 python3 scripts/config.py set --savings 75
 python3 scripts/config.py off
-./setup.sh --mode full --savings 50 --provider auto
+./setup.sh --mode ultra --savings 75 --provider auto
 ```
 
 User phrases:
-- "开启/启用 caveman", `/caveman on` -> run `python3 scripts/config.py on full` unless mode given.
+- "开启/启用 caveman", `/caveman on` -> run `python3 scripts/config.py on ultra` unless mode given.
 - "关闭/禁用 caveman", `normal mode`, `stop caveman`, `/caveman off` -> run `python3 scripts/config.py off`.
 - "节省 N% token", `/caveman savings N` -> run `python3 scripts/config.py set --savings N`.
 - "caveman status/help" -> show current config or quick command card.
@@ -54,7 +56,13 @@ Apply active mode every response until disabled:
 
 Preserve exact code, commands, file paths, URLs, API names, symbols, errors, dates, numbers. Keep user's dominant language. Do not announce style.
 
-Auto-clarity: write normal for security warnings, irreversible actions, precise multi-step order, or when compression risks ambiguity. Resume terse after clear section.
+Auto-clarity: write normal for security warnings, irreversible actions, precise multi-step order, explaining concepts, or when compression risks ambiguity. Resume terse after clear section.
+
+Concept explanation override:
+- If the user asks to explain/teach/define/compare a concept, temporarily disable compression for that answer.
+- Use clear normal prose with enough context, examples, and causal links for learning.
+- Preserve concise structure; do not add fluff.
+- Resume active Caveman mode on the next non-explanation answer.
 
 ## Compress Files
 

@@ -1,7 +1,7 @@
 interface:
   display_name: "Conductor"
-  short_description: "Context firewall with handoff capsules"
-  default_prompt: "Use $conductor as an Autopilot context firewall: route specialized work outward, require Handoff Capsules, and ask only at hard gates."
+  short_description: "Autopilot context firewall and routing"
+  default_prompt: "Use $conductor proactively as an Autopilot context firewall: route specialized work outward, require Handoff Capsules, and ask only at hard gates."
 
 policy:
   allow_implicit_invocation: true

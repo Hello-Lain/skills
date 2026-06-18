@@ -187,26 +187,27 @@ promotes the worker to:
 `wait` returns exit `3` for this state. `follow` and `reply` are allowed to
 continue from this state on the same Codex thread.
 
-## Result Handoff Contract
+## Result Artifact Contract
 
-Every new substantive worker `result.md` should end with:
+When a `.codex/specs/<slug>/` directory exists, workers should update or reference the requested artifact instead of inventing a separate handoff format. Implementation results list changed files, verification, risks, and next action. Review results include scope, findings, tests or verification, and a hard verdict:
 
 ```md
-## Handoff Capsule
+## Cycle 1
+Scope: <scope>
 
-- Goal:
-- Current state:
-- Authoritative artifacts:
-- Decisions:
-- Verification:
-- Remaining risks:
-- Next action:
-- Suggested skills:
-- Redactions / omitted raw data:
+### Findings
+- [path:line] Risk or bug, or `None`.
+
+### Verification
+- Command and result.
+
+### Verdict
+PASS|FAIL
 ```
 
-`scripts/validate_result_contract.py` enforces this by default. Pass
-`--allow-missing-handoff` only for old artifacts or compatibility diagnosis.
+`scripts/validate_result_contract.py` validates generic worker output by default. Pass `--require-review` for review artifacts or `--require-handoff` for legacy `## Handoff Capsule` artifacts.
+
+For codex-agent-team waves, `scripts/prepare_wave.py` parses `tasks.md`, rejects same-wave write-scope overlap, and writes generated briefs plus `manifest.json`. `scripts/run_wave.py` can take either `--manifest` or `--spec-dir/--wave`; it supports `--dry-run`, `--profile minimal|full`, `--no-fix-wave`, `--auto-run-fix`, and `--max-fix-cycles`. It executes the manifest with `meight`, waits for workers, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md`, creates `Wave N: fix review findings` on review `FAIL`, optionally runs the fix wave(s) and reruns the original review until PASS or cycle limit, shuts down each isolated daemon, and returns nonzero on worker failure, blocked result, missing artifact, invalid review artifact, or review `FAIL`. A worker `completed` state is not sufficient if the expected artifact is missing or invalid.
 
 ## Daemon Internals
 

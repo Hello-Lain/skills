@@ -1,61 +1,87 @@
 ---
 name: codex2codex
-description: "Use only for explicit /codex2codex requests, worker delegation, worker review/verification/arbitration, or Decision Council analysis. Coordinate Codex workers through meight with supervised start/wait loops, pushback, and lead-side verification. Do not use for ordinary tasks."
+description: "Meight execution backend for codex-agent-team style collaboration. Use for explicit /codex2codex work or upstream heavy-mode waves that need isolated Codex workers, file-disjoint implementation, scoped review, PASS/FAIL gates, or consults without polluting primary context. Do not use for ordinary single-agent tasks."
 ---
 
 # Codex2Codex
 
-Lead owns decomposition, arbitration, integration, verification, user communication, and git. Workers own bounded reasoning, execution, or review.
+Runtime only. Use `codex-agent-team` as the team protocol: `.codex/specs/<slug>/` artifacts, `tasks.md` waves, file-disjoint scopes, scoped briefs, PASS/FAIL review, lead consolidation.
 
-## Use
-- Use only when the user explicitly asks for `/codex2codex`.
-- Prefer the smallest fit: Consult-first, Implement + audit, Lead implementation + fresh review, Dual proposal + synthesis, Partitioned execution + cross-review, Verifier-only pair, Workflow runner + loopback auditor, Arbiter, Decision Council.
-- If the task is trivial, short, or low-risk, stay in the lead session.
+## Use / Skip
 
-## Workflow
-- Resolve `meight` once: `meight` -> `codex2codex/.venv/bin/python meight.py` -> `python3 meight.py` (auto-reexecs into the skill `.venv` when `openai_codex` is absent).
-- Start each `/codex2codex` request with a fresh state dir: `RUN_HOME=$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")`. Record it.
-- Prefix every meight command in that request with the same `MEIGHT_HOME="$RUN_HOME"`; do not reuse `$REPO/.meight` unless explicitly debugging/resuming.
-- Use `--cwd` for worker workdir; `MEIGHT_HOME` is only harness state, not the worker repo.
-- After terminal results are read and no worker is active: `MEIGHT_HOME="$RUN_HOME" meight shutdown || true`, then `rm -rf -- "$RUN_HOME"`.
-- For stale state or SDK issues: `MEIGHT_HOME="$RUN_HOME" meight doctor`; require `openai_codex_import: True`; then `MEIGHT_HOME="$RUN_HOME" meight recover --dry-run`, and `recover --force` only if safe.
-- Use `start` + `wait` for substantive work; use `dispatch` only for trivial short low-risk tasks.
-- Exit `1` is a checkpoint; exit `3` means `QUESTION:`.
-- Workers never commit, push, or recurse into `/codex2codex`.
+- Use: bounded wave exists or can be cheaply written in `.codex/specs/<slug>/tasks.md`.
+- Skip: trivial task, unclear reqs, overlapping edits without worktrees, or single-agent path is safe.
 
-## Brief
-Keep briefs compact: `Role, Goal, Scope, Constraints, Challenge contract, Verification, Output contract, Report, Handoff Capsule`.
-Council adds: `Decision question, Objective function, Hard constraints, Known options, Unknowns, Failure modes, Reversibility, Evidence required, Decision record output`.
+## Artifacts
 
-## Contracts
-- Ask workers to end with `QUESTION:` when blocked, when a better path exists, or when direction could change.
-- Progress-only worker output is invalid; verify the artifact before accepting it.
-- For substantive or structured outputs, validate result files with `validate_result_contract.py` when practical. New results must include `## Handoff Capsule`; use `--allow-missing-handoff` only for old artifacts.
-- For structured worker results, use role headings:
-  - Proposer: `## 提案`, `## 理由`, `## 证据`, `## 风险`, `## 替代方案考虑`
-  - Red-Team Reviewer: `## 审查对象`, `## 假设挑战`, `## 遗漏风险`, `## 反证`, `## 替代方案`
-  - Constraint Auditor: `## 约束清单`, `## 合规状态`, `## 违规分析（如有）`, `## 影响评估`
-  - Rollback Planner: `## 可逆性评估`, `## 回滚步骤`, `## 恢复时间预期`, `## 不可逆风险`
-  - ADR Synthesizer: `## 上下文`, `## 决策问题`, `## 选项评估`, `## 约束合规性`, `## 关键分歧`, `## 决策`, `## 理由`, `## 后果`, `## 后续行动`
-- Every substantive `result.md` ends with:
-  - `## Handoff Capsule`
-  - `Goal`, `Current state`, `Authoritative artifacts`, `Decisions`, `Verification`, `Remaining risks`, `Next action`, `Suggested skills`, `Redactions / omitted raw data`
-- After each result, read the artifact, check the contract, and use at most one targeted `reply`/`follow` if something is missing.
-- `NO-GO` means fix and re-review.
-- Load nested skills in the lead session first and preserve all user-confirmation gates.
-- Summarize final roles, disagreements, changed artifacts, evidence, risks, and any user decision needed.
+Default shared state:
 
-## Decision Council
-Use only for consequential choices. Default workers: Proposer, Red-Team Reviewer, Constraint Auditor; add Rollback Planner or ADR Synthesizer only when risk justifies it. Evidence beats votes. Limit each worker to one `reply` or `follow` turn. Show the final ADR or decision summary to the user before consequential changes.
+```text
+.codex/specs/<slug>/
+  spec.md
+  design.md          # optional
+  tasks.md
+  review.md | review-<scope>.md
+  review-summary.md
+  decisions.md
+```
 
-## Command Notes
-- `status`: plan, changed files, tokens, recent tail.
-- `doctor`: daemon health.
-- `recover --dry-run`: stale cleanup candidates.
-- `steer`: mid-run correction.
-- `interrupt`: cancel unsafe runs.
-- Worker artifacts: `$RUN_HOME/workers/<name>/{brief.md,status.json,events.log,result.md}` during the current request only.
-- Re-run the pinned `openai-codex` SDK suite when upgrading the SDK.
+`tasks.md` owns wave/task scope. Same-wave write files must not overlap. Each task needs exact paths and a verify command. Record blockers/scope changes in `decisions.md`. Use `scripts/prepare_wave.py --spec-dir <dir> --wave "<wave>"` to generate briefs/manifest and reject overlapping write scopes.
 
-## Nested Skill Handoff
-Pass only the nested skill, path, current phase, do-not-advance gate, challenge contract, and output contract.
+## Modes
+
+- `consult`: read-only expert check.
+- `implement`: file-disjoint coding/devops wave.
+- `review`: read product scope, write only `review*.md`, verdict `PASS` or `FAIL`.
+- `fix`: fix FAIL findings -> rerun affected review only.
+
+Use councils only for high-stakes decisions with real rollback/security/cost/reliability risk.
+
+## Worker Brief
+
+```text
+Use role:
+Instance:
+Spec:
+Wave:
+File scope:
+Task:
+Verify:
+Output:
+Concurrency:
+Restrictions:
+```
+
+One worker = one role, one scope, one output artifact. Workers must not edit outside scope, commit, push, talk to user, or invoke `/codex2codex`. Review workers use workspace-write only so they can write review artifacts; their product scope is read-only by instruction. Workers may end with `QUESTION:` for blockers, wrong assumptions, or better paths.
+
+## Meight Loop
+
+- Resolve `meight`: PATH -> `codex2codex/.venv/bin/python meight.py` -> `python3 meight.py`.
+- `RUN_HOME=$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")`; prefix every command with `MEIGHT_HOME="$RUN_HOME"`.
+- Use `--cwd` for repo/worktree. Use `start` + checkpoint `wait`; `dispatch` only for tiny consults.
+- Exit `1`: read `status`; wait if healthy, `steer` if drifting, interrupt/restart once if stale.
+- Exit `3`: answer `QUESTION:` with `reply`, or return repo-unanswerable questions upstream.
+- Read `result`; accept only if artifact/review contract passes. Exit `0` alone is not success.
+- End: `MEIGHT_HOME="$RUN_HOME" meight shutdown || true`; remove `$RUN_HOME` unless debugging/resume requested.
+
+## Gates
+
+- Any material bug/security/regression/interface mismatch/missing verification => review `FAIL`.
+- Any scoped `FAIL` => wave fails; `run_wave.py` creates the next fix wave unless `--no-fix-wave`; add `--auto-run-fix` to run fix wave(s) and rerun the original review, bounded by `--max-fix-cycles`.
+- Missing expected artifact or blocked terminal result => wave fails even if `meight wait` returned `0`.
+- Never stream raw events/logs/transcripts into lead context.
+- Keep secrets/credentials/raw logs/private data out of artifacts and final summaries.
+- Git, user comms, irreversible decisions, and final acceptance stay with lead.
+
+## Validate / Return
+
+Prefer upstream validators. Otherwise check:
+
+- implementation result: changed files + verification + risks;
+- review result: scope + findings + tests/verification + `Verdict: PASS|FAIL`;
+- decisions captured in `decisions.md`;
+- no raw transcript/secret leak.
+
+Use `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"` for generated waves. It prepares minimal-profile briefs, starts workers, waits, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md` on success, creates a fix wave on review `FAIL`, shuts down `meight`, and returns nonzero on worker failure, blocked result, missing artifact, or review `FAIL`. Use `--auto-run-fix` for FAIL -> fix -> rerun review loops, `--dry-run` to preview workers, and `--profile full` only when minimal context is insufficient. For manual runs, use `--manifest`, `validate_result_contract.py`, and `validate_wave.py` directly.
+
+Return only: mode/wave, workers, artifacts, verdicts, verification, decisions/blockers, cleanup status, raw data omitted.

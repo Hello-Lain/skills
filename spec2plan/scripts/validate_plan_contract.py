@@ -11,13 +11,17 @@ REQUIRED_HEADINGS = (
     "Goal",
     "Non-Goals",
     "Evidence Inspected",
+    "Spec Summary",
     "Domain Language Check",
     "Current Context",
     "Assumptions",
     "User Inputs Needed",
     "Proposed Approach",
     "Scenario Probes",
+    "Dependency Graph",
+    "Task Breakdown",
     "Step-by-Step Plan",
+    "Parallelization",
     "Files / Components Likely Affected",
     "Owners / Responsibilities",
     "Validation Plan",
@@ -43,15 +47,29 @@ HANDOFF_LABELS = (
     "Redactions / omitted raw data",
 )
 
+SUBAGENT_PHASES = ("planner", "reviewer", "synthesizer")
+ARTIFACT_START = "SPEC2PLAN_ARTIFACT_V1"
+ARTIFACT_END = "SPEC2PLAN_ARTIFACT_END"
+
+MODE_RE = re.compile(r"(?mi)^.*Mode:\s*(light|heavy)\b")
 RISK_RE = re.compile(r"(?mi)^.*Risk level:\s*(Low|Medium|High|Critical)\b")
 CONFIDENCE_RE = re.compile(r"(?mi)^.*Confidence:\s*(Low|Medium|High)\b")
 ADR_RE = re.compile(r"(?mi)\bADR\s*:\s*(Needed|Not needed|Existing)\b")
-SUBAGENT_PHASES = ("planner", "grill", "synthesizer")
-ARTIFACT_START = "PLAN_GRILL_ARTIFACT_V1"
-ARTIFACT_END = "PLAN_GRILL_ARTIFACT_END"
+TASK_RE = re.compile(r"(?mi)^\s*#{3,}\s*Task\s+\d+\s*:")
+XL_RE = re.compile(r"(?mi)Estimated scope:\s*XL\b")
+
 
 def has_heading(text: str, heading: str) -> bool:
     return bool(re.search(rf"(?m)^##\s+{re.escape(heading)}\s*$", text))
+
+
+def section_text(text: str, heading: str) -> str:
+    match = re.search(
+        rf"(?ms)^##\s+{re.escape(heading)}\s*\n(.*?)(?=^##\s+|\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
+
 
 def handoff_errors(text: str) -> list[str]:
     errors: list[str] = []
@@ -64,6 +82,26 @@ def handoff_errors(text: str) -> list[str]:
     if headings and headings[-1] != "Execution Handoff":
         errors.append("Execution Handoff must be the final heading")
     return errors
+
+
+def task_errors(text: str) -> list[str]:
+    errors: list[str] = []
+    task_section = section_text(text, "Task Breakdown")
+    if not TASK_RE.search(task_section):
+        errors.append("Task Breakdown must include at least one ### Task N:")
+    for label in (
+        "Acceptance criteria",
+        "Verification",
+        "Dependencies",
+        "Files likely touched",
+        "Estimated scope",
+    ):
+        if not re.search(rf"(?mi)^\s*-\s*{re.escape(label)}\s*:", task_section):
+            errors.append(f"Task Breakdown missing task field: {label}")
+    if XL_RE.search(task_section):
+        errors.append("XL tasks are not allowed")
+    return errors
+
 
 def subagent_errors(plan_path: Path) -> list[str]:
     errors: list[str] = []
@@ -85,6 +123,7 @@ def subagent_errors(plan_path: Path) -> list[str]:
             detail = (result.stderr or result.stdout).strip()
             errors.append(f"invalid {phase} artifact: {detail}")
     return errors
+
 
 def synthesizer_match_errors(plan_path: Path, plan_text: str) -> list[str]:
     artifact = plan_path.parent / "subagents" / "synthesizer.md"
@@ -111,11 +150,11 @@ def synthesizer_match_errors(plan_path: Path, plan_text: str) -> list[str]:
         return ["plan.md must match subagents/synthesizer.md artifact body exactly"]
     return []
 
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a plan-grill plan contract.")
+    parser = argparse.ArgumentParser(description="Validate a spec2plan plan contract.")
     parser.add_argument("plan_path", type=Path)
-    parser.add_argument("--allow-missing-handoff", action="store_true", help="Compatibility mode for old plans.")
-    parser.add_argument("--allow-missing-subagents", action="store_true", help="Compatibility mode for legacy plans only.")
+    parser.add_argument("--mode", choices=("light", "heavy"), default="light")
     args = parser.parse_args()
 
     try:
@@ -132,16 +171,19 @@ def main() -> int:
         if not has_heading(text, heading):
             errors.append(f"missing ## {heading}")
 
-    if not RISK_RE.search(text):
-        errors.append("missing Risk level: Low|Medium|High|Critical")
-    if not CONFIDENCE_RE.search(text):
-        errors.append("missing Confidence: Low|Medium|High")
-    if not ADR_RE.search(text):
-        errors.append("missing ADR: Needed|Not needed|Existing")
+    for name, regex in (
+        ("Mode: light|heavy", MODE_RE),
+        ("Risk level: Low|Medium|High|Critical", RISK_RE),
+        ("Confidence: Low|Medium|High", CONFIDENCE_RE),
+        ("ADR: Needed|Not needed|Existing", ADR_RE),
+    ):
+        if not regex.search(text):
+            errors.append(f"missing {name}")
 
-    if not args.allow_missing_handoff:
-        errors.extend(handoff_errors(text))
-    if not args.allow_missing_subagents:
+    errors.extend(task_errors(text))
+    errors.extend(handoff_errors(text))
+
+    if args.mode == "heavy":
         errors.extend(subagent_errors(args.plan_path))
         errors.extend(synthesizer_match_errors(args.plan_path, text))
 
@@ -151,6 +193,7 @@ def main() -> int:
 
     print("VALID")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

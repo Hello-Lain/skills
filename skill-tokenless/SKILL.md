@@ -57,7 +57,7 @@ When `$skill-creator` creates or updates a skill, run this skill as a final desi
    - for established dotted canonical IDs, run `.system/skill-creator/scripts/quick_validate.py --allow-dotted-name <skill-dir>`
    - compare line/word counts before/after
    - grep key gates from the new files
-   - inspect diff for accidental behavior loss
+   - inspect diff for accidental behavior loss; if the skill dir is not in a git repo, use the fallback in Validation Commands
 6. Report: files changed, token/line reduction, preserved gates, validation result, residual risks.
 
 ## Compression Patterns
@@ -92,8 +92,15 @@ python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py <
 python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py --allow-dotted-name <skill-dir>
 wc -l <skill-dir>/SKILL.md <skill-dir>/agents/openai.yaml
 wc -w <skill-dir>/SKILL.md
-git diff --stat -- <skill-dir>
-git diff -- <skill-dir>/SKILL.md <skill-dir>/agents/openai.yaml
+
+# Diff inspection:
+# 1. If <skill-dir> is inside a git repo:
+git -C <skill-dir> diff --stat -- .
+git -C <skill-dir> diff -- SKILL.md agents/openai.yaml
+# 2. If not, create backups before editing, then compare:
+diff -u <skill-dir>/SKILL.md.before <skill-dir>/SKILL.md
+diff -u <skill-dir>/agents/openai.yaml.before <skill-dir>/agents/openai.yaml
+# 3. If no backup exists, use validator + counts + rg gate checks as the minimum fallback.
 ```
 
 Default validator mode remains required for normal hyphen-case skills.

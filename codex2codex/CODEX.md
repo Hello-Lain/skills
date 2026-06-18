@@ -24,7 +24,7 @@ MEIGHT_HOME="$RUN_HOME" meight status
 |---|---|
 | Bounded implementation with a clear spec; code review; browser/runtime checks | Codex worker (supervised dispatch) |
 | Exploration fan-out, codebase mapping; fresh-context verification of worker output | Fresh Codex worker or Codex subagent |
-| High-stakes decisions with multiple viable paths, hard constraints, rollback concerns, or unclear global optimum | Decision Council: proposer + red-team reviewer + constraint auditor, with optional rollback planner / ADR synthesizer |
+| High-stakes decisions with multiple viable paths, hard constraints, rollback concerns, or unclear global optimum | Optional council: proposer + red-team reviewer + constraint auditor; record the final call in `.codex/specs/<slug>/decisions.md` |
 | High-stakes or irreversible changes | Either worker — but runtime evidence + your explicit sign-off before completion claims |
 
 ## Dispatch protocol
@@ -41,7 +41,7 @@ MEIGHT_HOME="$RUN_HOME" meight start <name> --brief-file - --cwd <dir> [--sandbo
 ## Constraints <domain rules only — no-commit & QUESTION protocol are auto-injected>
 ## Verification <commands to run + expected outcome; include output in report>
 ## Report     <changed files, verification output, judgment calls, open risks>
-## Handoff Capsule <goal, current state, artifacts, decisions, verification, risks, next action, suggested skills, redactions>
+## Output      Update the requested `.codex/specs/<slug>/` artifact or report changed files, verification, risks, and next action.
 EOF
 
 # 2) Wait as a checkpoint timer (set --timeout ~ expected duration), run as a background Bash call. Timeout does NOT kill the worker.
@@ -59,12 +59,13 @@ MEIGHT_HOME="$RUN_HOME" meight result <name>
 - exit `3` = the worker raised something — blocked, or (under the preamble) flagging a better path, a wrong assumption, or a tradeoff that needs your call. Answer *or discuss back* with `MEIGHT_HOME="$RUN_HOME" meight reply <name> --brief "..."` (same thread); it's a conversation, not just an unblock.
 - Stuck yourself? Run it the other way - `MEIGHT_HOME="$RUN_HOME" meight start consult-x --sandbox ro` with a "here's my thinking, what am I missing?" brief, then `follow` to shape direction together. The sibling of independent review: review checks a finished artifact, consult shapes the thinking. Codex is a teammate, not just a delegate.
 - One-shot `MEIGHT_HOME="$RUN_HOME" meight dispatch <name> ...` (ensure daemon → start → wait → result, in one background call) is fine for trivial, short, low-risk work — not for anything that may need observation or steering.
-- For high-stakes decisions, run a Decision Council instead of treating workers as votes: use independent roles, compare evidence and constraints, reuse an arbiter only for disputed claims, and have the lead synthesize the final ADR/decision record.
+- For high-stakes decisions, use a council only when justified; compare evidence and constraints, then have the lead record the final decision in `.codex/specs/<slug>/decisions.md`.
 - Worker model/reasoning by task: omit `--model` to inherit config; use `--model` for a cheaper, faster, or stronger worker; `medium` effort for routine work, `high` for tricky implementation/reviews/debugging, `xhigh` for precision verification (concurrency, critical paths).
 - Parallel workers with overlapping file scopes get separate git worktrees (`--cwd`).
 - At most ~2 `follow`/`reply` turns per thread, then reset with a fresh brief.
 - After the final `result` is read, shut down and remove the isolated state dir: `MEIGHT_HOME="$RUN_HOME" meight shutdown || true; rm -rf -- "$RUN_HOME"`.
-- Every substantive worker `result.md` must end with `## Handoff Capsule` containing `Goal`, `Current state`, `Authoritative artifacts`, `Decisions`, `Verification`, `Remaining risks`, `Next action`, `Suggested skills`, and `Redactions / omitted raw data`. Validate new result files with `scripts/validate_result_contract.py`; use `--allow-missing-handoff` only for old artifacts.
+- Prefer codex-agent-team artifacts over standalone handoffs: implementation reports list changed files and verification; review artifacts include findings, tests/verification, and `Verdict: PASS|FAIL`. Validate generic results with `scripts/validate_result_contract.py`; add `--require-review` for review outputs or `--require-handoff` only for legacy handoff artifacts.
+- For codex-agent-team waves, prefer `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"`; use `--dry-run` to preview, default `--profile minimal` to reduce tokens, and `--profile full` only when needed. It prepares, executes, validates, updates artifacts, and appends a fix wave on review `FAIL`; add `--auto-run-fix` to run fix wave(s) and rerun the original review until PASS or `--max-fix-cycles`. Accept the wave only after validation passes. Review workers should use workspace-write for `review*.md` but treat product file scope as read-only.
 
 ## Rules that keep this safe
 

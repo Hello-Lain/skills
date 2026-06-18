@@ -1,0 +1,6 @@
+interface:
+  display_name: "Debugging Recovery"
+  short_description: "Find root causes and guard fixes"
+  default_prompt: "Use $debugging-and-error-recovery to reproduce, localize, fix, and guard a failure."
+policy:
+  allow_implicit_invocation: true

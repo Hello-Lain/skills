@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git Workflow"
+  short_description: "Keep commits atomic and reversible"
+  default_prompt: "Use $git-workflow-and-versioning proactively to inspect dirty state and structure branches, commits, PRs, releases, or history."
+policy:
+  allow_implicit_invocation: true

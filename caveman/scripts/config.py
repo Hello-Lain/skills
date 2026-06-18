@@ -49,8 +49,8 @@ def load() -> dict:
     if not path.exists():
         return {
             "enabled": True,
-            "defaultMode": "full",
-            "targetSavings": 50,
+            "defaultMode": "ultra",
+            "targetSavings": 75,
             "provider": "auto",
         }
     try:
@@ -59,8 +59,8 @@ def load() -> dict:
         data = {}
     return {
         "enabled": bool(data.get("enabled", data.get("defaultMode") != "off")),
-        "defaultMode": data.get("defaultMode", "full"),
-        "targetSavings": int(data.get("targetSavings", MODES.get(data.get("defaultMode", "full"), 50))),
+        "defaultMode": data.get("defaultMode", "ultra"),
+        "targetSavings": int(data.get("targetSavings", MODES.get(data.get("defaultMode", "ultra"), 75))),
         "provider": data.get("provider", "auto"),
     }
 
@@ -128,7 +128,7 @@ def main() -> int:
     elif args.command == "off":
         data["enabled"] = False
         if not args.keep_mode:
-            data["defaultMode"] = data.get("defaultMode", "full")
+            data["defaultMode"] = data.get("defaultMode", "ultra")
         save(data)
     elif args.command == "set":
         if args.savings is not None:

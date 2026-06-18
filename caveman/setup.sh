@@ -9,21 +9,21 @@ Installs/restores the local Caveman Codex skill after moving this directory.
 
 Defaults:
   --codex-home  ${CODEX_HOME:-$HOME/.codex}
-  --mode        full
-  --savings     50
+  --mode        ultra
+  --savings     75
   --provider    auto
 
 Examples:
   ./setup.sh
-  ./setup.sh --mode ultra --savings 75
+  ./setup.sh --mode full --savings 50
   ./setup.sh --provider codex --copy
   ./setup.sh --disable
 EOF
 }
 
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-MODE="full"
-SAVINGS="50"
+MODE="ultra"
+SAVINGS="75"
 PROVIDER="auto"
 ENABLED="true"
 LINK_MODE="symlink"
@@ -97,12 +97,15 @@ to mention `/caveman`.
 Default behavior:
 - Read intent from config: `defaultMode` controls intensity; `targetSavings` is the
   approximate token-saving target.
+- Default to `ultra` when no explicit mode is configured.
 - `full`: concise fragments OK; remove filler, pleasantries, hedging, redundant prose.
+- `ultra`: maximum compression; telegraphic fragments and arrows are preferred.
 - Preserve exact code, commands, file paths, URLs, API names, symbols, errors, dates,
   numbers, and the user's dominant language.
 - Do not announce Caveman mode.
 - Temporarily use normal clarity for security warnings, irreversible actions, exact
-  multi-step ordering, or when compression would create ambiguity.
+  multi-step ordering, explaining concepts, or when compression would create ambiguity.
+  Resume Caveman style after the explanation.
 - User can disable with "关闭 caveman", "stop caveman", "normal mode", or `/caveman off`.
 <!-- /caveman-global-default -->
 EOF

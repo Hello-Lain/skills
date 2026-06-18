@@ -44,6 +44,9 @@ HANDOFF_LABELS = (
     "Suggested skills",
     "Redactions / omitted raw data",
 )
+REVIEW_VERDICT_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
+REVIEW_SECTION_RE = re.compile(r"(?mi)^#{1,6}\s+(Findings|Tests|Verification|Verdict)\b")
+BLOCKED_RE = re.compile(r"(?mi)^\s*(Blocked|Cannot complete|Unable to write|could not write)\b")
 
 
 def _looks_progress_only(text: str, required_markers: list[str], window_chars: int) -> bool:
@@ -87,11 +90,39 @@ def _validate_handoff(text: str) -> list[str]:
         errors.append("Handoff Capsule must be the final heading")
     return errors
 
+def _validate_review(text: str) -> list[str]:
+    errors = []
+    if not _review_verdict(text):
+        errors.append("missing review verdict: PASS or FAIL")
+    sections = {match.group(1).casefold() for match in REVIEW_SECTION_RE.finditer(text)}
+    if "findings" not in sections:
+        errors.append("missing review findings section")
+    if "tests" not in sections and "verification" not in sections:
+        errors.append("missing review tests/verification section")
+    return errors
+
+
+def _review_verdict(text: str) -> str:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        match = REVIEW_VERDICT_RE.match(line)
+        if not match:
+            continue
+        if match.group(1):
+            return match.group(1).upper()
+        for next_line in lines[index + 1 :]:
+            value = next_line.strip().strip("`").rstrip(".").upper()
+            if value in {"PASS", "FAIL"}:
+                return value
+            if value:
+                break
+    return ""
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a worker result against a simple text contract.")
     parser.add_argument("result_path", type=Path)
-    parser.add_argument("--min-chars", type=int, default=400)
+    parser.add_argument("--min-chars", type=int, default=60)
     parser.add_argument("--must-contain", action="append", default=[])
     parser.add_argument("--must-not-contain", action="append", default=[])
     parser.add_argument(
@@ -112,9 +143,19 @@ def main() -> int:
         help="Require at least this many Markdown headings.",
     )
     parser.add_argument(
-        "--allow-missing-handoff",
+        "--require-handoff",
         action="store_true",
-        help="Compatibility mode for old worker results that predate Handoff Capsule.",
+        help="Require the legacy ## Handoff Capsule block.",
+    )
+    parser.add_argument(
+        "--require-review",
+        action="store_true",
+        help="Require codex-agent-team style review output with findings, verification, and Verdict: PASS|FAIL.",
+    )
+    parser.add_argument(
+        "--allow-blocked",
+        action="store_true",
+        help="Allow blocked/error-status result text. By default blocked terminal results are invalid.",
     )
     args = parser.parse_args()
 
@@ -147,10 +188,20 @@ def main() -> int:
         print("INVALID: result looks like a progress/status note, not the requested artifact", file=sys.stderr)
         return 1
 
-    if not args.allow_missing_handoff:
+    if not args.allow_blocked and BLOCKED_RE.search(text):
+        print("INVALID: result reports blocked or unable to complete", file=sys.stderr)
+        return 1
+
+    if args.require_handoff:
         handoff_errors = _validate_handoff(text)
         if handoff_errors:
             print("INVALID: " + "; ".join(handoff_errors), file=sys.stderr)
+            return 1
+
+    if args.require_review:
+        review_errors = _validate_review(text)
+        if review_errors:
+            print("INVALID: " + "; ".join(review_errors), file=sys.stderr)
             return 1
 
     forbidden = [needle for needle in args.must_not_contain if needle in text]

@@ -75,6 +75,33 @@ For substantial work, use supervised dispatch. The Codex skill uses a fresh `MEI
 RUN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")"
 ```
 
+For codex-agent-team specs, generate worker briefs from `tasks.md` first:
+
+```bash
+python scripts/prepare_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1"
+```
+
+The generated manifest rejects overlapping write scopes. Review workers use workspace-write so they can create `review*.md`, but their product file scope remains read-only by instruction.
+
+Run the wave end-to-end:
+
+```bash
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1"
+```
+
+On success this validates the wave, marks matching `tasks.md` items complete, and writes `review-summary.md` for review waves. Use `--manifest` to run a previously generated manifest.
+
+Useful controls:
+
+```bash
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --dry-run
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --profile full
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --no-fix-wave
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 2: review" --auto-run-fix --max-fix-cycles 2
+```
+
+Default profile is `minimal`: generated briefs tell workers to read only the spec, task, listed files, and directly related tests. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached.
+
 Reuse that same path for every command in the request:
 
 ```bash
@@ -116,23 +143,27 @@ On exit `0`, `2`, or `3`, `wait` prints a status summary. Read the full message 
 MEIGHT_HOME="$RUN_HOME" meight result impl-1
 ```
 
-New substantive worker reports should end with a handoff block so a later lead can continue without re-reading raw logs:
+New worker reports should update or reference the relevant `.codex/specs/<slug>/` artifact when one exists. Implementation reports should list changed files, verification, risks, and next action. Review reports should include findings, tests/verification, and a hard verdict:
 
 ```md
-## Handoff Capsule
+## Cycle 1
+Scope: parser
 
-- Goal:
-- Current state:
-- Authoritative artifacts:
-- Decisions:
-- Verification:
-- Remaining risks:
-- Next action:
-- Suggested skills:
-- Redactions / omitted raw data:
+### Findings
+- [path:line] Risk or bug, or `None`.
+
+### Verification
+- Command and result.
+
+### Verdict
+PASS
 ```
 
-Validate new result artifacts with `python scripts/validate_result_contract.py "$RUN_HOME/workers/<name>/result.md"`. Use `--allow-missing-handoff` only when inspecting old results.
+Validate generic result artifacts with `python scripts/validate_result_contract.py "$RUN_HOME/workers/<name>/result.md"`. Add `--require-review` for review outputs, or `--require-handoff` only for legacy Handoff Capsule results. Generated review summaries include each review worker's verdict, critical finding count, verification excerpt, and artifact path. After a generated wave, validate the whole wave before accepting completion:
+
+```bash
+python scripts/validate_wave.py --manifest .codex/specs/<slug>/generated/<wave>/manifest.json --meight-home "$RUN_HOME"
+```
 
 The worker asked a question (exit 3)? The question is also visible in `meight status impl-1` as `needs_input_detail`. Answer in one shot, same thread:
 
@@ -159,7 +190,7 @@ MEIGHT_HOME="$RUN_HOME" meight dispatch tiny-1 --brief "Check whether README men
 This is the intended consumer. For real work, run `wait --timeout` as the **background Bash call**. Codex wakes at the checkpoint, reads one `status`, and either waits again or sends a targeted `steer`:
 
 ```
-Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight start review-1 --sandbox ro --effort high --brief-file - <<'EOF' ... EOF")
+Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight start review-1 --sandbox ws --effort high --brief-file - <<'EOF' ... EOF")
 Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight wait review-1 --timeout 300",
      run_in_background: true)
 -> ... Codex keeps working ...
@@ -167,6 +198,8 @@ Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight wait review-1 --timeout 300",
 → MEIGHT_HOME="$RUN_HOME" meight status review-1
 → healthy: wait again · drifting: MEIGHT_HOME="$RUN_HOME" meight steer review-1 "..."
 ```
+
+Use `--sandbox ro` for pure consult/review reports that do not write artifacts. Use `--sandbox ws` when the worker must create `review*.md`; restrict product files in the brief.
 
 When the worker reaches a terminal state, the notification is `0` (completed), `2` (failed/interrupted), or `3` (worker question). Use `MEIGHT_HOME="$RUN_HOME" meight result review-1` for the full report. On `0`, verify the work before accepting it. On `3`, answer with `MEIGHT_HOME="$RUN_HOME" meight reply`.
 

@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex2Codex"
-  short_description: "Meight loops with handoff capsules"
-  default_prompt: "Use $codex2codex with a fresh MEIGHT_HOME per request and require worker Handoff Capsules for review, verification, or Decision Council work."
+  short_description: "Meight backend for team waves"
+  default_prompt: "Use $codex2codex to dry-run, prepare, execute, validate, and fix codex-agent-team style waves with isolated minimal-profile meight workers and PASS/FAIL gates."
 
 policy:
   allow_implicit_invocation: false
