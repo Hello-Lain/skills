@@ -52,14 +52,14 @@ The managed wrapper currently avoids:
 
 - `rtk find <existing path>` -> forwards as `rtk.real find <path> -maxdepth 2`
 - `rtk test <args containing spaces or equals>` -> forwards through `rtk.real proxy` to preserve argument fidelity better than the test filter
-- `RTK_DOCTOR_DIAG=1 rtk nl|sed ...` -> emits a diagnostic recommending CodeGraph, `ctx_read` line ranges, or another raw file reader for source snippets
+- `rtk nl|sed ...` -> bypasses `rtk.real` compression and executes system `nl`/`sed` directly; `RTK_DOCTOR_DIAG=1` also emits a diagnostic
 
 The doctor check currently probes:
 
 - executable bit and `rtk --version`
 - wrapper target health
 - `find <existing path>` regression
-- `nl|sed` line-snippet pipelines returning unrelated git summaries or missing sentinel lines
+- `nl|sed` line-snippet pipelines returning unrelated git summaries or missing sentinel lines across proxy/direct/piped `rtk nl` and `rtk sed` forms
 
 Unknown new failures are not magically fixed. On first encounter, diagnose, record, add a narrow wrapper rule or documented command substitution, then run `repair` so future calls avoid it.
 

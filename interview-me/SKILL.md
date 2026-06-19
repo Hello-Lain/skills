@@ -10,7 +10,7 @@ description: Interview users one question at a time to turn a chosen direction w
 - Extract intent, then produce a confirmed markdown spec downstream skills can consume.
 - Do not plan, code, or write tasks before spec confirmation.
 - Ask one focused question at a time. Include a guess and why the question matters.
-- Require explicit approval before treating a restatement or spec as authoritative.
+- Require explicit approval before treating a restatement or spec as authoritative; an explicit `yes` to the restatement authorizes writing the final spec and saving it to the default workspace.
 - Requires a live user. In non-interactive/autonomous contexts, stop and report missing requirements instead of guessing.
 - If the user explicitly chooses speed, a short pass, or "don't overthink it", use Fast Spec Mode.
 - Do not announce that the skill is being used; start with the interview output.
@@ -120,17 +120,27 @@ Explicit yes / refine?
 
 Require an explicit yes before writing the final spec. "Whatever you think", "sounds good", or silence is not enough; offer concrete alternatives or ask what to refine.
 
+An explicit `yes` to this restatement means:
+- Write the final spec.
+- Read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
+- Save the confirmed spec automatically to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md`, or to the reused topic workspace when the interview started from an existing workspace artifact.
+- Do not ask a separate "save?" question unless the canonical `spec.md` already exists and replacement intent is unclear.
+
 ### 5. Produce The Spec
 
 Before finalizing, read `references/spec-quality-rubric.md`, use its template, and fix any failing gate. Include only details supported by the interview; mark unresolved items as assumptions or open questions.
 
 For codebase work, inspect relevant files before finalizing Commands, Project Structure, Testing Strategy, or integration constraints. Reference concrete paths when useful.
 
-### 6. Confirm / Save / Hand Off
+### 6. Save / Hand Off
 
-Ask the user to confirm the spec. If they approve and want persistence, first read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or their chosen path. Do not save before confirmation.
+After the user explicitly answers `yes` to the restated intent, produce the final spec and save it automatically. First read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or to the user's chosen path when provided. Do not save before explicit `yes`.
 
 Prefer the project root's `.codex/work/` topic workspace so downstream skills can discover the spec, lineage, and later plan cleanly. Use a dated kebab-case topic workspace, for example `.codex/work/20260619-auth-migration/spec.md`. If the interview started from an existing workspace artifact, reuse that workspace and set `lineage.spec` to the source artifact when applicable. If the current workspace is not a project/repo, ask for a path instead of guessing.
+
+If the intended canonical `spec.md` already exists:
+- Overwrite it only when the user explicitly requested replacement or the current interview is a continuation that clearly supersedes the existing draft.
+- Otherwise ask before overwriting, or save the new draft under `revisions/spec-<yyyyMMdd-HHmmss>.md` when the user asked for an alternative.
 
 After confirmation, downstream handoff:
 
@@ -151,6 +161,7 @@ Before finishing, verify:
 - Vague terms were converted into measurable criteria or open questions.
 - Spec separates requirements, constraints, assumptions, risks, acceptance checks.
 - User explicitly confirmed the restated intent before the final spec was treated as authoritative.
+- Confirmed specs are saved automatically after explicit `yes`, unless conflict rules require asking before overwrite.
 - No implementation plan or code was produced before spec confirmation.
 
 ## Red Flags

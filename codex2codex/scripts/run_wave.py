@@ -12,7 +12,9 @@ import sys
 import tempfile
 from pathlib import Path, PurePosixPath
 
+from execution_state import record_wave_result
 from roles import ALLOWED_CONTEXT_PROFILES, DEFAULT_EFFORT, ROLE_MODE
+from scope_contract import path_in_scope, scope_entries
 
 HEADING_RE = re.compile(r"^\s*#{1,6}\s+(.+?)\s*$")
 VERDICT_LINE_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
@@ -28,6 +30,7 @@ CONTRACT_FAIL = "CONTRACT_FAIL"
 INFRA_FAILED = "INFRA_FAILED"
 CONTRACT_FAILED = "CONTRACT_FAILED"
 TASK_BLOCKED = "TASK_BLOCKED"
+REVIEW_UNAVAILABLE = "REVIEW_UNAVAILABLE"
 RECOVERY_RETRY = "retry"
 RECOVERY_STOP = "stop"
 ACTIVE_WORKER_STATES = {"starting", "running"}
@@ -41,12 +44,14 @@ TRANSIENT_API_RE = re.compile(
     r"provider\s+(?:timeout|timed?\s*out|unavailable)|"
     r"unavailable\s+provider|"
     r"no\s+active\s+credentials|"
+    r"stream\s+(?:exception|failure|error)|"
     r"app[-\s]?server|"
     r"socket\s+(?:disconnect|closed|timeout|error)|"
+    r"connection\s+(?:reset|closed|timeout|timed?\s*out)|"
     r"server\s+disconnect(?:ed)?|"
     r"api\s+(?:timeout|connection|server)\s+error|"
     r"rate\s*limit|"
-    r"\b(?:429|5\d\d)\b|"
+    r"\b(?:404|429|5\d\d)\b|"
     r"bad\s+gateway|service\s+unavailable|gateway\s+timeout"
     r")\b"
 )
@@ -235,16 +240,17 @@ def _run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False) ->
         check=False,
     )
 
-def _shutdown_workers(meight: str, meight_home: Path, cwd: Path) -> None:
+def _shutdown_workers(meight: str, meight_home: Path, cwd: Path) -> bool:
     proc = _run([meight, "shutdown"], meight_home, cwd, capture=True)
     if proc.returncode == 0:
-        return
+        return True
     sys.stderr.write(proc.stderr or proc.stdout or "")
     force_proc = _run([meight, "shutdown", "--force"], meight_home, cwd, capture=True)
     if force_proc.stdout:
         print(force_proc.stdout.strip())
     if force_proc.stderr:
         sys.stderr.write(force_proc.stderr)
+    return force_proc.returncode == 0
 
 
 def _start_worker(worker: dict, meight_home: Path, cwd: Path, meight: str, *, name: str | None = None) -> str:
@@ -311,13 +317,16 @@ def _run_worker_control(cmd: list[str], meight_home: Path, cwd: Path) -> int:
     return proc.returncode
 
 
-def _recovery_brief(worker_name: str, category: str | None, reason: str) -> str:
+def _recovery_brief(worker: dict, worker_name: str, category: str | None, reason: str) -> str:
     return "\n".join(
         [
             "[run_wave recovery]",
             f"Previous attempt for `{worker_name}` failed with category `{category or TOOL_INFRA}`.",
             f"Observed reason: {reason or 'recovery checkpoint'}",
+            f"Original task scope: {', '.join(worker.get('files', []) or ['<none>'])}",
+            f"Required output artifact: {worker.get('output') or '<none>'}",
             "Continue the original task in the original scope.",
+            "Do not restart from scratch unless that is the only way to complete the same task.",
             "Write the required output artifact. Use QUESTION only for a required orchestrator decision.",
         ]
     )
@@ -348,6 +357,188 @@ def _copy_worker_outcome(meight_home: Path, source: str, dest: str) -> None:
         source_path = source_dir / fname
         if source_path.exists():
             shutil.copy2(source_path, dest_dir / fname)
+
+
+def _slug(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", text.strip()).strip("-").lower() or "wave"
+
+
+def _runs_dir(manifest: dict) -> Path:
+    return Path(manifest["spec_dir"]) / "runs" / _slug(str(manifest.get("wave") or "wave"))
+
+
+def _worker_run_dir(run_dir: Path | None, worker_name: str) -> Path | None:
+    if run_dir is None:
+        return None
+    path = run_dir / worker_name
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _artifact_snapshot(path: Path | None) -> dict:
+    if not path or not path.exists():
+        return {"exists": False}
+    try:
+        stat = path.stat()
+        return {"exists": True, "size": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+    except OSError:
+        return {"exists": True}
+
+
+def _progress_snapshot(meight_home: Path, worker_name: str, cwd: Path, worker: dict, status: dict | None = None) -> dict:
+    status = status or {}
+    result = _worker_result(meight_home, worker_name)
+    return {
+        "state": status.get("state"),
+        "updated_at": status.get("updated_at"),
+        "last_event_at": status.get("last_event_at"),
+        "tokens": status.get("tokens") or status.get("token_count") or status.get("total_tokens"),
+        "result_tail": result[-400:],
+        "artifact": _artifact_snapshot(_worker_artifact_path(cwd, worker)),
+        "files_changed": status.get("files_changed") or [],
+    }
+
+
+def _progress_changed(before: dict, after: dict) -> bool:
+    for key in ("updated_at", "last_event_at", "tokens", "result_tail", "artifact", "files_changed", "state"):
+        if before.get(key) != after.get(key):
+            return True
+    return False
+
+
+def _append_attempt(run_dir: Path | None, record: dict) -> None:
+    if run_dir is None:
+        return
+    run_dir.mkdir(parents=True, exist_ok=True)
+    path = run_dir / "attempts.jsonl"
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _write_worker_summary(run_dir: Path | None, record: dict) -> None:
+    if run_dir is None:
+        return
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "summary.json").write_text(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_success_summary(
+    run_dir: Path | None,
+    *,
+    worker: str,
+    active_worker: str,
+    attempt: int,
+    category: str | None,
+    artifact_path: str | None,
+) -> None:
+    _write_worker_summary(
+        run_dir,
+        {
+            "worker": worker,
+            "active_worker": active_worker,
+            "attempt": attempt,
+            "category": category,
+            "terminal_category": None,
+            "artifact_path": artifact_path,
+            "exit_code": 0,
+            "final_outcome": "success",
+        },
+    )
+
+
+def _write_wave_summary(run_dir: Path, manifest: dict, workers: list[dict]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    summary = {
+        "wave": manifest.get("wave"),
+        "workers": workers,
+        "final_outcome": "success" if all(item.get("exit_code") == 0 for item in workers) else "failed",
+    }
+    if any(item.get("terminal_category") == REVIEW_UNAVAILABLE for item in workers):
+        summary["final_outcome"] = REVIEW_UNAVAILABLE
+    (run_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _execution_workers(manifest: dict, run_dir: Path) -> list[dict]:
+    workers: list[dict] = []
+    for worker in manifest.get("workers", []):
+        summary_path = run_dir / worker["name"] / "summary.json"
+        output = worker.get("output") or ""
+        artifact = _repo_path(manifest, output) if output else None
+        workers.append(
+            {
+                "name": worker["name"],
+                "mode": worker.get("mode"),
+                "role": worker.get("role"),
+                "output": str(artifact) if artifact else output,
+                "summary_path": str(summary_path),
+                "files": worker.get("files", []),
+            }
+        )
+    return workers
+
+
+def _wave_summary_has_terminal(run_dir: Path, terminal_category: str) -> bool:
+    path = run_dir / "summary.json"
+    if not path.exists():
+        return False
+    try:
+        summary = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if summary.get("final_outcome") == terminal_category:
+        return True
+    return any(worker.get("terminal_category") == terminal_category for worker in summary.get("workers") or [])
+
+
+def _artifact_meta_path(artifact: Path) -> Path:
+    return artifact.with_name(artifact.name + ".meta.json")
+
+
+def _write_artifact_meta(artifact: Path, *, wave: str | None, worker: str, source: str, verdict: str | None = None) -> None:
+    meta = {
+        "wave": wave,
+        "worker": worker,
+        "source": source,
+        "artifact": str(artifact),
+        "verdict": verdict,
+    }
+    _artifact_meta_path(artifact).write_text(json.dumps(meta, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_worker_artifact_meta(worker: dict, cwd: Path, *, wave: str | None, worker_name: str, source: str) -> None:
+    artifact = _worker_artifact_path(cwd, worker)
+    if not artifact or not artifact.exists():
+        return
+    verdict = None
+    if worker.get("mode") == "review":
+        try:
+            verdict = _review_verdict(artifact.read_text(encoding="utf-8"))
+        except OSError:
+            verdict = "UNKNOWN"
+    _write_artifact_meta(artifact, wave=wave, worker=worker_name, source=source, verdict=verdict)
+
+
+def _record_worker_success(
+    worker: dict,
+    cwd: Path,
+    worker_run_dir: Path | None,
+    *,
+    wave: str | None,
+    original_name: str,
+    active_name: str,
+    attempt: int,
+    category: str | None,
+    source: str,
+) -> None:
+    _write_worker_artifact_meta(worker, cwd, wave=wave, worker_name=original_name, source=source)
+    _write_success_summary(
+        worker_run_dir,
+        worker=original_name,
+        active_worker=active_name,
+        attempt=attempt,
+        category=category,
+        artifact_path=worker.get("output"),
+    )
 
 
 def _print_recovery_exhausted(name: str, decision: RecoveryDecision) -> None:
@@ -463,14 +654,10 @@ def _validate_patch_scope(worker: dict, paths: tuple[str, ...], cwd: Path | None
     raw_scope = [path for path in worker.get("files", []) if path]
     if not raw_scope:
         raise ValueError("PATCH_BODY rejected: worker has no writable scope")
-    allowed = _normalized_scope_entries(raw_scope, cwd)
+    root = cwd or Path.cwd()
+    allowed = scope_entries(root, raw_scope)
     for path in paths:
-        in_scope = False
-        for scope, allow_child in allowed:
-            if path == scope or (allow_child and path.startswith(scope + "/")):
-                in_scope = True
-                break
-        if not in_scope:
+        if not path_in_scope(path, allowed, root):
             raise ValueError(f"PATCH_BODY path outside writable scope: `{path}`")
     return paths
 
@@ -669,17 +856,9 @@ def _completed_worker_contract_failure(worker: dict, cwd: Path, status: dict, re
             return PatchFallbackResult(category=CONTRACT_FAIL, reason=f"missing review verdict: {artifact}")
 
     if worker.get("mode") != "review":
-        scope = _contract_scope_entries(cwd, [path for path in worker.get("files", []) if path])
-        changed = [
-            _repo_relative_contract_path(cwd, path)
-            for path in status.get("files_changed") or []
-            if path
-        ]
-        if scope and not any(
-            _contract_path_in_scope(changed_path, scope_path, allow_child)
-            for changed_path in changed
-            for scope_path, allow_child in scope
-        ):
+        scope = scope_entries(cwd, [path for path in worker.get("files", []) if path])
+        changed = [path for path in status.get("files_changed") or [] if path]
+        if scope and not any(path_in_scope(changed_path, scope, cwd) for changed_path in changed):
             return PatchFallbackResult(
                 category=CONTRACT_FAIL,
                 reason=f"missing expected implementation evidence: no scoped files_changed for {[path for path, _ in scope]}",
@@ -696,14 +875,23 @@ def _wait_worker_with_recovery(
     *,
     same_worker_restarts: int = 1,
     fresh_worker_restarts: int = 1,
+    same_thread_continues: int = 3,
+    run_dir: Path | None = None,
+    wave: str | None = None,
 ) -> int:
     original_name = worker["name"]
     active_name = original_name
-    follow_attempted = False
+    worker_run_dir = _worker_run_dir(run_dir, original_name)
+    continues = 0
     same_restarts = 0
     fresh_restarts = 0
+    attempt = 0
+    previous_snapshot: dict | None = None
+    final_category: str | None = None
+    terminal_category: str | None = None
 
     while True:
+        attempt += 1
         wait_code = _wait_worker_once(active_name, meight_home, cwd, meight, timeout)
         if wait_code == 0:
             patch_failure = _finish_worker_or_patch_failure(worker, meight_home, active_name, original_name, cwd)
@@ -716,6 +904,17 @@ def _wait_worker_with_recovery(
                 result,
             )
             if patch_failure is None and contract_failure is None:
+                _record_worker_success(
+                    worker,
+                    cwd,
+                    worker_run_dir,
+                    wave=wave,
+                    original_name=original_name,
+                    active_name=active_name,
+                    attempt=attempt,
+                    category=None,
+                    source="worker-result",
+                )
                 return 0
             if patch_failure is None:
                 patch_failure = contract_failure
@@ -724,8 +923,26 @@ def _wait_worker_with_recovery(
             patch_failure = None
 
         status = _worker_status(meight_home, active_name, cwd, meight)
+        snapshot = _progress_snapshot(meight_home, active_name, cwd, worker, status)
+        progress = previous_snapshot is None or _progress_changed(previous_snapshot, snapshot)
+        previous_snapshot = snapshot
         if status.get("state") in ACTIVE_WORKER_STATES and status.get("stalled"):
             reason = str(status.get("stalled_reason") or "active worker stalled")
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": active_name,
+                    "attempt": attempt,
+                    "category": TOOL_INFRA,
+                    "action": "steer",
+                    "reason": reason,
+                    "progress": progress,
+                    "progress_signals": snapshot,
+                    "artifact_path": worker.get("output"),
+                },
+            )
             _run_worker_control(
                 [meight, "steer", active_name, _steer_brief(original_name, reason)],
                 meight_home,
@@ -743,6 +960,17 @@ def _wait_worker_with_recovery(
                     result,
                 )
                 if patch_failure is None and contract_failure is None:
+                    _record_worker_success(
+                        worker,
+                        cwd,
+                        worker_run_dir,
+                        wave=wave,
+                        original_name=original_name,
+                        active_name=active_name,
+                        attempt=attempt,
+                        category=None,
+                        source="worker-result",
+                    )
                     return 0
                 if patch_failure is None:
                     patch_failure = contract_failure
@@ -756,31 +984,52 @@ def _wait_worker_with_recovery(
             patch_result = _apply_worker_patch_body(worker, meight_home, active_name, cwd, result)
             if patch_result.applied:
                 _copy_worker_outcome(meight_home, active_name, original_name)
+                _record_worker_success(
+                    worker,
+                    cwd,
+                    worker_run_dir,
+                    wave=wave,
+                    original_name=original_name,
+                    active_name=active_name,
+                    attempt=attempt,
+                    category=None,
+                    source="patch-body",
+                )
                 return 0
             if patch_result.category:
                 patch_failure = patch_result
 
         category = patch_failure.category if patch_failure else classify_worker_failure(status=status, result=result)
-        decision = recovery_decision(
-            category,
-            attempts=same_restarts + fresh_restarts,
-            max_attempts=same_worker_restarts + fresh_worker_restarts,
-        )
-        if decision.action == RECOVERY_STOP:
-            _print_recovery_exhausted(original_name, decision)
-            return wait_code or 1
+        final_category = category or TOOL_INFRA
 
         if (
-            not follow_attempted
-            and category in RECOVERABLE_FAILURES
+            continues < same_thread_continues
+            and final_category in RECOVERABLE_FAILURES
             and status.get("state") in (TERMINAL_WORKER_STATES | {"needs_input"})
         ):
-            follow_attempted = True
             reason = patch_failure.reason if patch_failure else str(
                 status.get("failure_detail")
                 or status.get("needs_input_detail")
                 or status.get("stalled_reason")
                 or "terminal recoverable failure"
+            )
+            continues += 1
+            action = "continue"
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": active_name,
+                    "attempt": attempt,
+                    "continue_attempt": continues,
+                    "category": final_category,
+                    "action": action,
+                    "reason": reason,
+                    "progress": progress,
+                    "progress_signals": snapshot,
+                    "artifact_path": worker.get("output"),
+                },
             )
             follow_code = _run_worker_control(
                 [
@@ -788,7 +1037,7 @@ def _wait_worker_with_recovery(
                     "follow",
                     active_name,
                     "--brief",
-                    _recovery_brief(original_name, category, reason),
+                    _recovery_brief(worker, original_name, final_category, reason),
                 ],
                 meight_home,
                 cwd,
@@ -799,6 +1048,21 @@ def _wait_worker_with_recovery(
         if same_restarts < same_worker_restarts:
             same_restarts += 1
             active_name = original_name
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": active_name,
+                    "attempt": attempt,
+                    "category": final_category,
+                    "action": "same-name-restart",
+                    "reason": "same-thread continuation unavailable or exhausted",
+                    "progress": progress,
+                    "progress_signals": snapshot,
+                    "artifact_path": worker.get("output"),
+                },
+            )
             if status.get("state") in ACTIVE_WORKER_STATES:
                 _run_worker_control([meight, "interrupt", active_name], meight_home, cwd)
                 _wait_worker_once(active_name, meight_home, cwd, meight, timeout)
@@ -808,10 +1072,57 @@ def _wait_worker_with_recovery(
         if fresh_restarts < fresh_worker_restarts:
             fresh_restarts += 1
             active_name = f"{original_name}-recovery-{fresh_restarts}"
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": active_name,
+                    "attempt": attempt,
+                    "category": final_category,
+                    "action": "fresh-worker-restart",
+                    "reason": "same-name restart budget exhausted",
+                    "progress": progress,
+                    "progress_signals": snapshot,
+                    "artifact_path": worker.get("output"),
+                },
+            )
             _start_worker(worker, meight_home, cwd, meight, name=active_name)
             continue
 
-        exhausted = recovery_decision(category, attempts=1, max_attempts=1)
+        exhausted = recovery_decision(final_category, attempts=1, max_attempts=1)
+        terminal_category = exhausted.terminal_category
+        if worker.get("mode") == "review" and final_category in {TRANSIENT_API, TOOL_INFRA}:
+            terminal_category = REVIEW_UNAVAILABLE
+            exhausted = RecoveryDecision(final_category, RECOVERY_STOP, terminal_category, "review infrastructure unavailable")
+        _append_attempt(
+            worker_run_dir,
+            {
+                "wave": wave,
+                "worker": original_name,
+                "active_worker": active_name,
+                "attempt": attempt,
+                "category": final_category,
+                "action": "terminal",
+                "reason": exhausted.reason,
+                "progress": progress,
+                "progress_signals": snapshot,
+                "artifact_path": worker.get("output"),
+                "final_outcome": terminal_category,
+            },
+        )
+        _write_worker_summary(
+            worker_run_dir,
+            {
+                "worker": original_name,
+                "active_worker": active_name,
+                "attempt": attempt,
+                "category": final_category,
+                "terminal_category": terminal_category,
+                "artifact_path": worker.get("output"),
+                "exit_code": wait_code or 1,
+            },
+        )
         _print_recovery_exhausted(original_name, exhausted)
         return wait_code or 1
 
@@ -825,8 +1136,12 @@ def _wait_workers(
     *,
     same_worker_restarts: int = 1,
     fresh_worker_restarts: int = 1,
+    same_thread_continues: int = 3,
+    run_dir: Path | None = None,
 ) -> int:
     exit_code = 0
+    summaries: list[dict] = []
+    wave = manifest.get("wave")
     for worker in manifest.get("workers", []):
         code = _wait_worker_with_recovery(
             worker,
@@ -836,9 +1151,25 @@ def _wait_workers(
             timeout,
             same_worker_restarts=same_worker_restarts,
             fresh_worker_restarts=fresh_worker_restarts,
+            same_thread_continues=same_thread_continues,
+            run_dir=run_dir,
+            wave=wave,
         )
+        worker_summary_path = None
+        if run_dir is not None:
+            worker_summary_path = run_dir / worker["name"] / "summary.json"
+        if worker_summary_path and worker_summary_path.exists():
+            try:
+                summary = json.loads(worker_summary_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                summary = {"worker": worker["name"], "exit_code": code}
+        else:
+            summary = {"worker": worker["name"], "exit_code": code, "terminal_category": None}
+        summaries.append(summary)
         if code != 0:
             exit_code = code
+    if run_dir is not None:
+        _write_wave_summary(run_dir, manifest, summaries)
     return exit_code
 
 
@@ -909,6 +1240,8 @@ def _salvage_artifacts(manifest: dict, meight_home: Path) -> None:
                 continue
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text(body, encoding="utf-8")
+        verdict = _review_verdict(body) if worker.get("mode") == "review" else None
+        _write_artifact_meta(artifact, wave=manifest.get("wave"), worker=worker["name"], source="artifact-body", verdict=verdict)
         print(f"salvaged artifact: {artifact}")
 
 
@@ -1014,6 +1347,56 @@ def _create_fix_waves(manifest: dict) -> list[str]:
     return waves
 
 
+def _review_refs(review: Path, manifest: dict) -> list[str]:
+    spec_dir = Path(manifest["spec_dir"])
+    repo_root = _repo_root(spec_dir)
+    refs: list[str] = []
+    for candidate in (review, review.resolve()):
+        text = str(candidate)
+        if text not in refs:
+            refs.append(text)
+        for base in (repo_root, spec_dir):
+            try:
+                rel = os.path.relpath(candidate, base)
+            except ValueError:
+                continue
+            if rel not in refs:
+                refs.append(rel)
+    if review.name not in refs:
+        refs.append(review.name)
+    return refs
+
+
+def _mark_obsolete_fix_waves_for_pass_reviews(manifest: dict) -> None:
+    tasks_path = Path(manifest["spec_dir"]) / "tasks.md"
+    if not tasks_path.exists():
+        return
+    pass_refs: list[str] = []
+    for worker in manifest.get("workers", []):
+        if worker.get("mode") != "review" or not worker.get("output"):
+            continue
+        review_path = _repo_path(manifest, worker["output"])
+        if not review_path.exists():
+            continue
+        try:
+            if _review_verdict(review_path.read_text(encoding="utf-8")) == "PASS":
+                pass_refs.extend(_review_refs(review_path, manifest))
+        except OSError:
+            continue
+    if not pass_refs:
+        return
+    lines = tasks_path.read_text(encoding="utf-8").splitlines()
+    changed = False
+    for index, line in enumerate(lines):
+        if "Fix review findings from" not in line or "fix-wave-obsolete" in line:
+            continue
+        if any(ref and (f"`{ref}`" in line or ref in line) for ref in pass_refs):
+            lines[index] = line.replace("- [ ]", "- [x]", 1) + " # fix-wave-obsolete"
+            changed = True
+    if changed:
+        tasks_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def _update_tasks(manifest: dict) -> None:
     tasks_path = Path(manifest["spec_dir"]) / "tasks.md"
     if not tasks_path.exists():
@@ -1107,6 +1490,7 @@ def _write_review_summary(manifest: dict) -> None:
 
 
 def _dry_run(manifest: dict) -> None:
+    print("COMPILE ONLY - NOT A QUALITY GATE")
     print(f"wave: {manifest.get('wave')}")
     for worker in manifest.get("workers", []):
         print(
@@ -1207,6 +1591,7 @@ def _run_manifest(
     create_fix_waves: bool,
     same_worker_restarts: int = 1,
     fresh_worker_restarts: int = 1,
+    same_thread_continues: int = 3,
     preflight: bool = True,
     preflight_timeout: int = 30,
 ) -> tuple[int, dict, list[str]]:
@@ -1216,8 +1601,13 @@ def _run_manifest(
     created_home = meight_home is None
 
     print(f"MEIGHT_HOME={run_home}")
+    run_dir = _runs_dir(manifest)
     fix_waves: list[str] = []
     should_shutdown = False
+    wait_code = 0
+    validate_code = 0
+    exit_code = 1
+    cleanup = {"shutdown_attempted": False, "shutdown_ok": False}
     try:
         if preflight:
             preflight_result = _preflight_manifest(manifest, run_home, cwd, meight, preflight_timeout)
@@ -1228,6 +1618,17 @@ def _run_manifest(
                     f"failure_category={preflight_result.category or TOOL_INFRA} "
                     f"reason={preflight_result.reason}",
                     file=sys.stderr,
+                )
+                record_wave_result(
+                    Path(manifest["spec_dir"]),
+                    wave=str(manifest.get("wave") or ""),
+                    exit_code=1,
+                    validate_code=0,
+                    wait_code=0,
+                    run_dir=run_dir,
+                    workers=_execution_workers(manifest, run_dir),
+                    cleanup=cleanup,
+                    fix_waves=fix_waves,
                 )
                 return 1, manifest, fix_waves
         should_shutdown = True
@@ -1240,20 +1641,35 @@ def _run_manifest(
             timeout,
             same_worker_restarts=same_worker_restarts,
             fresh_worker_restarts=fresh_worker_restarts,
+            same_thread_continues=same_thread_continues,
+            run_dir=run_dir,
         )
         _salvage_artifacts(manifest, run_home)
         validate_code = 0 if skip_validate else _validate(manifest_path, run_home, cwd)
         exit_code = wait_code or validate_code
         if update_tasks:
             _write_review_summary(manifest)
-        if validate_code != 0 and create_fix_waves:
+        review_unavailable = _wave_summary_has_terminal(run_dir, REVIEW_UNAVAILABLE)
+        if validate_code != 0 and create_fix_waves and not review_unavailable:
             fix_waves = _create_fix_waves(manifest)
         if exit_code == 0 and update_tasks:
+            _mark_obsolete_fix_waves_for_pass_reviews(manifest)
             _update_tasks(manifest)
         return exit_code, manifest, fix_waves
     finally:
         if should_shutdown:
-            _shutdown_workers(meight, run_home, cwd)
+            cleanup = {"shutdown_attempted": True, "shutdown_ok": _shutdown_workers(meight, run_home, cwd)}
+            record_wave_result(
+                Path(manifest["spec_dir"]),
+                wave=str(manifest.get("wave") or ""),
+                exit_code=exit_code,
+                validate_code=validate_code,
+                wait_code=wait_code,
+                run_dir=run_dir,
+                workers=_execution_workers(manifest, run_dir),
+                cleanup=cleanup,
+                fix_waves=fix_waves,
+            )
         if created_home and not keep_home:
             shutil.rmtree(run_home, ignore_errors=True)
 
@@ -1270,6 +1686,7 @@ def _auto_run_fix_loop(
     max_fix_cycles: int,
     same_worker_restarts: int = 1,
     fresh_worker_restarts: int = 1,
+    same_thread_continues: int = 3,
     preflight: bool = True,
     preflight_timeout: int = 30,
 ) -> int:
@@ -1287,6 +1704,7 @@ def _auto_run_fix_loop(
             create_fix_waves=cycles < max_fix_cycles,
             same_worker_restarts=same_worker_restarts,
             fresh_worker_restarts=fresh_worker_restarts,
+            same_thread_continues=same_thread_continues,
             preflight=preflight,
             preflight_timeout=preflight_timeout,
         )
@@ -1312,6 +1730,7 @@ def _auto_run_fix_loop(
                 create_fix_waves=False,
                 same_worker_restarts=same_worker_restarts,
                 fresh_worker_restarts=fresh_worker_restarts,
+                same_thread_continues=same_thread_continues,
                 preflight=preflight,
                 preflight_timeout=preflight_timeout,
             )
@@ -1338,6 +1757,7 @@ def main() -> int:
     parser.add_argument("--max-fix-cycles", type=int, default=1)
     parser.add_argument("--same-worker-restarts", type=_bounded_nonnegative_int, default=1)
     parser.add_argument("--fresh-worker-restarts", type=_bounded_nonnegative_int, default=1)
+    parser.add_argument("--same-thread-continues", type=_bounded_nonnegative_int, default=3)
     parser.add_argument("--no-preflight", action="store_true")
     parser.add_argument("--preflight-timeout", type=int, default=30)
     parser.add_argument("--dry-run", action="store_true")
@@ -1370,6 +1790,7 @@ def main() -> int:
             max_fix_cycles=args.max_fix_cycles,
             same_worker_restarts=args.same_worker_restarts,
             fresh_worker_restarts=args.fresh_worker_restarts,
+            same_thread_continues=args.same_thread_continues,
             preflight=not args.no_preflight,
             preflight_timeout=args.preflight_timeout,
         )
@@ -1385,6 +1806,7 @@ def main() -> int:
         create_fix_waves=not args.no_fix_wave,
         same_worker_restarts=args.same_worker_restarts,
         fresh_worker_restarts=args.fresh_worker_restarts,
+        same_thread_continues=args.same_thread_continues,
         preflight=not args.no_preflight,
         preflight_timeout=args.preflight_timeout,
     )

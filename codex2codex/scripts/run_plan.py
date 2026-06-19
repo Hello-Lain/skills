@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from execution_state import record_plan_compile, record_plan_result
 from roles import ALLOWED_CONTEXT_PROFILES
 
 
@@ -73,6 +74,7 @@ def _run_wave(spec_dir: Path, wave: str, args: argparse.Namespace) -> int:
         cmd.extend(["--max-fix-cycles", str(args.max_fix_cycles)])
     cmd.extend(["--same-worker-restarts", str(args.same_worker_restarts)])
     cmd.extend(["--fresh-worker-restarts", str(args.fresh_worker_restarts)])
+    cmd.extend(["--same-thread-continues", str(args.same_thread_continues)])
     if args.no_preflight:
         cmd.append("--no-preflight")
     cmd.extend(["--preflight-timeout", str(args.preflight_timeout)])
@@ -80,7 +82,7 @@ def _run_wave(spec_dir: Path, wave: str, args: argparse.Namespace) -> int:
     return proc.returncode
 
 
-def main() -> int:
+def main_with_args(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Compile plan.md into codex2codex waves, then dry-run or execute them.")
     parser.add_argument("plan_path", type=Path)
     parser.add_argument("--spec-dir", type=Path)
@@ -99,9 +101,10 @@ def main() -> int:
     parser.add_argument("--max-fix-cycles", type=int, default=1)
     parser.add_argument("--same-worker-restarts", type=_bounded_nonnegative_int, default=1)
     parser.add_argument("--fresh-worker-restarts", type=_bounded_nonnegative_int, default=1)
+    parser.add_argument("--same-thread-continues", type=_bounded_nonnegative_int, default=3)
     parser.add_argument("--no-preflight", action="store_true")
     parser.add_argument("--preflight-timeout", type=int, default=30)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     dry_run_dir: Path | None = None
     spec_dir_arg = args.spec_dir
@@ -112,6 +115,15 @@ def main() -> int:
     try:
         compiled = _compile_plan(args.plan_path, spec_dir_arg, args.force, args.add_review)
         spec_dir = Path(compiled["spec_dir"])
+        record_plan_compile(
+            spec_dir,
+            plan_path=args.plan_path,
+            tasks_path=compiled["tasks_path"],
+            waves=compiled["waves"],
+            dry_run=args.dry_run,
+        )
+        if args.dry_run:
+            print("COMPILE ONLY - NOT A QUALITY GATE")
         print(f"compiled tasks: {compiled['tasks_path']}")
         exit_code = 0
         for wave in compiled["waves"]:
@@ -120,10 +132,15 @@ def main() -> int:
             if code != 0:
                 exit_code = code
                 break
+        record_plan_result(spec_dir, exit_code=exit_code, dry_run=args.dry_run)
         return exit_code
     finally:
         if dry_run_dir:
             shutil.rmtree(dry_run_dir, ignore_errors=True)
+
+
+def main() -> int:
+    return main_with_args()
 
 
 if __name__ == "__main__":

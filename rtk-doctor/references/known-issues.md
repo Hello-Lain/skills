@@ -110,10 +110,21 @@ Some tool layers classify `nl|sed` source-snippet output as compressible command
 
 Repair:
 
-Do not rely on `nl|sed` pipelines for source snippets when patching or debugging RTK output. Prefer CodeGraph file mode, `ctx_read` line ranges, `rtk read`, or another raw file reader. The managed wrapper emits an opt-in diagnostic for direct `rtk nl`/`rtk sed` calls when `RTK_DOCTOR_DIAG=1`.
+Run `rtk-doctor.sh repair`. The managed wrapper bypasses `rtk.real` compression for direct `rtk nl ...` and `rtk sed ...` calls by executing system `nl`/`sed` directly. This preserves normal pipeline behavior for `rtk nl -ba file | rtk sed -n '120,150p'`. `RTK_DOCTOR_DIAG=1` also emits a diagnostic when the bypass is used.
+
+For patching or debugging source snippets, CodeGraph file mode, `ctx_read` line ranges, `rtk read`, or another raw file reader are still safer than `nl|sed` pipelines through tool layers.
 
 Verification:
 
 ```bash
 /data/lcq/.codex/skills/rtk-doctor/scripts/rtk-doctor.sh check
+```
+
+The check covers:
+
+```bash
+rtk proxy bash -lc 'nl -ba "$1" | sed -n "2,4p"' _ file
+rtk nl -ba file | sed -n '2,4p'
+nl -ba file | rtk sed -n '2,4p'
+rtk nl -ba file | rtk sed -n '2,4p'
 ```

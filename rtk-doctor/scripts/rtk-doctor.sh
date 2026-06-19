@@ -86,7 +86,7 @@ line_snippet_advice() {
 }
 
 check_line_snippet_pipeline() {
-  local fixture file raw_out rtk_out
+  local fixture file raw_out rtk_proxy_out rtk_nl_out rtk_sed_out rtk_both_out
   fixture="$(mktemp -d)"
   file="$fixture/snippet.txt"
   cat > "$file" <<'EOF'
@@ -98,7 +98,10 @@ rtk-doctor-line-05
 EOF
 
   raw_out="$(nl -ba "$file" | sed -n '2,4p' 2>&1 || true)"
-  rtk_out="$("$rtk_bin" proxy bash -lc 'nl -ba "$1" | sed -n "2,4p"' _ "$file" 2>&1 || true)"
+  rtk_proxy_out="$("$rtk_bin" proxy bash -lc 'nl -ba "$1" | sed -n "2,4p"' _ "$file" 2>&1 || true)"
+  rtk_nl_out="$("$rtk_bin" nl -ba "$file" 2>&1 | sed -n '2,4p' 2>&1 || true)"
+  rtk_sed_out="$(nl -ba "$file" 2>&1 | "$rtk_bin" sed -n '2,4p' 2>&1 || true)"
+  rtk_both_out="$("$rtk_bin" nl -ba "$file" 2>&1 | "$rtk_bin" sed -n '2,4p' 2>&1 || true)"
   rm -rf "$fixture"
 
   if [[ "$raw_out" != *"rtk-doctor-line-02"* || "$raw_out" != *"rtk-doctor-line-04"* ]]; then
@@ -106,17 +109,27 @@ EOF
     line_snippet_advice
     return 1
   fi
-  if looks_like_git_summary "$rtk_out" && [[ "$rtk_out" != *"rtk-doctor-line-02"* ]]; then
-    info "FAIL line-snippet-pipeline: rtk proxy nl|sed returned unrelated git summary"
-    line_snippet_advice
-    return 1
-  fi
-  if [[ "$rtk_out" != *"rtk-doctor-line-02"* || "$rtk_out" != *"rtk-doctor-line-04"* ]]; then
-    info "FAIL line-snippet-pipeline: rtk proxy nl|sed did not return sentinel lines"
-    line_snippet_advice
-    return 1
-  fi
+  check_snippet_output "rtk proxy nl|sed" "$rtk_proxy_out" || return 1
+  check_snippet_output "rtk nl | sed" "$rtk_nl_out" || return 1
+  check_snippet_output "nl | rtk sed" "$rtk_sed_out" || return 1
+  check_snippet_output "rtk nl | rtk sed" "$rtk_both_out" || return 1
   info "PASS line-snippet-pipeline"
+}
+
+check_snippet_output() {
+  local label output
+  label="$1"
+  output="$2"
+  if looks_like_git_summary "$output" && [[ "$output" != *"rtk-doctor-line-02"* ]]; then
+    info "FAIL line-snippet-pipeline: $label returned unrelated git summary"
+    line_snippet_advice
+    return 1
+  fi
+  if [[ "$output" != *"rtk-doctor-line-02"* || "$output" != *"rtk-doctor-line-04"* ]]; then
+    info "FAIL line-snippet-pipeline: $label did not return sentinel lines"
+    line_snippet_advice
+    return 1
+  fi
 }
 
 check_exec() {
@@ -193,6 +206,22 @@ if [[ "${1:-}" == "test" ]]; then
   done
   exec "$rtk_real" test "$@"
 fi
+
+case "${1:-}" in
+  nl|sed)
+    cmd="$1"
+    shift
+    system_cmd="$(command -v "$cmd" 2>/dev/null || true)"
+    [[ -n "$system_cmd" ]] || {
+      printf 'ERROR: %s not found on PATH\n' "$cmd" >&2
+      exit 127
+    }
+    if [[ "${RTK_DOCTOR_DIAG:-0}" == "1" ]]; then
+      printf '%s\n' "DIAG line-snippet-reader: rtk doctor is bypassing rtk compression for $cmd and executing $system_cmd directly." >&2
+    fi
+    exec "$system_cmd" "$@"
+    ;;
+esac
 
 if [[ "${RTK_DOCTOR_DIAG:-0}" == "1" ]]; then
   case "${1:-}" in

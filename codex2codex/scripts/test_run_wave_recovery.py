@@ -331,6 +331,7 @@ PATCH_BODY:
                         5,
                         same_worker_restarts=1,
                         fresh_worker_restarts=0,
+                        same_thread_continues=1,
                     )
         finally:
             run_wave._run = original_run
@@ -375,6 +376,7 @@ class RunWaveRecoveryLoopTest(unittest.TestCase):
                         5,
                         same_worker_restarts=0,
                         fresh_worker_restarts=0,
+                        same_thread_continues=0,
                     )
         finally:
             run_wave._run = original_run
@@ -413,6 +415,7 @@ class RunWaveRecoveryLoopTest(unittest.TestCase):
                         5,
                         same_worker_restarts=1,
                         fresh_worker_restarts=0,
+                        same_thread_continues=1,
                     )
         finally:
             run_wave._run = original_run
@@ -597,6 +600,7 @@ class RunWaveRecoveryLoopTest(unittest.TestCase):
                         5,
                         same_worker_restarts=0,
                         fresh_worker_restarts=0,
+                        same_thread_continues=0,
                     )
         finally:
             run_wave._run = original_run
@@ -709,6 +713,125 @@ class RunWaveRecoveryLoopTest(unittest.TestCase):
 
         self.assertEqual(code, 3)
 
+    def test_default_same_thread_continuation_budget_is_three_and_writes_ledger(self) -> None:
+        calls: list[list[str]] = []
+        wait_codes = [2, 2, 2, 2]
+
+        def fake_run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False):
+            calls.append(cmd)
+            if cmd[1] == "wait":
+                return subprocess.CompletedProcess(cmd, wait_codes.pop(0), stdout="", stderr="")
+            if cmd[1] == "status":
+                status = {"name": "coding-1", "state": "failed", "failure_detail": "provider timeout"}
+                return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(status), stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        original_run = run_wave._run
+        run_wave._run = fake_run
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                run_dir = root / "runs" / "wave-1"
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = run_wave._wait_worker_with_recovery(
+                        self._worker(),
+                        root / "meight",
+                        root,
+                        "meight",
+                        5,
+                        same_worker_restarts=0,
+                        fresh_worker_restarts=0,
+                        run_dir=run_dir,
+                        wave="Wave 1",
+                    )
+                attempts = [
+                    json.loads(line)
+                    for line in (run_dir / "coding-1" / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+                ]
+                summary = json.loads((run_dir / "coding-1" / "summary.json").read_text(encoding="utf-8"))
+        finally:
+            run_wave._run = original_run
+
+        self.assertEqual(code, 2)
+        self.assertEqual([cmd[1] for cmd in calls].count("follow"), 3)
+        self.assertEqual([item["continue_attempt"] for item in attempts if item["action"] == "continue"], [1, 2, 3])
+        self.assertTrue(all(item["wave"] == "Wave 1" for item in attempts))
+        self.assertEqual(summary["terminal_category"], run_wave.INFRA_FAILED)
+
+    def test_review_infra_failure_is_review_unavailable_and_no_fix_wave(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "spec_dir": str(root),
+                        "wave": "Wave 2",
+                        "workers": [{"name": "review-1", "mode": "review", "output": "review.md"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            original_start = run_wave._start_workers
+            original_wait = run_wave._wait_workers
+            original_validate = run_wave._validate
+            original_fix = run_wave._create_fix_waves
+            original_shutdown = run_wave._shutdown_workers
+            run_wave._start_workers = lambda *args, **kwargs: ["review-1"]
+            run_wave._wait_workers = lambda manifest, home, cwd, meight, timeout, **kwargs: (
+                run_wave._write_wave_summary(
+                    kwargs["run_dir"],
+                    manifest,
+                    [{"worker": "review-1", "exit_code": 2, "terminal_category": run_wave.REVIEW_UNAVAILABLE}],
+                )
+                or 2
+            )
+            run_wave._validate = lambda *args, **kwargs: 1
+            run_wave._create_fix_waves = lambda *args, **kwargs: ["unexpected-fix-wave"]
+            run_wave._shutdown_workers = lambda *args, **kwargs: None
+            try:
+                code, _, fix_waves = run_wave._run_manifest(
+                    manifest_path,
+                    meight="meight",
+                    timeout=5,
+                    meight_home=root / "meight",
+                    keep_home=True,
+                    skip_validate=False,
+                    update_tasks=False,
+                    create_fix_waves=True,
+                    preflight=False,
+                )
+            finally:
+                run_wave._start_workers = original_start
+                run_wave._wait_workers = original_wait
+                run_wave._validate = original_validate
+                run_wave._create_fix_waves = original_fix
+                run_wave._shutdown_workers = original_shutdown
+
+        self.assertEqual(code, 2)
+        self.assertEqual(fix_waves, [])
+
+    def test_pass_review_marks_existing_fix_wave_obsolete(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            review = root / "review.md"
+            review.write_text("Verdict: PASS\n\n## Findings\n- None.\n\n## Verification\n- ok.\n", encoding="utf-8")
+            tasks = root / "tasks.md"
+            tasks.write_text(
+                f"# Tasks\n\n## Wave 3: fix review findings\n- [ ] [coding] Fix review findings from `{review}` | `src/app.py` | Verify: tests\n",
+                encoding="utf-8",
+            )
+
+            run_wave._mark_obsolete_fix_waves_for_pass_reviews(
+                {"spec_dir": str(root), "workers": [{"name": "review-1", "mode": "review", "output": str(review)}]}
+            )
+
+            text = tasks.read_text(encoding="utf-8")
+
+        self.assertIn("- [x] [coding] Fix review findings", text)
+        self.assertIn("fix-wave-obsolete", text)
+
     def test_completed_contract_failure_rejects_file_scope_child_path(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             cwd = Path(temp)
@@ -791,6 +914,7 @@ class RunPlanRecoveryControlsTest(unittest.TestCase):
             max_fix_cycles=2,
             same_worker_restarts=2,
             fresh_worker_restarts=0,
+            same_thread_continues=3,
             no_preflight=True,
             preflight_timeout=7,
         )
@@ -808,6 +932,8 @@ class RunPlanRecoveryControlsTest(unittest.TestCase):
         self.assertEqual(command[command.index("--same-worker-restarts") + 1], "2")
         self.assertIn("--fresh-worker-restarts", command)
         self.assertEqual(command[command.index("--fresh-worker-restarts") + 1], "0")
+        self.assertIn("--same-thread-continues", command)
+        self.assertEqual(command[command.index("--same-thread-continues") + 1], "3")
         self.assertIn("--no-preflight", command)
         self.assertIn("--preflight-timeout", command)
         self.assertEqual(command[command.index("--preflight-timeout") + 1], "7")

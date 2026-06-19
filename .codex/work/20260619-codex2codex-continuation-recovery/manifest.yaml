@@ -1,0 +1,36 @@
+version: 1
+id: "work_20260619_codex2codex_continuation_recovery"
+slug: "20260619-codex2codex-continuation-recovery"
+title: "Codex2Codex Continuation-First Recovery"
+created_at: "2026-06-19T23:04:20+08:00"
+updated_at: "2026-06-20T00:20:53+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-19T23:04:20+08:00"
+    action: "created"
+    artifact: "spec.md"
+    by: "interview-me"
+  - at: "2026-06-20T00:20:53+08:00"
+    action: "planned"
+    artifact: "plan.md"
+    by: "spec2plan"
+  - at: "2026-06-20T00:20:53+08:00"
+    action: "heavy-subagent-artifacts"
+    artifact: "subagents/"
+    by: "spec2plan"
