@@ -21,6 +21,16 @@ Keep one master session clean. Act only as router, context firewall, and gatekee
 - `Autopilot`: default. Create branch cards, briefs, maps, sidecars, completion reports, and Handoff Capsules automatically.
 - `Strict`: high-risk/audit. Ask before branch/session open, completion, and merge.
 
+## Audit Sidecars
+
+For read-only audit/review sidecars that inspect context and return findings without editing files, creating branches, touching Trellis, or merging work, use the lightweight audit path:
+
+- No branch card, branch map, completion report, or Handoff Capsule is required.
+- Prompt must state `read-only audit`, allowed paths, no edits, and expected output format.
+- Master may merge back only concise findings, risks, and validation gaps.
+
+For any sidecar that may edit files, create branches/worktrees, run implementation, or affect Trellis state, use full Autopilot artifacts before `create_agent`: branch card/brief, branch map entry, lifecycle state, and completion report.
+
 ## Local Routing
 
 - `$plan-grill`: production `plan.md`, safer plan artifact, or plan hardening.

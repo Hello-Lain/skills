@@ -161,6 +161,57 @@ function getTaskService(userId: string): TaskService {
 }
 ```
 
+## Documentation Lifecycle Cleanup
+
+Treat documentation like deprecated code: it has consumers, compatibility constraints, maintenance cost, and removal risk. Cleanup is not "delete old docs"; it is preserving the authoritative record while retiring stale, duplicate, temporary, process, and result docs that no longer earn their keep.
+
+### Classification
+
+| Class | Definition | Action |
+|---|---|---|
+| **Authoritative** | Current source of truth for behavior, process, API, ADR, runbook, or user-facing guidance | Keep and update. Link duplicates here. |
+| **Working** | Active draft, plan, checklist, or migration tracker still used by ongoing work | Keep until work completes, then merge or archive. |
+| **Historical** | Superseded doc that records important decisions, incidents, verification, or migration history | Archive or summarize into the authoritative doc. |
+| **Stale** | Outdated guidance that conflicts with current behavior and has no historical value | Merge any useful content, then delete or archive. |
+| **Duplicate** | Repeats another doc, summary, or generated artifact with little or no unique content | Merge unique content into the authoritative doc, then delete. |
+| **Temporary** | Scratchpad, agent process note, generated intermediate, one-off result, or transient task artifact | Delete after results are captured and references are cleared. |
+| **Redundant** | Correct but unnecessary because it is covered by a clearer source of truth | Link to or merge into the authoritative source, then delete. |
+
+### Cleanup Workflow
+
+For each candidate document:
+
+```
+1. Identify its consumers: humans, agents, scripts, links, READMEs, specs, runbooks, or onboarding flows.
+2. Classify it as authoritative, working, historical, stale, duplicate, temporary, or redundant.
+3. Compare against the likely authoritative source.
+4. Extract unique decisions, verification evidence, migration notes, examples, or user-facing guidance.
+5. Merge or summarize that useful content into the authoritative doc.
+6. Update inbound links and references.
+7. Apply the delete gates below before removing anything.
+```
+
+Prefer `keep` when the doc is authoritative, `merge` when it contains unique current guidance, `summarize` when it only needs a compact historical record, `archive` when it should be preserved but not surfaced as current guidance, and `delete` only when the delete gates pass.
+
+### Delete Gates
+
+Do not delete a document unless all gates pass:
+
+- No active references remain in code, docs, specs, task plans, scripts, CI, READMEs, or agent prompts.
+- No unique decision, rationale, verification result, incident detail, API contract, migration note, or user-facing instruction would be lost.
+- Useful content has been merged, summarized, or linked from the authoritative location.
+- The remaining authoritative doc is easier to find than the deleted one.
+- The deletion scope is explicit and does not sweep broad directories or unrelated histories.
+
+### Agent Process and Result Docs
+
+Agent-generated docs are often temporary but can contain real decisions. Separate process noise from durable output:
+
+- Process docs: prompts, wave logs, scratch plans, handoff fragments, intermediate reviews, generated checklists. Delete when the final plan, review, or implementation artifact captures the result.
+- Result docs: accepted specs, ADRs, migration guides, review findings, verification summaries, release notes. Keep as authoritative or historical unless superseded and summarized elsewhere.
+- If a process doc is the only record of why a direction changed, summarize that decision before deletion.
+- If many result docs overlap, merge the current guidance into one authoritative doc and archive only the historical record needed for traceability.
+
 ## Zombie Code
 
 Zombie code is code that nobody owns but everybody depends on. It's not actively maintained, has no clear owner, and accumulates security vulnerabilities and compatibility issues. Signs:
@@ -193,6 +244,9 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 - New features added to a deprecated system (invest in the replacement instead)
 - Deprecation without measuring current usage
 - Removing code without verifying zero active consumers
+- Deleting docs before identifying the authoritative replacement
+- Deleting temporary or duplicate docs without checking references and preserving unique decisions
+- Archiving stale docs where users will still find and trust them as current guidance
 
 ## Verification
 
@@ -204,3 +258,11 @@ After completing a deprecation:
 - [ ] Old code, tests, documentation, and configuration are fully removed
 - [ ] No references to the deprecated system remain in the codebase
 - [ ] Deprecation notices are removed (they served their purpose)
+
+After completing documentation cleanup:
+
+- [ ] Each changed doc was classified as authoritative, working, historical, stale, duplicate, temporary, or redundant
+- [ ] Unique decisions, verification evidence, and user-facing guidance were merged or summarized before deletion
+- [ ] Delete gates passed for every removed document
+- [ ] Active references now point to the authoritative doc or intentional archive
+- [ ] Temporary agent process docs are removed once durable result docs exist

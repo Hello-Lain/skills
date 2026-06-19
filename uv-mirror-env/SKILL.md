@@ -34,6 +34,8 @@ Recovery loop:
 
 If a command may be failing because of both code and dependencies, fix the dependency blocker first, then re-run to expose any remaining code issue.
 
+Audit-mode exception: when the task is read-only audit/validation and the only failures come from vendored env/cache dirs such as `.venv/`, `site-packages/`, `.cache/`, wheelhouses, generated vendor trees, or downloaded dependency sources, do not start the full `.venv` repair loop yet. Narrow the command to first-party source/tests by excluding vendored env/cache dirs, preserve the excluded failure, and continue only if targeted source validation passes. If the narrowed command still fails from env/deps, or project code needs the broken package, resume the recovery loop above.
+
 Escalate to the user only after at least one appropriate local repair path has failed and the remaining action is unsafe, destructive, requires credentials, requires choosing incompatible dependency versions without project evidence, or cannot be completed with available network/cache/tooling. Report the preserved command, exact blocker, attempted repair path, and the concrete decision needed.
 
 ## Defaults

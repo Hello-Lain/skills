@@ -207,7 +207,22 @@ PASS|FAIL
 
 `scripts/validate_result_contract.py` validates generic worker output by default. Pass `--require-review` for review artifacts or `--require-handoff` for legacy `## Handoff Capsule` artifacts.
 
-For codex-agent-team waves, `scripts/prepare_wave.py` parses `tasks.md`, rejects same-wave write-scope overlap, and writes generated briefs plus `manifest.json`. `scripts/run_wave.py` can take either `--manifest` or `--spec-dir/--wave`; it supports `--dry-run`, `--profile minimal|full`, `--no-fix-wave`, `--auto-run-fix`, and `--max-fix-cycles`. It executes the manifest with `meight`, waits for workers, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md`, creates `Wave N: fix review findings` on review `FAIL`, optionally runs the fix wave(s) and reruns the original review until PASS or cycle limit, shuts down each isolated daemon, and returns nonzero on worker failure, blocked result, missing artifact, invalid review artifact, or review `FAIL`. A worker `completed` state is not sufficient if the expected artifact is missing or invalid.
+## Plan-to-Wave Contract
+
+`plan.md` is the high-level orchestration input; `tasks.md` and `manifest.json` are the executable IR. `scripts/plan_to_tasks.py` must parse `### Task N:` sections from a `spec2plan` plan and compile them into codex2codex task lines.
+
+Each executable plan task should include:
+
+- `Worker role`: `coding|devops|review|consult|sa` or a clear alias.
+- `Writable scope`: exact paths the worker may write. For review/consult, this is product read scope.
+- `Verification`: command or check the worker must run/report.
+- `Dependencies`: task numbers or `None`.
+- `Wave`: optional explicit wave number.
+- `Output artifact`: path for the worker report/review.
+
+`plan_to_tasks.py` assigns waves from dependencies, moves overlapping same-wave implementation scopes later, writes `.codex/specs/<slug>/tasks.md`, creates a minimal `spec.md` source pointer when absent, and can append a review wave. `scripts/run_plan.py` wraps `plan_to_tasks.py` plus `run_wave.py`; `--dry-run` previews workers before execution.
+
+For codex-agent-team waves, `scripts/prepare_wave.py` parses `tasks.md`, rejects same-wave write-scope overlap, and writes generated briefs plus `manifest.json`. `scripts/run_wave.py` can take either `--manifest` or `--spec-dir/--wave`; it supports `--dry-run`, `--profile minimal|full`, `--no-fix-wave`, `--auto-run-fix`, and `--max-fix-cycles`. It executes the manifest with `meight`, waits for workers, salvages complete PASS/FAIL review bodies from `result.md` when artifact writes are blocked, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md`, creates `Wave N: fix review findings` on review `FAIL`, optionally runs the fix wave(s) and reruns the original review until PASS or cycle limit, shuts down each isolated daemon, and returns nonzero on worker failure, blocked result, missing artifact, invalid review artifact, or review `FAIL`. A worker `completed` state is not sufficient if the expected artifact is missing or invalid.
 
 ## Daemon Internals
 

@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex2Codex"
-  short_description: "Meight backend for team waves"
-  default_prompt: "Use $codex2codex to dry-run, prepare, execute, validate, and fix codex-agent-team style waves with isolated minimal-profile meight workers and PASS/FAIL gates."
+  short_description: "Plan and run Codex worker waves"
+  default_prompt: "Use $codex2codex to compile plan.md into worker waves, dry-run/execute/validate codex-agent-team tasks, and fix review FAILs with isolated meight workers and PASS/FAIL gates."
 
 policy:
   allow_implicit_invocation: false

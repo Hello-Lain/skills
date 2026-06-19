@@ -1,4 +1,4 @@
 interface:
   display_name: "Spec2Plan"
-  short_description: "Convert specs into executable plans"
-  default_prompt: "Use $spec2plan to convert this spec into an executable plan.md, using light mode by default and heavy mode when risk or coordination requires it."
+  short_description: "Convert specs into worker-ready plans"
+  default_prompt: "Use $spec2plan to convert this spec into an executable, codex2codex-ready plan.md with dependency-ordered waves, worker roles, writable scopes, verification, and output artifacts."

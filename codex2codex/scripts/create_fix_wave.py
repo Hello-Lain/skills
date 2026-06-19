@@ -8,7 +8,12 @@ import sys
 from pathlib import Path
 
 VERDICT_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
-FILE_REF_RE = re.compile(r"(?:\[([^\]\s]+):\d+[^\]]*\])|(?:\[([^\]\s]+\.[A-Za-z0-9_./-]+)\]\([^)]+\):\d+)|`([^`]+\.[A-Za-z0-9_./-]+)`")
+FILE_REF_RE = re.compile(
+    r"(?:\[([^\]\s]+):\d+[^\]]*\])"
+    r"|(?:\[([^\]\s]+\.[A-Za-z0-9_./-]+)\]\([^)]+\):\d+)"
+    r"|`([^`]+\.[A-Za-z0-9_./-]+)(?::[^`]*)?`"
+    r"|(?<![\w/.-])([A-Za-z0-9_./-]+\.[A-Za-z0-9_]+):(?:\d+|[A-Za-z_][A-Za-z0-9_]*)"
+)
 WAVE_RE = re.compile(r"^##\s+Wave\s+(\d+)", re.M)
 WAVE_HEADER_RE = re.compile(r"^##\s+(Wave\s+\d+.*)$")
 
@@ -16,7 +21,7 @@ WAVE_HEADER_RE = re.compile(r"^##\s+(Wave\s+\d+.*)$")
 def _file_refs(text: str) -> list[str]:
     refs: list[str] = []
     for match in FILE_REF_RE.finditer(text):
-        ref = (match.group(1) or match.group(2) or match.group(3) or "").strip()
+        ref = (match.group(1) or match.group(2) or match.group(3) or match.group(4) or "").strip()
         if not ref or ref.startswith(".codex/") or ref.endswith(".md"):
             continue
         if ref not in refs:

@@ -56,7 +56,23 @@ RISK_RE = re.compile(r"(?mi)^.*Risk level:\s*(Low|Medium|High|Critical)\b")
 CONFIDENCE_RE = re.compile(r"(?mi)^.*Confidence:\s*(Low|Medium|High)\b")
 ADR_RE = re.compile(r"(?mi)\bADR\s*:\s*(Needed|Not needed|Existing)\b")
 TASK_RE = re.compile(r"(?mi)^\s*#{3,}\s*Task\s+\d+\s*:")
+TASK_BLOCK_RE = re.compile(r"(?ms)^\s*#{3,}\s*Task\s+\d+\s*:.+?(?=^\s*#{3,}\s*Task\s+\d+\s*:|\Z)")
+FIELD_RE = re.compile(r"(?ms)^\s*-\s*([^:\n]+?)\s*:\s*(.*?)(?=^\s*-\s*[^:\n]+?\s*:|\Z)")
 XL_RE = re.compile(r"(?mi)Estimated scope:\s*XL\b")
+CODE_RE = re.compile(r"`([^`]+)`")
+VALID_ROLES = {"coding", "devops", "review", "consult", "sa"}
+TASK_REQUIRED_FIELDS = (
+    "Worker role",
+    "Wave",
+    "Acceptance criteria",
+    "Verification",
+    "Dependencies",
+    "Files likely touched",
+    "Writable scope",
+    "Output artifact",
+    "Estimated scope",
+)
+EXEC_REQUIRED_FIELDS = ("Worker role", "Wave", "Verification", "Writable scope", "Output artifact")
 
 
 def has_heading(text: str, heading: str) -> bool:
@@ -89,17 +105,84 @@ def task_errors(text: str) -> list[str]:
     task_section = section_text(text, "Task Breakdown")
     if not TASK_RE.search(task_section):
         errors.append("Task Breakdown must include at least one ### Task N:")
-    for label in (
-        "Acceptance criteria",
-        "Verification",
-        "Dependencies",
-        "Files likely touched",
-        "Estimated scope",
-    ):
-        if not re.search(rf"(?mi)^\s*-\s*{re.escape(label)}\s*:", task_section):
-            errors.append(f"Task Breakdown missing task field: {label}")
+    task_blocks = [match.group(0) for match in TASK_BLOCK_RE.finditer(task_section)]
+    if TASK_RE.search(task_section) and not task_blocks:
+        errors.append("Task Breakdown task blocks could not be parsed")
+    for block in task_blocks:
+        task_number = re.search(r"(?m)Task\s+(\d+)\s*:", block)
+        label = f"Task {task_number.group(1)}" if task_number else "Task"
+        fields = _task_fields(block)
+        for field in TASK_REQUIRED_FIELDS:
+            if field.lower() not in fields:
+                errors.append(f"{label} missing task field: {field}")
+        for field in EXEC_REQUIRED_FIELDS:
+            value = fields.get(field.lower(), "")
+            if _empty_or_placeholder(value):
+                errors.append(f"{label} has non-executable {field}")
+        errors.extend(_output_artifact_errors(fields.get("output artifact", ""), label))
+        role = fields.get("worker role", "").strip().lower()
+        if role and role not in VALID_ROLES:
+            errors.append(f"{label} has unknown Worker role: {role}")
     if XL_RE.search(task_section):
         errors.append("XL tasks are not allowed")
+    errors.extend(_wave_overlap_errors(task_blocks))
+    return errors
+
+def _task_fields(block: str) -> dict[str, str]:
+    return {match.group(1).strip().lower(): match.group(2).strip() for match in FIELD_RE.finditer(block)}
+
+def _empty_or_placeholder(value: str) -> bool:
+    stripped = re.sub(r"\s+", " ", value.strip()).strip("` ").lower()
+    return not stripped or stripped in {"tbd", "todo", "unknown", "not specified", "n/a", "na"}
+
+def _scope_paths(value: str) -> list[str]:
+    paths = [path.strip() for path in CODE_RE.findall(value) if path.strip()]
+    if paths:
+        return paths
+    paths = []
+    for line in value.splitlines():
+        item = line.strip().lstrip("-").strip()
+        if item and not _empty_or_placeholder(item):
+            paths.append(item)
+    return paths
+
+
+def _output_artifact_errors(value: str, task_label: str) -> list[str]:
+    errors: list[str] = []
+    for path_text in _scope_paths(value):
+        path = Path(path_text)
+        if path_text.endswith("/") or path.name in {"", ".", ".."}:
+            errors.append(f"{task_label} has invalid Output artifact path: {path_text}")
+            continue
+        parent = path.parent
+        if str(parent) in {"", "."}:
+            errors.append(f"{task_label} Output artifact must include a parent directory: {path_text}")
+            continue
+        if path.is_absolute():
+            continue
+        first = path.parts[0] if path.parts else ""
+        if first not in {".codex", ".spec2plan"}:
+            errors.append(f"{task_label} Output artifact should live under .codex/ or .spec2plan/: {path_text}")
+    return errors
+
+
+def _wave_overlap_errors(task_blocks: list[str]) -> list[str]:
+    errors: list[str] = []
+    owners: dict[tuple[str, str], str] = {}
+    for block in task_blocks:
+        task_number = re.search(r"(?m)Task\s+(\d+)\s*:", block)
+        task_label = f"Task {task_number.group(1)}" if task_number else "Task"
+        fields = _task_fields(block)
+        role = fields.get("worker role", "").strip().lower()
+        if role in {"review", "consult", "sa"}:
+            continue
+        wave = fields.get("wave", "").strip()
+        for path in _scope_paths(fields.get("writable scope", "")):
+            key = (wave, path)
+            prior = owners.get(key)
+            if prior:
+                errors.append(f"same-wave Writable scope overlap: {path} in {prior} and {task_label}")
+            owners[key] = task_label
     return errors
 
 

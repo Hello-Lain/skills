@@ -27,6 +27,7 @@ When `$skill-creator` creates or updates a skill, run this skill as a final desi
 - Keep `SKILL.md` as the small always-loaded entrypoint.
 - Put conditional, long, rare, or subagent-only detail in one-level `references/` files.
 - Run the skill validator after changes.
+- For created or materially changed skills, run a realistic scenario gate unless blocked by live-system risk; clean all temporary files afterward.
 
 ## Workflow
 
@@ -52,13 +53,42 @@ When `$skill-creator` creates or updates a skill, run this skill as a final desi
    - body: core contract, routing, workflow, gates, validation, references.
    - references: detailed contracts, schemas, templates, API notes, examples loaded only when needed.
    - `agents/openai.yaml`: short `short_description` and one-sentence `default_prompt` mentioning `$skill-name`.
-5. Validate and compare:
+5. Run the Scenario Gate for new or materially changed skills:
+   - create a bounded, realistic, complex fixture in `mktemp -d` or `<skill-dir>/.tmp-forward-test/`
+   - include 3-7 files, one ambiguity/edge case, one path that should load a reference/script, and one validation command
+   - use the skill to solve the scenario, watching trigger accuracy, resource loading, tool use, output format, questions asked, token bloat, and cleanup behavior
+   - patch the skill for any real failure, then rerun the same scenario or a close variant once
+   - delete the fixture and all outputs; verify no unrelated files remain
+   - if live systems, secrets, cost, long runtime, or user data are involved, use a dry-run/mock fixture or record the blocker instead
+6. Validate and compare:
    - run `.system/skill-creator/scripts/quick_validate.py <skill-dir>`
    - for established dotted canonical IDs, run `.system/skill-creator/scripts/quick_validate.py --allow-dotted-name <skill-dir>`
    - compare line/word counts before/after
    - grep key gates from the new files
    - inspect diff for accidental behavior loss; if the skill dir is not in a git repo, use the fallback in Validation Commands
-6. Report: files changed, token/line reduction, preserved gates, validation result, residual risks.
+7. Report: files changed, token/line reduction, preserved gates, Scenario Gate result, validation result, residual risks.
+
+## Scenario Gate
+
+Goal: prove the skill works in a messy task, not just passes schema checks.
+
+PASS requires:
+
+- Skill triggers for the scenario and avoids triggering for an obvious non-scenario.
+- Required references/scripts are used only when needed.
+- Output matches the skill's declared schema/format.
+- Validation commands run or a concrete blocker is recorded.
+- The agent does not ask avoidable questions, skip required gates, or load broad unnecessary context.
+- All temporary fixtures, generated outputs, indexes, logs, and scratch files are removed.
+- Any discovered failure is patched, retested, or listed as residual risk.
+
+Fixture design:
+
+- Prefer `tmpdir="$(mktemp -d)"`; if the task needs the skill path, use `<skill-dir>/.tmp-forward-test/`.
+- Model realistic failure modes: stale config, similar names, missing fields, partial data, fallback tool path, malformed input, or conflicting docs.
+- Keep the fixture small enough for fast cleanup and large enough to exercise routing.
+- Do not touch live services, secrets, production data, expensive APIs, or user-owned files.
+- Use subagents only when available and useful; keep prompts generic and pass the skill plus fixture, not expected answers.
 
 ## Compression Patterns
 
@@ -93,6 +123,10 @@ python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py -
 wc -l <skill-dir>/SKILL.md <skill-dir>/agents/openai.yaml
 wc -w <skill-dir>/SKILL.md
 
+# Scenario Gate cleanup/status:
+test ! -e <skill-dir>/.tmp-forward-test
+git -C <repo> status --short <skill-dir>
+
 # Diff inspection:
 # 1. If <skill-dir> is inside a git repo:
 git -C <skill-dir> diff --stat -- .
@@ -111,4 +145,4 @@ Use `rg` to verify key terms/gates survived.
 - Stop if the target skill's behavior is unclear and no local evidence can recover it.
 - Stop before deleting or moving large resources unless the user explicitly asked.
 - Stop if validation fails after one repair attempt.
-- Ask before forward-testing if it may take long, require approvals, or modify live systems.
+- Do not run live-system, costly, secret-bearing, long-running, or user-data forward tests; use a mock/dry-run fixture or report the blocker.

@@ -59,6 +59,17 @@ def _run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False) ->
         check=False,
     )
 
+def _shutdown_workers(meight: str, meight_home: Path, cwd: Path) -> None:
+    proc = _run([meight, "shutdown"], meight_home, cwd, capture=True)
+    if proc.returncode == 0:
+        return
+    sys.stderr.write(proc.stderr or proc.stdout or "")
+    force_proc = _run([meight, "shutdown", "--force"], meight_home, cwd, capture=True)
+    if force_proc.stdout:
+        print(force_proc.stdout.strip())
+    if force_proc.stderr:
+        sys.stderr.write(force_proc.stderr)
+
 
 def _start_workers(manifest: dict, meight_home: Path, cwd: Path, meight: str) -> list[str]:
     names: list[str] = []
@@ -137,23 +148,55 @@ def _repo_path(manifest: dict, path_text: str) -> Path:
     return _repo_root(Path(manifest["spec_dir"])) / path
 
 
-def _salvage_review_artifacts(manifest: dict, meight_home: Path) -> None:
+def _artifact_exists(path: Path) -> bool:
+    try:
+        return path.exists() and path.read_text(encoding="utf-8").strip() != ""
+    except OSError:
+        return False
+
+
+def _salvage_artifacts(manifest: dict, meight_home: Path) -> None:
     for worker in manifest.get("workers", []):
-        if worker.get("mode") != "review" or not worker.get("output"):
+        if not worker.get("output"):
             continue
         artifact = _repo_path(manifest, worker["output"])
-        if artifact.exists():
-            continue
         result = _worker_result(meight_home, worker["name"]).strip()
-        if not result or _review_verdict(result) not in {"PASS", "FAIL"}:
+        if not result:
             continue
+        if worker.get("mode") == "review":
+            body = _review_artifact_body(worker["name"], result)
+        else:
+            body = _implementation_artifact_body(worker["name"], result)
+        if not body:
+            continue
+        if _artifact_exists(artifact):
+            try:
+                existing = artifact.read_text(encoding="utf-8")
+            except OSError:
+                existing = ""
+            if "Salvaged-From-Worker:" not in existing:
+                continue
         artifact.parent.mkdir(parents=True, exist_ok=True)
-        artifact.write_text(_normalize_review_artifact(worker["name"], result), encoding="utf-8")
-        print(f"salvaged review artifact: {artifact}")
+        artifact.write_text(body, encoding="utf-8")
+        print(f"salvaged artifact: {artifact}")
 
 
-def _normalize_review_artifact(worker_name: str, result: str) -> str:
+def _clean_result_text(result: str) -> str:
     text = result.strip()
+    turns = list(re.finditer(r"(?m)^##\s+Turn\s+\d+\b.*$", text))
+    if turns:
+        text = text[turns[-1].end() :].strip()
+    text = re.sub(r"(?ms)\n?QUESTION:.*$", "", text).strip()
+    return text
+
+
+def _review_artifact_body(worker_name: str, result: str) -> str:
+    if _review_verdict(result) not in {"PASS", "FAIL"}:
+        return ""
+    text = _clean_result_text(result)
+    marker = re.search(r"(?mi)^Review result:\s*$", text)
+    if marker:
+        text = text[marker.end() :].strip()
     headings = {match.group(1).strip().lower() for match in HEADING_RE.finditer(text)}
     lines = [f"Salvaged-From-Worker: {worker_name}", ""]
     if "findings" not in headings:
@@ -162,6 +205,17 @@ def _normalize_review_artifact(worker_name: str, result: str) -> str:
     if "verification" not in headings and "tests" not in headings:
         lines.extend(["", "### Verification", "- See worker result; artifact was salvaged by run_wave.py after worker write failure."])
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _implementation_artifact_body(worker_name: str, result: str) -> str:
+    text = _clean_result_text(result)
+    if not text:
+        return ""
+    if re.search(r"(?mi)^\s*QUESTION\s*:", text):
+        return ""
+    if not re.search(r"(?mi)(changed files|verification|verified|residual risks|risks|summary)", text):
+        return ""
+    return f"Salvaged-From-Worker: {worker_name}\n\n{text.rstrip()}\n"
 
 
 def _create_fix_waves(manifest: dict) -> list[str]:
@@ -252,6 +306,18 @@ def _section_items(text: str, names: set[str]) -> list[str]:
     return items
 
 
+def _inline_verification_items(text: str) -> list[str]:
+    items: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip().lstrip("-").strip()
+        match = re.match(r"(?i)(verification|test|tests|result)\s*:\s*(.+)$", stripped)
+        if match:
+            item = match.group(2).strip()
+            if item.lower().rstrip(".") not in {"none", "n/a", "na"}:
+                items.append(item)
+    return items
+
+
 def _review_summary_entry(manifest: dict, worker: dict) -> str:
     output = worker.get("output") or ""
     artifact = _repo_path(manifest, output) if output else None
@@ -262,6 +328,8 @@ def _review_summary_entry(manifest: dict, worker: dict) -> str:
     verdict = _review_verdict(text)
     critical = len(_section_items(text, {"critical"}))
     verification_items = _section_items(text, {"verification", "tests"})
+    if not verification_items or all("salvaged by run_wave.py" in item for item in verification_items):
+        verification_items = _inline_verification_items(text) or verification_items
     verification = "; ".join(verification_items[:2]) if verification_items else "not reported"
     if len(verification) > 220:
         verification = verification[:217].rstrip() + "..."
@@ -317,7 +385,7 @@ def _run_manifest(
     try:
         names = _start_workers(manifest, run_home, cwd, meight)
         wait_code = _wait_workers(names, run_home, cwd, meight, timeout)
-        _salvage_review_artifacts(manifest, run_home)
+        _salvage_artifacts(manifest, run_home)
         validate_code = 0 if skip_validate else _validate(manifest_path, run_home, cwd)
         exit_code = validate_code if wait_code == 3 and validate_code == 0 else wait_code or validate_code
         if update_tasks:
@@ -328,7 +396,7 @@ def _run_manifest(
             _update_tasks(manifest)
         return exit_code, manifest, fix_waves
     finally:
-        _run([meight, "shutdown"], run_home, cwd, capture=True)
+        _shutdown_workers(meight, run_home, cwd)
         if created_home and not keep_home:
             shutil.rmtree(run_home, ignore_errors=True)
 

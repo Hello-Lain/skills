@@ -75,7 +75,16 @@ For substantial work, use supervised dispatch. The Codex skill uses a fresh `MEI
 RUN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")"
 ```
 
-For codex-agent-team specs, generate worker briefs from `tasks.md` first:
+For `spec2plan`-style plans, use `plan.md` as the high-level input and compile it into executable waves:
+
+```bash
+python scripts/run_plan.py plan.md --dry-run
+python scripts/run_plan.py plan.md --force
+```
+
+`plan_to_tasks.py` reads `### Task N` blocks with `Worker role`, `Writable scope`, `Verification`, `Dependencies`, `Wave`, and `Output artifact`, then writes `.codex/specs/<slug>/tasks.md`. It assigns waves from dependencies, prevents same-wave write overlap by moving conflicting implementation tasks later, and appends a review wave by default.
+
+For codex-agent-team specs, generate worker briefs from existing `tasks.md` first:
 
 ```bash
 python scripts/prepare_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1"
@@ -100,7 +109,7 @@ python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --no-f
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 2: review" --auto-run-fix --max-fix-cycles 2
 ```
 
-Default profile is `minimal`: generated briefs tell workers to read only the spec, task, listed files, and directly related tests. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached.
+Default profile is `minimal`: generated briefs tell workers to read only the spec, task, listed files, and directly related tests. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached. If a review worker cannot write the artifact but returns a complete PASS/FAIL review, `run_wave.py` salvages that body into the requested `review*.md` before validation.
 
 Reuse that same path for every command in the request:
 
@@ -236,6 +245,15 @@ Small decisions everywhere assume the user is an LLM agent, not a person at a te
 | `meight result / list / daemon / ping / shutdown` | Low-level support commands |
 
 Options: `--cwd` (worker workdir - use separate git worktrees for overlapping file scopes), `--sandbox ws|ro|full` (default `ws` = workspace-write; reviews run `ro`), `--model MODEL` (worker model; omit to inherit `~/.codex/config.toml`), `--effort low|medium|high|xhigh` (worker reasoning effort; default `medium`), `--fast`/`--no-fast` (per-worker toggle for Codex Fast/priority tier; omit to inherit config), `--timeout`.
+
+Plan/wave helpers:
+
+| Script | What it does |
+|---|---|
+| `scripts/plan_to_tasks.py <plan.md>` | Compile executable `plan.md` task blocks into `.codex/specs/<slug>/tasks.md` waves. |
+| `scripts/run_plan.py <plan.md> [--dry-run]` | Compile plan, then preview or run each generated wave sequentially. |
+| `scripts/prepare_wave.py --spec-dir DIR --wave WAVE` | Compile one `tasks.md` wave into worker briefs and `manifest.json`. |
+| `scripts/run_wave.py --spec-dir DIR --wave WAVE` | Prepare, execute, validate, update task state, and create fix waves on review `FAIL`. |
 
 Worker state lives in `$MEIGHT_HOME/workers/<name>/`: `brief.md`, `status.json` (state machine + tokens + files changed + last activity), `events.log` (one line per meaningful event), `result.md` (final message per turn). Without `MEIGHT_HOME`, the CLI uses `<repo>/.meight/`; add `.meight/` to your global gitignore.
 

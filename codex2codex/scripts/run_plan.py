@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+
+
+def _compile_plan(plan_path: Path, spec_dir: Path | None, force: bool, add_review: bool) -> dict:
+    script = Path(__file__).with_name("plan_to_tasks.py")
+    cmd = [sys.executable, str(script), str(plan_path), "--json"]
+    if spec_dir:
+        cmd.extend(["--spec-dir", str(spec_dir)])
+    if force:
+        cmd.append("--force")
+    if add_review:
+        cmd.append("--add-review")
+    proc = _run(cmd)
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr or proc.stdout)
+        raise SystemExit(proc.returncode)
+    return json.loads(proc.stdout)
+
+
+def _run_wave(spec_dir: Path, wave: str, args: argparse.Namespace) -> int:
+    script = Path(__file__).with_name("run_wave.py")
+    cmd = [
+        sys.executable,
+        str(script),
+        "--spec-dir",
+        str(spec_dir),
+        "--wave",
+        wave,
+        "--profile",
+        args.profile,
+        "--timeout",
+        str(args.timeout),
+        "--meight",
+        args.meight,
+    ]
+    if args.dry_run:
+        cmd.append("--dry-run")
+    if args.keep_home:
+        cmd.append("--keep-home")
+    if args.skip_validate:
+        cmd.append("--skip-validate")
+    if args.no_update_tasks:
+        cmd.append("--no-update-tasks")
+    if args.no_fix_wave:
+        cmd.append("--no-fix-wave")
+    if args.auto_run_fix:
+        cmd.append("--auto-run-fix")
+        cmd.extend(["--max-fix-cycles", str(args.max_fix_cycles)])
+    proc = subprocess.run(cmd, text=True, check=False)
+    return proc.returncode
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Compile plan.md into codex2codex waves, then dry-run or execute them.")
+    parser.add_argument("plan_path", type=Path)
+    parser.add_argument("--spec-dir", type=Path)
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--add-review", action="store_true", default=True)
+    parser.add_argument("--no-add-review", dest="add_review", action="store_false")
+    parser.add_argument("--profile", choices=("minimal", "full"), default="minimal")
+    parser.add_argument("--timeout", type=int, default=1800)
+    parser.add_argument("--meight", default="meight")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--keep-home", action="store_true")
+    parser.add_argument("--skip-validate", action="store_true")
+    parser.add_argument("--no-update-tasks", action="store_true")
+    parser.add_argument("--no-fix-wave", action="store_true")
+    parser.add_argument("--auto-run-fix", action="store_true")
+    parser.add_argument("--max-fix-cycles", type=int, default=1)
+    args = parser.parse_args()
+
+    dry_run_dir: Path | None = None
+    spec_dir_arg = args.spec_dir
+    if args.dry_run:
+        dry_run_dir = Path(tempfile.mkdtemp(prefix=f"run-plan-dry-{args.plan_path.stem}-"))
+        spec_dir_arg = dry_run_dir / "spec"
+
+    try:
+        compiled = _compile_plan(args.plan_path, spec_dir_arg, args.force, args.add_review)
+        spec_dir = Path(compiled["spec_dir"])
+        print(f"compiled tasks: {compiled['tasks_path']}")
+        exit_code = 0
+        for wave in compiled["waves"]:
+            print(f"== {wave} ==")
+            code = _run_wave(spec_dir, wave, args)
+            if code != 0:
+                exit_code = code
+                break
+        return exit_code
+    finally:
+        if dry_run_dir:
+            shutil.rmtree(dry_run_dir, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

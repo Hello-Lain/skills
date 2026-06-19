@@ -1,0 +1,12 @@
+interface:
+  display_name: "CodeGraph Project Reader"
+  short_description: "Use CodeGraph to read codebases faster."
+  default_prompt: "Use $codegraph-project-reader to map this codebase with CodeGraph before broad file reads."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "codegraph"
+      description: "Local CodeGraph MCP server for symbol maps, call graphs, impact analysis, and affected tests."
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

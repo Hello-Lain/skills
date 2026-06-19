@@ -139,7 +139,15 @@ def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode:
     instance = f"{task.role.lower().strip()}-{index}"
     restrictions = "no commit, no push, no user communication, no /codex2codex recursion"
     if mode == "review":
-        restrictions += "; do not modify product files; write only the requested review artifact"
+        restrictions += (
+            "; do not modify product files; write only the requested review artifact; "
+            "if artifact write tooling is blocked, include the complete review body in final output"
+        )
+    else:
+        restrictions += (
+            "; write the requested Output artifact; if artifact write tooling is blocked, "
+            "include a complete artifact body in final output with changed files, verification, and risks"
+        )
     return "\n".join(
         [
             f"Use role: {task.role}-agent",

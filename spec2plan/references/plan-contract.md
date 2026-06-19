@@ -57,10 +57,14 @@ Each task must include:
 ### Task N: Short title
 
 - Description:
+- Worker role: coding|devops|review|consult|sa
+- Wave: N
 - Acceptance criteria:
 - Verification:
 - Dependencies:
 - Files likely touched:
+- Writable scope:
+- Output artifact:
 - Estimated scope: XS|S|M|L
 ```
 
@@ -82,6 +86,13 @@ Break a task down further when it touches unrelated subsystems, takes more than 
 - Add checkpoints after every 2-3 tasks.
 - State what can run in parallel, what must be sequential, and what needs a shared contract first.
 - Each checkpoint must leave the repo in a buildable/testable state.
+- Tasks in the same wave must not have overlapping `Writable scope` unless they are `review`, `consult`, or `sa`.
+- `Writable scope` must use exact repo-relative paths or conservative directory globs; do not write "TBD" in final plans.
+- `Output artifact` should be under `.codex/specs/<slug>/artifacts/` for implementation/consult tasks and `.codex/specs/<slug>/review*.md` for reviews.
+- Add a final review task/wave for multi-worker implementation unless the work is docs-only or explicitly review-exempt.
+- `Parallelization` must name wave groups and explain why same-wave tasks are safe to run together.
+- Artifact parent dirs must be creatable before execution; plan setup should create them or name the command that will.
+- Plans intended for `$codex2codex` must pass `scripts/run_plan.py <plan.md> --dry-run` or explicitly record why dry-run is unavailable.
 
 ## Execution Handoff
 

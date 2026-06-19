@@ -11,7 +11,7 @@ from pathlib import Path
 BLOCKED_RE = re.compile(r"(?mi)^\s*(Blocked|Cannot complete|Unable to write|could not write)\b")
 SKILL_MONITOR_RE = re.compile(r"(?mi)^Skill Monitor:")
 VERDICT_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
-SALVAGED_REVIEW_RE = re.compile(r"(?mi)^Salvaged-From-Worker:\s+\S+")
+SALVAGED_RE = re.compile(r"(?mi)^Salvaged-From-Worker:\s+\S+")
 
 
 def _load_json(path: Path):
@@ -34,6 +34,44 @@ def _worker_result(status_root: Path, name: str) -> str:
         return path.read_text(encoding="utf-8")
     except OSError:
         return ""
+
+
+def _terminal_result(text: str) -> str:
+    turns = list(re.finditer(r"(?m)^##\s+Turn\s+\d+\b.*$", text))
+    if not turns:
+        return text
+    return text[turns[-1].end() :].strip()
+
+
+def _artifact_path(repo_root: Path, output: str) -> Path:
+    artifact = Path(output)
+    if not artifact.is_absolute():
+        artifact = (repo_root / artifact).resolve()
+    return artifact
+
+
+def _artifact_salvaged(repo_root: Path, output: str) -> bool:
+    artifact = _artifact_path(repo_root, output)
+    if not artifact.exists():
+        return False
+    try:
+        return bool(SALVAGED_RE.search(artifact.read_text(encoding="utf-8")))
+    except OSError:
+        return False
+
+
+def _validate_output_artifact(repo_root: Path, output: str) -> list[str]:
+    if not output:
+        return []
+    artifact = _artifact_path(repo_root, output)
+    if not artifact.exists():
+        return [f"missing output artifact: {artifact}"]
+    try:
+        if not artifact.read_text(encoding="utf-8").strip():
+            return [f"empty output artifact: {artifact}"]
+    except OSError as exc:
+        return [f"cannot read output artifact: {artifact}: {exc}"]
+    return []
 
 
 def _validate_review_artifact(validator: Path, artifact: Path) -> list[str]:
@@ -73,18 +111,6 @@ def _review_verdict(text: str) -> str:
     return ""
 
 
-def _review_artifact_salvaged(repo_root: Path, output: str) -> bool:
-    artifact = Path(output)
-    if not artifact.is_absolute():
-        artifact = (repo_root / artifact).resolve()
-    if not artifact.exists():
-        return False
-    try:
-        return bool(SALVAGED_REVIEW_RE.search(artifact.read_text(encoding="utf-8")))
-    except OSError:
-        return False
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a completed codex2codex wave against manifest artifacts.")
     parser.add_argument("--manifest", required=True, type=Path)
@@ -106,30 +132,25 @@ def main() -> int:
         name = worker["name"]
         status = _worker_status(args.meight_home, name)
         state = status.get("state")
-        review_salvaged = bool(
-            worker.get("mode") == "review"
-            and worker.get("output")
-            and _review_artifact_salvaged(repo_root, worker["output"])
-        )
-        if state != "completed" and not (state == "needs_input" and review_salvaged):
+        artifact_salvaged = bool(worker.get("output") and _artifact_salvaged(repo_root, worker["output"]))
+        if state != "completed" and not (state == "needs_input" and artifact_salvaged):
             errors.append(f"{name}: state is {state}, expected completed")
 
         result = _worker_result(args.meight_home, name)
         if not result.strip():
             errors.append(f"{name}: missing result.md")
-        if BLOCKED_RE.search(result) and not (
-            review_salvaged
-        ):
+        terminal_result = _terminal_result(result)
+        if BLOCKED_RE.search(terminal_result) and not artifact_salvaged:
             errors.append(f"{name}: result reports blocked despite terminal state")
         if SKILL_MONITOR_RE.search(result):
             warnings.append(f"{name}: result contains Skill Monitor section; consider filtering worker output")
 
         if worker.get("mode") == "review":
             output = worker.get("output") or ""
-            artifact = Path(output)
-            if not artifact.is_absolute():
-                artifact = (repo_root / artifact).resolve()
+            artifact = _artifact_path(repo_root, output)
             errors.extend(_validate_review_artifact(args.validator, artifact))
+        else:
+            errors.extend(_validate_output_artifact(repo_root, worker.get("output") or ""))
 
     if warnings:
         for warning in warnings:

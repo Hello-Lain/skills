@@ -40,6 +40,7 @@ Send `$codex2codex` one compact upstream packet; let it derive worker briefs:
 - Output path and mode.
 - Redaction rules.
 - Required contract: `references/plan-contract.md`.
+- Required executable task fields: `Worker role`, `Wave`, `Writable scope`, `Verification`, `Dependencies`, and `Output artifact`.
 - Required validator commands.
 - Artifact path: `<plan-dir>/subagents/<phase>.md`.
 - Instruction: do not implement, do not mutate repo, return artifact envelope only.
@@ -82,3 +83,5 @@ Use `None found` only after inspecting available code/docs.
 - Never degrade heavy mode to main-agent-only synthesis.
 - Save validated artifacts under `<plan-dir>/subagents/planner.md`, `reviewer.md`, and `synthesizer.md`.
 - `plan.md` must match the synthesizer artifact body exactly.
+- Before accepting a synthesizer plan, ensure it can be compiled by `$codex2codex scripts/plan_to_tasks.py` without missing writable scopes or unresolved worker roles.
+- If execution is expected next, create/check artifact parent directories and run `$codex2codex scripts/run_plan.py <plan.md> --dry-run`; fix the plan before handoff if dry-run fails.
