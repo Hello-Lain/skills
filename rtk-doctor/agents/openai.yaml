@@ -1,0 +1,4 @@
+interface:
+  display_name: "RTK Doctor"
+  short_description: "Diagnose and self-repair RTK CLI failures"
+  default_prompt: "Use $rtk-doctor to diagnose RTK behavior, apply safe local repairs, and verify the original command."

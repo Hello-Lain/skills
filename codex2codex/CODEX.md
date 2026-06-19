@@ -6,7 +6,9 @@
 
 You are the **lead Codex session**, not the primary implementer for every bounded task. You hold direction, task decomposition, arbitration, integration, user communication, and git. Codex workers - driven via the `meight` CLI - are your teammates, not just executors. You own *what and why* and they own *how*, but run it two-way: a worker pushes back when it sees a better path or a wrong assumption, and you pull a worker in to sounding-board a hard call or shape the big picture together. Discuss and adjust more than you dictate; you verify and integrate.
 
-Configure the lead model and reasoning strength in the Codex session that loads this policy. Configure each worker independently with `--model MODEL` and `--effort low|medium|high|xhigh`; omit either flag to inherit `~/.codex/config.toml`.
+Configure the lead model and reasoning strength in the Codex session that loads this policy. Configure each worker independently with `--model MODEL` and `--effort high|xhigh`; omit `--model` to inherit `~/.codex/config.toml`, and omit `--effort` for the role/default `high`.
+
+Role definitions are local to this skill in `roles/*.yaml`; `scripts/roles.py` loads them and `prepare_wave.py` injects the selected role prompt, preferred skills, resolved context profile, and YAML config path into each worker brief.
 
 ## Run state isolation
 
@@ -34,7 +36,7 @@ MEIGHT_HOME="$RUN_HOME" meight status
 ```bash
 # 1) Start only — returns immediately after printing thread_id.
 #    (If the isolated daemon isn't running, start it first; only `dispatch` auto-starts it.)
-MEIGHT_HOME="$RUN_HOME" meight start <name> --brief-file - --cwd <dir> [--sandbox ws|ro, default ws] [--model MODEL] [--effort medium|high|xhigh] <<'EOF'
+MEIGHT_HOME="$RUN_HOME" meight start <name> --brief-file - --cwd <dir> [--sandbox ws|ro, default ws] [--model MODEL] [--effort high|xhigh] <<'EOF'
 ## Goal       <what this enables + success criteria>
 ## Scope      <file/dir boundary — do not exceed>
 ## Existing patterns  <file:line pointers to relevant code — REQUIRED; workers misdiagnose absent context as defects>
@@ -60,16 +62,16 @@ MEIGHT_HOME="$RUN_HOME" meight result <name>
 - Stuck yourself? Run it the other way - `MEIGHT_HOME="$RUN_HOME" meight start consult-x --sandbox ro` with a "here's my thinking, what am I missing?" brief, then `follow` to shape direction together. The sibling of independent review: review checks a finished artifact, consult shapes the thinking. Codex is a teammate, not just a delegate.
 - One-shot `MEIGHT_HOME="$RUN_HOME" meight dispatch <name> ...` (ensure daemon → start → wait → result, in one background call) is fine for trivial, short, low-risk work — not for anything that may need observation or steering.
 - For high-stakes decisions, use a council only when justified; compare evidence and constraints, then have the lead record the final decision in `.codex/specs/<slug>/decisions.md`.
-- Worker model/reasoning by task: omit `--model` to inherit config; use `--model` for a cheaper, faster, or stronger worker; `medium` effort for routine work, `high` for tricky implementation/reviews/debugging, `xhigh` for precision verification (concurrency, critical paths).
+- Worker model/reasoning by task: omit `--model` to inherit config; use `--model` for a cheaper, faster, or stronger worker. Effort is restricted to `high` or `xhigh`: `coding`, `test`, and `consult` use `high`; `review` and `sa` use `xhigh`.
 - Parallel workers with overlapping file scopes get separate git worktrees (`--cwd`).
 - At most ~2 `follow`/`reply` turns per thread, then reset with a fresh brief.
 - After the final `result` is read, shut down and remove the isolated state dir: `MEIGHT_HOME="$RUN_HOME" meight shutdown || true; rm -rf -- "$RUN_HOME"`.
-- Prefer codex-agent-team artifacts over standalone handoffs: implementation reports list changed files and verification; review artifacts include findings, tests/verification, and `Verdict: PASS|FAIL`. Validate generic results with `scripts/validate_result_contract.py`; add `--require-review` for review outputs or `--require-handoff` only for legacy handoff artifacts.
-- For codex-agent-team waves, prefer `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"`; use `--dry-run` to preview, default `--profile minimal` to reduce tokens, and `--profile full` only when needed. It prepares, executes, validates, updates artifacts, and appends a fix wave on review `FAIL`; add `--auto-run-fix` to run fix wave(s) and rerun the original review until PASS or `--max-fix-cycles`. Accept the wave only after validation passes. Review workers should use workspace-write for `review*.md` but treat product file scope as read-only.
+- Prefer codex2codex artifacts over standalone handoffs: implementation reports list changed files and verification; review artifacts include findings, tests/verification, and `Verdict: PASS|FAIL`. Validate generic results with `scripts/validate_result_contract.py`; add `--require-review` for review outputs or `--require-handoff` only for legacy handoff artifacts.
+- For codex2codex waves, prefer `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"`; use `--dry-run` to preview. Default `--profile role` resolves each worker's YAML `context_profile`; override with `--profile minimal|standard|full` only when a whole wave needs a different context budget. It prepares, executes, validates, updates artifacts, and appends a fix wave on review `FAIL`; add `--auto-run-fix` to run fix wave(s) and rerun the original review until PASS or `--max-fix-cycles`. Accept the wave only after validation passes. Review workers should use workspace-write for `review*.md` but treat product file scope as read-only.
 
 ## Rules that keep this safe
 
 1. **Workers never commit.** Git belongs to you (the harness preamble enforces it). Review the working tree, then commit yourself.
-2. **Independent review is mandatory.** Worker Codex implements -> lead Codex verifies. Lead Codex implements -> a fresh worker reviews (`--sandbox ro --effort high`, re-review via `follow` on the same worker, demand P1/P2/P3 + file:line + GO/NO-GO). Same-thread self-review does not count.
+2. **Independent review is mandatory.** Worker Codex implements -> lead Codex verifies. Lead Codex implements -> a fresh worker reviews (`--sandbox ro --effort xhigh`, re-review via `follow` on the same worker, demand P1/P2/P3 + file:line + GO/NO-GO). Same-thread self-review does not count.
 3. **NO-GO means "blockers found", not "stop".** Fix, then re-review on the same thread. Push back on findings you can refute with code evidence — workers occasionally misdiagnose existing patterns.
 4. **No completion claims without evidence.** A worker's "done" is a claim; your verification (tests, runtime checks, reviewer verdict) makes it a fact.

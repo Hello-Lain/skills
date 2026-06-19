@@ -64,12 +64,13 @@ The routing we run in production with Codex as the orchestrator; adapt to taste.
 | Exploration fan-out; fresh-context verification; anything needing the orchestrator's own tooling | Fresh Codex worker or Codex subagent |
 | High-stakes or irreversible paths | Either — but runtime evidence + explicit orchestrator sign-off regardless |
 
-- **Independent review is mandatory**: worker Codex implements -> lead Codex verifies; lead Codex implements -> a fresh worker reviews (`--sandbox ro --effort high`, re-review via `follow` on the same worker). Same-thread self-review is not accepted.
-- Worker model/reasoning is per-dispatch: omit `--model`/`--effort` to inherit `~/.codex/config.toml`, or override with `--model MODEL --effort low|medium|high|xhigh`.
+- **Independent review is mandatory**: worker Codex implements -> lead Codex verifies; lead Codex implements -> a fresh worker reviews (`--sandbox ro --effort xhigh`, re-review via `follow` on the same worker). Same-thread self-review is not accepted.
+- Worker model/reasoning is per-dispatch: omit `--model` to inherit `~/.codex/config.toml`, and override effort only with `--effort high|xhigh`.
 - Workers never commit; git belongs to the orchestrator (enforced by the preamble).
 - Briefs must point at *existing patterns* relevant to the task — detail-oriented reviewers flag absent context as defects otherwise.
 - `follow` at most ~2 times per thread, then reset with a fresh brief (long Codex sessions degrade).
-- Effort by complexity: `medium` default, `high` for tricky implementation/review/debugging, `xhigh` for precision verification (concurrency, critical paths).
+- Role effort, prompt text, aliases, caps, sandbox, context profile, and preferred skills are local to this skill in `roles/*.yaml`; `scripts/roles.py` is only the loader.
+- Wave profile defaults to `role`: `prepare_wave.py` resolves each worker's YAML `context_profile` and records the concrete `minimal|standard|full` value in `manifest.json`. Use static `doctor --json` for routine global-skill availability checks; live worker smoke tests are reserved for worker-execution debugging because they spend a full worker context.
 
 ## Hardening history
 

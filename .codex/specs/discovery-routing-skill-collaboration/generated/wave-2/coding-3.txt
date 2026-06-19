@@ -1,0 +1,12 @@
+Use role: coding-agent
+Instance: coding-3
+Spec: /data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/spec.md
+Wave: Wave 2
+File scope: spec2plan/SKILL.md
+Task: Task 4: Update spec2plan collaboration gate
+Verify: rtk grep -n "Discovery Routing\\|idea-refine\\|interview-me" spec2plan/SKILL.md
+Output: .codex/specs/discovery-routing-skill-collaboration/artifacts/task-4-spec2plan.md
+Context profile: Use minimal context: read only Spec, Task, listed File scope, and directly related tests. Do not load unrelated skills, MCP tool inventories, histories, large logs, or generated caches.
+Concurrency: peer workers may edit nearby files; stay inside scope.
+Restrictions: no commit, no push, no user communication, no /codex2codex recursion; write the requested Output artifact; if artifact write tooling is blocked, include a complete artifact body in final output with changed files, verification, and risks.
+Do not include Skill Monitor sections unless a real skill incident affects this output.

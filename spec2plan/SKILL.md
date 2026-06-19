@@ -16,14 +16,31 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 ## Resources
 
 - Always read `references/plan-contract.md` before drafting or validating a plan.
+- Read `references/discovery-routing.md` when the source artifact's maturity is ambiguous or the request may be an idea, direction, or incomplete spec rather than planning-ready requirements.
 - For `heavy`, also read `references/heavy-mode.md` and load `$codex2codex` from `/data/lcq/.codex/skills/codex2codex`.
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`.
 - Validate heavy worker artifacts with `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
 
+## Discovery Routing Gate
+
+Use `spec2plan` only after a confirmed spec or equivalent clear requirements exist. The upstream pipeline is:
+
+```text
+idea-refine -> interview-me -> spec2plan
+```
+
+- `idea-refine` chooses and stress-tests the direction; it is not a planning substitute.
+- `interview-me` turns a chosen direction into a confirmed spec; it is not a planning substitute.
+- If the input is an unconfirmed idea one-pager, weak direction, competing options, or a premature solution, do not draft a plan. Route through Discovery Routing to `idea-refine` or `interview-me` unless the user explicitly accepts recorded assumptions and asks to proceed.
+- If requirements are mostly clear but not stored as a formal spec, ask only for the missing planning-critical facts or record explicit assumptions before planning.
+- Do not hide unresolved product-direction or spec-quality gaps as implementation assumptions.
+
 ## Output
 
-- Default light path: `plan.md` in the repo/task root unless the user provides a path.
-- Default heavy path: `.spec2plan/<task-slug>/plan.md` unless the user provides a path.
+- Default light path: project-level `.codex/plans/<task-slug>/plan.md` unless the user provides a path.
+- Default heavy path: project-level `.codex/plans/<task-slug>/plan.md` unless the user provides a path.
+- If the source spec lives at `.codex/specs/<slug>/spec.md`, reuse `<slug>` for the plan directory: `.codex/plans/<slug>/plan.md`.
+- Keep per-phase heavy artifacts under `.codex/plans/<task-slug>/subagents/`.
 - Write plans, questions, and final responses in the user's language.
 - Keep commands, paths, env vars, identifiers, package names, API names, and errors exact.
 
@@ -40,7 +57,7 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 1. Main agent inspects only enough context to build a compact task packet: objective, spec source, repo status, constraints, likely files/docs, output path, output language, redaction rules, executable plan fields, and `no implementation`.
 2. Invoke `$codex2codex` inside a task subagent as the adaptive multi-agent shell; pass this skill's heavy-mode packet, contract, worker phases, validators, and artifact paths.
 3. Require `$codex2codex` to coordinate read-only `planner`, `reviewer`, and `synthesizer` workers through supervised meight loops; it may add consult/arbiter workers if needed.
-4. Save each terminal phase artifact under `<plan-dir>/subagents/<phase>.md`, then validate: `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
+4. Save each terminal phase artifact under `.codex/plans/<task-slug>/subagents/<phase>.md`, then validate: `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
 5. Write `plan.md` from the synthesizer artifact body exactly; do not replace it with main-agent synthesis.
 6. Run `scripts/validate_plan_contract.py <plan.md> --mode heavy`.
 7. Report generated path, artifact dir, validation status, `$codex2codex` cleanup status, key risks/open questions, and that implementation/ops were not executed.

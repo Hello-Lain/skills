@@ -1,11 +1,11 @@
 ---
 name: codex2codex
-description: "Meight execution backend and plan orchestrator for Codex worker teams. Use for explicit /codex2codex work, plan.md-to-worker decomposition, codex-agent-team/spec2plan waves, isolated Codex workers, file-disjoint implementation, scoped review, PASS/FAIL gates, or consults without polluting primary context. Do not use for ordinary single-agent tasks."
+description: "Meight execution backend and plan orchestrator for Codex worker teams. Use for explicit /codex2codex work, plan.md-to-worker decomposition, codex2codex/spec2plan waves, isolated Codex workers, file-disjoint implementation, scoped review, PASS/FAIL gates, or consults without polluting primary context. Do not use for ordinary single-agent tasks."
 ---
 
 # Codex2Codex
 
-Use `plan.md` as the high-level intent input when available. Compile it to `.codex/specs/<slug>/tasks.md`/manifest first, then run workers. `tasks.md` remains the execution IR: waves, file-disjoint scopes, scoped briefs, PASS/FAIL review, lead consolidation.
+Use `plan.md` as the high-level intent input when available. Compile it to `.codex/specs/<slug>/tasks.md`/manifest first, then run workers. `tasks.md` remains the execution IR: waves, file-disjoint scopes, scoped briefs, PASS/FAIL review, lead consolidation. Role definitions, prompts, aliases, caps, effort, sandbox, context profile, and preferred skills live in `roles/*.yaml`; `scripts/roles.py` loads them.
 
 ## Use / Skip
 
@@ -35,9 +35,19 @@ Default shared state:
 ## Modes
 
 - `consult`: read-only expert check.
-- `implement`: file-disjoint coding/devops wave.
+- `implement`: file-disjoint coding/test wave.
 - `review`: read product scope, write only `review*.md`, verdict `PASS` or `FAIL`.
 - `fix`: fix FAIL findings -> rerun affected review only.
+
+## Roles
+
+- Edit `roles/*.yaml`, not Python, to change a role prompt or config.
+- `fullstack-agent`: lead/orchestrator only; defined in `roles/fullstack.yaml` and rejected as a worker.
+- Worker roles are `coding`, `test`, `review`, `sa`, and `consult`; each has its own YAML file.
+- Effort is limited to `high|xhigh` by `roles/_defaults.yaml`.
+- Context profile defaults to `role`: resolve each worker's YAML `context_profile`. Override a whole wave with `--profile minimal|standard|full` only when justified.
+
+`devops-agent` is retired. `devops`, `ops`, `ci`, `deploy`, and `infra` remain compatibility aliases to `coding`; route high-stakes operational decisions to `sa`.
 
 Use councils only for high-stakes decisions with real rollback/security/cost/reliability risk.
 
@@ -57,7 +67,7 @@ Restrictions:
 ```
 
 One worker = one role, one scope, one output artifact. Workers must not edit outside scope, commit, push, talk to user, or invoke `/codex2codex`. Review workers use workspace-write only so they can write review artifacts; their product scope is read-only by instruction. Workers may end with `QUESTION:` for blockers, wrong assumptions, or better paths.
-If an artifact write is blocked, workers must put the full artifact body in final output so `run_wave.py` can salvage it.
+If an artifact write is blocked by approval/tooling/credentials, workers must not ask for approval or end with `QUESTION:`. They must finish with `ARTIFACT_BODY:` followed by the exact Markdown artifact body so `run_wave.py` can salvage only that body into the requested path.
 
 ## Meight Loop
 
@@ -75,9 +85,10 @@ If an artifact write is blocked, workers must put the full artifact body in fina
 - Any material bug/security/regression/interface mismatch/missing verification => review `FAIL`.
 - Any scoped `FAIL` => wave fails; `run_wave.py` creates the next fix wave unless `--no-fix-wave`; add `--auto-run-fix` to run fix wave(s) and rerun the original review, bounded by `--max-fix-cycles`.
 - Missing expected artifact or blocked terminal result => wave fails even if `meight wait` returned `0`.
-- If artifact write tooling is blocked but the worker final output contains a complete artifact body, `run_wave.py` may salvage implementation and review artifacts into the requested path and continue validation.
+- If artifact write tooling is blocked but the worker final output contains `ARTIFACT_BODY:` or one complete fenced Markdown artifact, `run_wave.py` may salvage implementation and review artifacts into the requested path and continue validation.
 - When a worker is continued after `QUESTION:`, validate only the final turn for unresolved blockers; earlier resolved blocker text must not fail the wave by itself.
 - Never stream raw events/logs/transcripts into lead context.
+- Use `meight doctor --json` for routine global-skill availability checks; avoid live worker smoke tests unless debugging worker execution.
 - Keep secrets/credentials/raw logs/private data out of artifacts and final summaries.
 - Git, user comms, irreversible decisions, and final acceptance stay with lead.
 
@@ -90,6 +101,6 @@ Prefer upstream validators. Otherwise check:
 - decisions captured in `decisions.md`;
 - no raw transcript/secret leak.
 
-Use `scripts/run_plan.py <plan.md> --dry-run` when starting from a plan; it compiles `### Task N` sections into waves and appends a review wave unless `--no-add-review`. Use `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"` for existing tasks. `run_wave.py` prepares minimal-profile briefs, starts workers, waits, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md` on success, creates a fix wave on review `FAIL`, shuts down `meight`, and returns nonzero on worker failure, blocked result, missing artifact, or review `FAIL`. Use `--auto-run-fix` for FAIL -> fix -> rerun review loops, `--dry-run` to preview workers, and `--profile full` only when minimal context is insufficient. For manual runs, use `--manifest`, `validate_result_contract.py`, and `validate_wave.py` directly.
+Use `scripts/run_plan.py <plan.md> --dry-run` when starting from a plan; it compiles `### Task N` sections into waves and appends a review wave unless `--no-add-review`. Use `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"` for existing tasks. `run_wave.py` prepares role-profile briefs by default, starts workers, waits, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md` on success, creates a fix wave on review `FAIL`, shuts down `meight`, and returns nonzero on worker failure, blocked result, missing artifact, or review `FAIL`. Use `--auto-run-fix` for FAIL -> fix -> rerun review loops, `--dry-run` to preview workers, and `--profile minimal|standard|full` only when overriding role budgets. For manual runs, use `--manifest`, `validate_result_contract.py`, and `validate_wave.py` directly.
 
 Return only: mode/wave, workers, artifacts, verdicts, verification, decisions/blockers, cleanup status, raw data omitted.

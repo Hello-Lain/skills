@@ -8,29 +8,12 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from roles import IMPLEMENT_ROLES, RoleError, normalize_role
+
 TASK_HEADING_RE = re.compile(r"(?m)^###\s+Task\s+(\d+)\s*:\s*(.+?)\s*$")
 FIELD_RE = re.compile(r"(?ms)^\s*-\s*([^:\n]+?)\s*:\s*(.*?)(?=^\s*-\s*[^:\n]+?\s*:|\Z)")
 CODE_RE = re.compile(r"`([^`]+)`")
 TASK_NUM_RE = re.compile(r"\bTask\s*(\d+)\b|\b#?(\d+)\b", re.I)
-
-ROLE_ALIASES = {
-    "code": "coding",
-    "coding": "coding",
-    "implement": "coding",
-    "implementation": "coding",
-    "dev": "coding",
-    "devops": "devops",
-    "ops": "devops",
-    "review": "review",
-    "reviewer": "review",
-    "qa": "review",
-    "consult": "consult",
-    "sa": "sa",
-    "architect": "sa",
-}
-
-IMPLEMENT_ROLES = {"coding", "devops"}
-
 
 @dataclass
 class PlanTask:
@@ -85,16 +68,10 @@ def _paths(value: str) -> list[str]:
 
 
 def _role(value: str, title: str) -> str:
-    raw = (value or "").strip().lower()
-    key = re.split(r"[\s,/|]+", raw, 1)[0] if raw else ""
-    if key in ROLE_ALIASES:
-        return ROLE_ALIASES[key]
-    lowered_title = title.lower()
-    if "review" in lowered_title:
-        return "review"
-    if "deploy" in lowered_title or "infra" in lowered_title or "ci" in lowered_title:
-        return "devops"
-    return "coding"
+    try:
+        return normalize_role(value, title)
+    except RoleError as exc:
+        raise SystemExit(f"ERROR: {exc}") from exc
 
 
 def _deps(value: str) -> list[int]:

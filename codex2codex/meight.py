@@ -37,6 +37,7 @@ STALL_WARN_SEC = 600.0
 # Bidirectional workers: automatically prepend this before start/follow briefs (disable with --no-preamble)
 PREAMBLE = """[Harness protocol — applies on top of the task below]
 - Never run `git commit` or `git push`. Leave all changes in the working tree.
+- Global Codex skills may be available through this same Codex environment. If the task or role brief names a relevant skill, read that skill's SKILL.md before acting. Do not load unrelated skills.
 - You are a teammate on this work, not a tool that only executes. If you see a better approach, the brief rests on a wrong assumption, or there's a tradeoff worth weighing before a direction is locked in, don't silently comply or guess — raise it in a final paragraph starting with `QUESTION:` and the orchestrator will discuss and adjust direction with you. Judge by the bar: raise it when the call could change direction — scope, approach, or risk — and just decide local implementation choices yourself, noting them as judgment calls in your report.
 - Likewise, when you are genuinely blocked on a decision or missing information that only the orchestrator can provide, end with a `QUESTION:` paragraph stating exactly what you need instead of guessing. Either way you receive the answer as a follow-up turn in this same thread.
 """
@@ -72,6 +73,9 @@ def maybe_reexec_with_bundled_python() -> None:
 
 
 maybe_reexec_with_bundled_python()
+
+sys.path.insert(0, str(SKILL_DIR / "scripts"))
+from roles import ALLOWED_EFFORTS, DEFAULT_EFFORT, ROLE_SPECS  # noqa: E402
 
 
 # ── Common Utilities ───────────────────────────────────────────────────────
@@ -843,7 +847,9 @@ class Daemon:
         if sandbox_key is None:
             return {"ok": False, "error": f"invalid sandbox: {req.get('sandbox')}"}
         model = req.get("model")
-        effort = req.get("effort") or "medium"
+        effort = req.get("effort") or DEFAULT_EFFORT
+        if effort not in ALLOWED_EFFORTS:
+            return {"ok": False, "error": f"invalid effort: {effort}; use high or xhigh"}
         service_tier = req.get("service_tier")
 
         with self.reg_lock:
@@ -1165,6 +1171,10 @@ def doctor_report(home: Path) -> dict:
         sdk_import = True
     except Exception as e:
         sdk_error = f"{type(e).__name__}: {e}"
+    codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+    skills_dir = codex_home / "skills"
+    role_skills = sorted({skill for role in ROLE_SPECS.values() for skill in role.skills})
+    missing_role_skills = [skill for skill in role_skills if not (skills_dir / skill / "SKILL.md").is_file()]
     return {
         "home": str(home),
         "home_exists": home.exists(),
@@ -1186,6 +1196,15 @@ def doctor_report(home: Path) -> dict:
         "codex_cli_found": shutil.which("codex") is not None,
         "openai_codex_import": sdk_import,
         "openai_codex_error": sdk_error,
+        "codex_home": str(codex_home),
+        "skills_dir": str(skills_dir),
+        "skills_dir_exists": skills_dir.is_dir(),
+        "global_skill_count": (
+            len([path for path in skills_dir.iterdir() if (path / "SKILL.md").is_file()])
+            if skills_dir.is_dir() else 0
+        ),
+        "role_skills": role_skills,
+        "missing_role_skills": missing_role_skills,
         "env_presence": redact_env_presence(),
         "worker_count": len(workers),
         "active_workers": active,
@@ -1210,6 +1229,11 @@ def print_doctor_report(report: dict) -> None:
     print(f"openai_codex_import: {report['openai_codex_import']}")
     if report.get("openai_codex_error"):
         print(f"openai_codex_error: {report['openai_codex_error']}")
+    print(f"codex_home: {report['codex_home']}")
+    print(f"skills_dir: {report['skills_dir']}")
+    print(f"skills_dir_exists: {report['skills_dir_exists']}")
+    print(f"global_skill_count: {report['global_skill_count']}")
+    print(f"missing_role_skills: {', '.join(report['missing_role_skills']) or '-'}")
     print(f"env_presence: {json.dumps(report['env_presence'], sort_keys=True)}")
     print(f"worker_count: {report['worker_count']}")
     print(f"active_workers: {', '.join(report['active_workers']) or '-'}")
@@ -1555,7 +1579,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--cwd")
         sp.add_argument("--sandbox", default="ws", choices=sorted(SANDBOX_MAP.keys()))
         sp.add_argument("--model")
-        sp.add_argument("--effort", default="medium", choices=["low", "medium", "high", "xhigh"])
+        sp.add_argument("--effort", default=DEFAULT_EFFORT, choices=list(ALLOWED_EFFORTS))
         sp.add_argument("--fast", action=argparse.BooleanOptionalAction, default=None,
                         help="use the priority service tier (codex 'Fast'); --no-fast forces a non-priority tier for a cheaper run; omit to inherit ~/.codex/config.toml")
         sp.add_argument("--no-preamble", action="store_true", help="disable prepending the harness protocol preamble")

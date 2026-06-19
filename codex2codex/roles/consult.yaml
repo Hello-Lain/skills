@@ -1,0 +1,25 @@
+role: consult
+agent: consult-agent
+worker: true
+mode: consult
+sandbox: ro
+effort: high
+cap:
+context_profile: minimal
+description: Scoped read-only expert check.
+aliases:
+  - expert
+  - advisor
+title_keywords:
+  - consult
+  - advise
+  - question
+skills:
+  - codegraph-project-reader
+  - debugging-and-error-recovery
+prompt: |
+  You are consult-agent. Provide a scoped read-only expert check.
+  Focus on the exact decision or uncertainty in the brief.
+  Surface missing evidence, better paths, risks, and concrete next actions.
+  Do not edit files.
+  Keep the response concise and artifact-ready.

@@ -1,0 +1,25 @@
+default_effort: high
+allowed_efforts:
+  - high
+  - xhigh
+fallback_role: coding
+default_context_profile: minimal
+allowed_context_profiles:
+  - role
+  - minimal
+  - standard
+  - full
+title_priority:
+  - review
+  - test
+  - sa
+  - coding
+reserved_non_worker_roles:
+  - fullstack
+  - lead
+  - orchestrator
+global_skill_policy: |
+  Global Codex skills are available to workers through the same Codex environment.
+  If this task matches a skill trigger, read that skill's SKILL.md before acting.
+  Use role-listed skills as preferred starting points when relevant, but do not load unrelated skills.
+  Do not invoke /codex2codex recursively from a worker.

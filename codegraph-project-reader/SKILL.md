@@ -13,6 +13,7 @@ Use CodeGraph first to turn a repo into a navigable symbol/call graph, then read
 - Do not ask before creating/updating a local `.codegraph/` index in the active repo.
 - Ask only before destructive actions (`uninit`, deleting indexes), installing/upgrading packages, editing global config, or indexing an unusually large/sensitive path outside the task repo.
 - If CodeGraph is unavailable, auto-fallback to `npx --yes @colbymchenry/codegraph`, then to `rg`/`rtk read`/`ctx_*`; report degraded mode briefly.
+- Exception: for lightweight docs-only skill/config edits where graph data is irrelevant, skip the `npx` fallback and use targeted reads/search; state the docs-only exception.
 
 ## Workflow
 

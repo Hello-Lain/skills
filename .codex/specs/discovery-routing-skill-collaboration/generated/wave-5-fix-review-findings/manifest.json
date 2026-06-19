@@ -1,0 +1,21 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration",
+  "wave": "Wave 5: fix review findings",
+  "profile": "minimal",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "medium",
+      "files": [
+        "`rtk grep -n \"Route to idea-refine\\"
+      ],
+      "verify": "rtk grep -n \"Route to idea-refine\\\\|Route to interview-me\\\\|Route to spec2plan\\\\|Avoid Loops\" idea-refine/references/discovery-routing.md interview-me/references/discovery-routing.md spec2plan/references/discovery-routing.md",
+      "output": "",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/generated/wave-5-fix-review-findings/coding-1.txt",
+      "raw_task": "- [ ] [coding] Fix review findings from `/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/review.md` | `rtk grep -n \"Route to idea-refine\\|Route to interview-me\\|Route to spec2plan\\|Avoid Loops\" ...` | Verify: rtk grep -n \"Route to idea-refine\\\\|Route to interview-me\\\\|Route to spec2plan\\\\|Avoid Loops\" idea-refine/references/discovery-routing.md interview-me/references/discovery-routing.md spec2plan/references/discovery-routing.md"
+    }
+  ]
+}

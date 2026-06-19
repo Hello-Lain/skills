@@ -8,6 +8,16 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from roles import (
+    ALLOWED_CONTEXT_PROFILES,
+    DEFAULT_CONTEXT_PROFILE,
+    ROLE_MODE,
+    ROLE_SPECS,
+    RoleError,
+    normalize_role,
+    role_instructions,
+)
+
 TASK_RE = re.compile(
     r"^\s*-\s*\[(?P<mark>[ xX])\]\s*\[(?P<role>[^\]]+)\]\s*"
     r"(?P<title>.*?)\s*\|\s*(?P<files>.*?)\s*\|\s*(?P<rest>.*)$"
@@ -16,15 +26,6 @@ WAVE_RE = re.compile(r"^##\s+(?P<name>.+?)\s*$")
 VERIFY_RE = re.compile(r"Verify:\s*(?P<verify>.*?)(?:\s+Output:\s*(?P<output>.*))?$", re.I)
 OUTPUT_RE = re.compile(r"Output:\s*(?P<output>.*)$", re.I)
 PATH_RE = re.compile(r"`([^`]+)`")
-
-ROLE_MODE = {
-    "coding": ("implement", "ws", "medium"),
-    "devops": ("implement", "ws", "medium"),
-    "review": ("review", "ws", "medium"),
-    "sa": ("consult", "ro", "high"),
-    "consult": ("consult", "ro", "medium"),
-}
-
 
 @dataclass
 class Task:
@@ -86,10 +87,14 @@ def parse_tasks(tasks_path: Path, wave_name: str, include_completed: bool = Fals
         if completed and not include_completed:
             continue
         verify, output = _split_verify(task_match.group("rest"))
+        try:
+            role = normalize_role(task_match.group("role").strip(), task_match.group("title").strip())
+        except RoleError as exc:
+            raise SystemExit(f"ERROR: {tasks_path}: {exc}") from exc
         tasks.append(
             Task(
                 completed=completed,
-                role=task_match.group("role").strip(),
+                role=role,
                 title=task_match.group("title").strip(),
                 files=_extract_paths(task_match.group("files")),
                 verify=verify,
@@ -114,7 +119,7 @@ def _check_overlap(tasks: list[Task]) -> list[str]:
     errors: list[str] = []
     for index, task in enumerate(tasks, 1):
         role_key = task.role.lower().strip()
-        mode = ROLE_MODE.get(role_key, ("implement", "ws", "medium"))[0]
+        mode = ROLE_MODE.get(role_key, ("implement", "ws", "high"))[0]
         if mode in {"review", "consult"}:
             continue
         owner = f"{role_key}-{index}"
@@ -127,26 +132,47 @@ def _check_overlap(tasks: list[Task]) -> list[str]:
 
 
 def _profile_text(profile: str) -> str:
+    if profile == "standard":
+        return (
+            "Use standard context: minimal context plus directly relevant design.md, decisions.md, "
+            "architecture notes, and API contracts. Do not load raw logs, transcripts, histories, "
+            "large generated caches, or unrelated skills."
+        )
     if profile == "full":
         return "Use normal project context if needed, but avoid raw logs/transcripts."
+    if profile != "minimal":
+        raise ValueError(f"unresolved context profile: {profile}")
     return (
         "Use minimal context: read only Spec, Task, listed File scope, and directly related tests. "
         "Do not load unrelated skills, MCP tool inventories, histories, large logs, or generated caches."
     )
 
 
+def _resolve_profile(requested: str, role_key: str) -> str:
+    if requested != "role":
+        return requested
+    role = ROLE_SPECS.get(role_key)
+    return role.context_profile if role else DEFAULT_CONTEXT_PROFILE
+
+
 def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode: str, profile: str) -> str:
     instance = f"{task.role.lower().strip()}-{index}"
     restrictions = "no commit, no push, no user communication, no /codex2codex recursion"
+    artifact_fallback = (
+        "If writing the Output artifact is blocked by approval/tooling/credentials, do not ask for "
+        "approval and do not end with QUESTION. Instead finish with `ARTIFACT_BODY:` followed by the "
+        "exact Markdown artifact body; run_wave.py will salvage that body into the requested path."
+    )
     if mode == "review":
         restrictions += (
             "; do not modify product files; write only the requested review artifact; "
-            "if artifact write tooling is blocked, include the complete review body in final output"
+            "the review artifact must include Findings, Verification or Tests, and Verdict: PASS|FAIL; "
+            f"{artifact_fallback}"
         )
     else:
         restrictions += (
-            "; write the requested Output artifact; if artifact write tooling is blocked, "
-            "include a complete artifact body in final output with changed files, verification, and risks"
+            "; write the requested Output artifact with changed files, verification, and risks; "
+            f"{artifact_fallback}"
         )
     return "\n".join(
         [
@@ -158,6 +184,8 @@ def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode:
             f"Task: {task.title}",
             f"Verify: {task.verify or 'Not specified'}",
             f"Output: {output}",
+            "Role instructions:",
+            role_instructions(task.role),
             f"Context profile: {_profile_text(profile)}",
             "Concurrency: peer workers may edit nearby files; stay inside scope.",
             f"Restrictions: {restrictions}.",
@@ -168,11 +196,11 @@ def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate codex2codex worker briefs from codex-agent-team tasks.md.")
+    parser = argparse.ArgumentParser(description="Generate codex2codex worker briefs from tasks.md.")
     parser.add_argument("--spec-dir", required=True, type=Path)
     parser.add_argument("--wave", required=True)
     parser.add_argument("--out-dir", type=Path)
-    parser.add_argument("--profile", choices=("minimal", "full"), default="minimal")
+    parser.add_argument("--profile", choices=ALLOWED_CONTEXT_PROFILES, default="role")
     parser.add_argument("--include-completed", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
@@ -203,11 +231,16 @@ def main() -> int:
         role_key = task.role.lower().strip()
         role_counts[role_key] = role_counts.get(role_key, 0) + 1
         role_index = role_counts[role_key]
-        mode, sandbox, effort = ROLE_MODE.get(role_key, ("implement", "ws", "medium"))
+        role_spec = ROLE_SPECS.get(role_key)
+        if role_spec and role_spec.cap is not None and role_index > role_spec.cap:
+            print(f"ERROR: role cap exceeded for {role_key}: {role_index}>{role_spec.cap}", file=sys.stderr)
+            return 2
+        mode, sandbox, effort = ROLE_MODE.get(role_key, ("implement", "ws", "high"))
+        context_profile = _resolve_profile(args.profile, role_key)
         output = _review_output(spec_dir, role_index, task) if mode == "review" else task.output
         name = f"{role_key}-{role_index}"
         brief_path = out_dir / f"{name}.txt"
-        brief_path.write_text(_brief(spec_dir, args.wave, task, role_index, output, mode, args.profile), encoding="utf-8")
+        brief_path.write_text(_brief(spec_dir, args.wave, task, role_index, output, mode, context_profile), encoding="utf-8")
         manifest["workers"].append(
             {
                 "name": name,
@@ -215,6 +248,8 @@ def main() -> int:
                 "mode": mode,
                 "sandbox": sandbox,
                 "effort": effort,
+                "context_profile": context_profile,
+                "role_config": role_spec.config_path if role_spec else "",
                 "files": task.files,
                 "verify": task.verify,
                 "output": output,

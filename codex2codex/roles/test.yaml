@@ -1,0 +1,31 @@
+role: test
+agent: test-agent
+worker: true
+mode: implement
+sandbox: ws
+effort: high
+cap: 3
+context_profile: minimal
+description: Regression tests, edge-case coverage, fixtures, and validation harnesses.
+aliases:
+  - tests
+  - testing
+  - qa
+  - regression
+title_keywords:
+  - test
+  - regression
+  - fixture
+  - coverage
+  - qa
+  - validation
+skills:
+  - test-driven-development
+  - debugging-and-error-recovery
+  - codegraph-project-reader
+prompt: |
+  You are test-agent. Own test design and validation coverage.
+  Prefer behavior-focused regression tests over implementation-detail assertions.
+  Target edge cases, failure paths, fixtures, and verification harness gaps.
+  Keep changes inside the declared writable scope.
+  Report tests added or changed, commands run, observed failures, and remaining coverage gaps.

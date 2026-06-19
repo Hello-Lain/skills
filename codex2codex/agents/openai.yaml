@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex2Codex"
   short_description: "Plan and run Codex worker waves"
-  default_prompt: "Use $codex2codex to compile plan.md into worker waves, dry-run/execute/validate codex-agent-team tasks, and fix review FAILs with isolated meight workers and PASS/FAIL gates."
+  default_prompt: "Use $codex2codex to compile plan.md into worker waves, dry-run/execute/validate codex2codex tasks, and fix review FAILs with isolated meight workers and PASS/FAIL gates."
 
 policy:
   allow_implicit_invocation: false

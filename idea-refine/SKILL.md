@@ -1,6 +1,6 @@
 ---
 name: idea-refine
-description: Refines raw ideas into sharp, actionable concepts through structured divergent and convergent thinking. Use when an idea is still vague, when you need to stress-test assumptions before committing to a plan, or when you want to expand options before converging on one. Triggers on "ideate", "refine this idea", or "stress-test my plan".
+description: Refines raw ideas into sharp, actionable directions through structured divergent and convergent thinking. Use when the direction is uncertain, options need comparison, or assumptions need stress-testing before requirement clarification or planning. Does not produce full implementation specs. Triggers on "ideate", "refine this idea", or "stress-test my plan".
 ---
 
 # Idea Refine
@@ -18,7 +18,7 @@ Refines raw ideas into sharp, actionable concepts worth building through structu
 This skill is primarily an interactive dialogue. Invoke it with an idea, and the agent will guide you through the process.
 
 ```bash
-# Optional: Initialize the ideas directory
+# Optional: Initialize the project-level ideas directory
 bash /mnt/skills/user/idea-refine/scripts/idea-refine.sh
 ```
 
@@ -27,9 +27,19 @@ bash /mnt/skills/user/idea-refine/scripts/idea-refine.sh
 - "Ideate on [concept]"
 - "Stress-test my plan"
 
+## Discovery Routing
+
+When handoff or workflow routing is relevant, read `references/discovery-routing.md` first and follow its shared contract.
+
+Route into `idea-refine` when the user has an idea, option set, rough solution, or architecture/workflow direction that may be premature, weakly motivated, or not yet worth specifying.
+
+Do not use `idea-refine` to create a full implementation spec or executable plan. If requirement facts are missing, borrow the `interview-me` one-question-at-a-time protocol only long enough to identify users, success criteria, constraints, and the decision being made. Then resume divergent/convergent refinement.
+
+Route out after a direction is recommended and the user confirms it. Hand off to `interview-me` when the chosen direction needs a confirmed spec. Hand off to `spec2plan` only when a confirmed spec or equivalent clear requirements already exist.
+
 ## Output
 
-The final output is a markdown one-pager saved to `docs/ideas/[idea-name].md` (after user confirmation), containing:
+The final output is a markdown one-pager saved to the project-level `.codex/ideas/[idea-name].md` by default (after user confirmation), containing:
 - Problem Statement
 - Recommended Direction
 - Key Assumptions
@@ -67,6 +77,8 @@ When the user invokes this skill with an idea (`$ARGUMENTS`), guide them through
    - Why now?
 
    Use the `AskUserQuestion` tool to gather this input. Do NOT proceed until you understand who this is for and what success looks like.
+
+   If only one critical fact is missing, ask one question at a time using the `interview-me` style. Stop before this becomes full requirement gathering; the output here is a direction, not a spec.
 
 3. **Generate 5-8 idea variations** using these lenses:
    - **Inversion:** "What if we did the opposite?"
@@ -135,9 +147,11 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 - [Question that needs answering before building]
 ```
 
+If the user confirms the recommended direction and wants to continue, state the handoff explicitly: current artifact maturity is `direction`; `idea-refine` should stop; `interview-me` should produce a confirmed `spec`; carry forward assumptions, risks, rejected alternatives, and open questions. Do not draft the spec here unless the user separately invokes a spec-writing skill.
+
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
+Ask the user if they'd like to save this to `.codex/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
 
 ### Anti-patterns to Avoid
 
@@ -148,6 +162,7 @@ Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a lo
 - **Don't over-engineer the process.** Three phases, each doing one thing well. Resist adding steps.
 - **Don't just list ideas — tell a story.** Each variation should have a reason it exists, not just be a bullet point.
 - **Don't ignore the codebase.** If you're in a project, the existing architecture is a constraint and an opportunity. Use it.
+- **Don't skip Discovery Routing.** If the next step is unclear, read `references/discovery-routing.md` and hand off only after this skill's exit criteria are met.
 
 ### Tone
 
@@ -164,6 +179,7 @@ Read `examples.md` in this skill directory for examples of what great ideation s
 - Producing a plan without a "Not Doing" list
 - Ignoring existing codebase constraints when ideating inside a project
 - Jumping straight to Phase 3 output without running Phases 1 and 2
+- Producing a full `interview-me` spec instead of a confirmed direction handoff
 
 ## Verification
 
@@ -176,3 +192,4 @@ After completing an ideation session:
 - [ ] A "Not Doing" list makes trade-offs explicit
 - [ ] The output is a concrete artifact (markdown one-pager), not just conversation
 - [ ] The user confirmed the final direction before any implementation work
+- [ ] If routing is needed, the next skill is named using Discovery Routing (`interview-me` for specs, `spec2plan` only for confirmed specs or equivalent clear requirements)

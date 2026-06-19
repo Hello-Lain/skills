@@ -84,7 +84,23 @@ python scripts/run_plan.py plan.md --force
 
 `plan_to_tasks.py` reads `### Task N` blocks with `Worker role`, `Writable scope`, `Verification`, `Dependencies`, `Wave`, and `Output artifact`, then writes `.codex/specs/<slug>/tasks.md`. It assigns waves from dependencies, prevents same-wave write overlap by moving conflicting implementation tasks later, and appends a review wave by default.
 
-For codex-agent-team specs, generate worker briefs from existing `tasks.md` first:
+Worker roles are self-contained in `roles/*.yaml`; edit those files to change prompt text, aliases, cap, sandbox, effort, context profile, or preferred skills:
+
+| File | Role |
+|---|---|
+| `roles/coding.yaml` | `coding-agent` |
+| `roles/test.yaml` | `test-agent` |
+| `roles/review.yaml` | `review-agent` |
+| `roles/sa.yaml` | `sa-agent` |
+| `roles/consult.yaml` | `consult-agent` |
+| `roles/fullstack.yaml` | lead-only `fullstack-agent`, rejected as a worker |
+| `roles/_defaults.yaml` | allowed efforts/context profiles, fallback routing, global skill policy |
+
+`fullstack-agent` is the lead/orchestrator role, not a worker. `devops-agent` is retired: `devops`, `ops`, `ci`, `deploy`, and `infra` are compatibility aliases to `coding`; high-stakes operational decisions route to `sa`.
+
+Default wave profile is `role`: each worker uses its role YAML `context_profile` (`minimal`, `standard`, or `full`) and the manifest records the resolved per-worker value. Override with `--profile minimal|standard|full` only when a whole wave needs a different context budget.
+
+For codex2codex specs, generate worker briefs from existing `tasks.md` first:
 
 ```bash
 python scripts/prepare_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1"
@@ -104,12 +120,13 @@ Useful controls:
 
 ```bash
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --dry-run
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --profile standard
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --profile full
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --no-fix-wave
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 2: review" --auto-run-fix --max-fix-cycles 2
 ```
 
-Default profile is `minimal`: generated briefs tell workers to read only the spec, task, listed files, and directly related tests. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached. If a review worker cannot write the artifact but returns a complete PASS/FAIL review, `run_wave.py` salvages that body into the requested `review*.md` before validation.
+Default profile is `role`: generated briefs resolve the YAML `context_profile` for each role. `minimal` reads only spec, task, listed files, and directly related tests. `standard` adds directly relevant design/decision/API context. `full` allows normal project context when needed. `prepare_wave.py` also injects the selected role's YAML prompt, preferred skills, global skill policy, resolved context profile, and role config path into each worker brief. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached. If a worker cannot write the artifact, the generated brief tells it to finish with `ARTIFACT_BODY:` plus the exact Markdown artifact body; `run_wave.py` salvages only that body into the requested artifact path before validation. It also supports legacy fallback output that contains one complete fenced Markdown artifact.
 
 Reuse that same path for every command in the request:
 
@@ -199,7 +216,7 @@ MEIGHT_HOME="$RUN_HOME" meight dispatch tiny-1 --brief "Check whether README men
 This is the intended consumer. For real work, run `wait --timeout` as the **background Bash call**. Codex wakes at the checkpoint, reads one `status`, and either waits again or sends a targeted `steer`:
 
 ```
-Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight start review-1 --sandbox ws --effort high --brief-file - <<'EOF' ... EOF")
+Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight start review-1 --sandbox ws --effort xhigh --brief-file - <<'EOF' ... EOF")
 Bash(command: "MEIGHT_HOME=\"$RUN_HOME\" meight wait review-1 --timeout 300",
      run_in_background: true)
 -> ... Codex keeps working ...
@@ -244,7 +261,7 @@ Small decisions everywhere assume the user is an LLM agent, not a person at a te
 | `meight follow <name> --brief ...` | Low-level: new turn on the same thread (context preserved) |
 | `meight result / list / daemon / ping / shutdown` | Low-level support commands |
 
-Options: `--cwd` (worker workdir - use separate git worktrees for overlapping file scopes), `--sandbox ws|ro|full` (default `ws` = workspace-write; reviews run `ro`), `--model MODEL` (worker model; omit to inherit `~/.codex/config.toml`), `--effort low|medium|high|xhigh` (worker reasoning effort; default `medium`), `--fast`/`--no-fast` (per-worker toggle for Codex Fast/priority tier; omit to inherit config), `--timeout`.
+Options: `--cwd` (worker workdir - use separate git worktrees for overlapping file scopes), `--sandbox ws|ro|full` (default `ws` = workspace-write; reviews use `ws` when writing artifacts and `ro` for pure read-only reports), `--model MODEL` (worker model; omit to inherit `~/.codex/config.toml`), `--effort high|xhigh` (worker reasoning effort; default `high`), `--fast`/`--no-fast` (per-worker toggle for Codex Fast/priority tier; omit to inherit config), `--timeout`.
 
 Plan/wave helpers:
 
@@ -260,6 +277,8 @@ Worker state lives in `$MEIGHT_HOME/workers/<name>/`: `brief.md`, `status.json` 
 ## Good to know
 
 - Meight inherits your `~/.codex/config.toml` as-is (model, reasoning effort, MCP servers, auth). If `codex` works in your terminal, `meight` works. Per-worker overrides (`--model`, `--effort`, `--fast`/`--no-fast`) take precedence for that worker.
+- `meight doctor --json` reports `codex_home`, `skills_dir`, `global_skill_count`, role-referenced skills, and `missing_role_skills`. Workers run through the same Codex SDK/app-server environment, and generated briefs include the role YAML's preferred skills plus the global skill policy from `roles/_defaults.yaml`.
+- Prefer `meight doctor --json` for routine global-skill checks. A live worker smoke proves the SDK path but costs a full worker context; use it only when debugging real worker execution.
 - `doctor` is read-only. Use `recover --dry-run` before `recover --force`; do not force recovery while a live socket or held lock is reported.
 - `openai-codex` is pinned (`0.1.0b3`, beta). When bumping, re-run the verification suite in [`SPEC.md`](./SPEC.md).
 - Design details — the concurrency model, state machine, and orchestration policy — live in [`ARCHITECTURE.md`](./ARCHITECTURE.md).

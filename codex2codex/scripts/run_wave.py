@@ -11,8 +11,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+from roles import ALLOWED_CONTEXT_PROFILES, DEFAULT_EFFORT, ROLE_MODE
+
 HEADING_RE = re.compile(r"^\s*#{1,6}\s+(.+?)\s*$")
 VERDICT_LINE_RE = re.compile(r"^\s*(?:-\s*)?(?:#{1,6}\s*)?Verdict\s*:?\s*`?(PASS|FAIL)?`?\.?\s*$", re.I)
+ARTIFACT_BODY_RE = re.compile(r"(?mis)^ARTIFACT_BODY:\s*\n(?P<body>.*)$")
 
 
 def _load_json(path: Path) -> dict:
@@ -87,7 +90,7 @@ def _start_workers(manifest: dict, meight_home: Path, cwd: Path, meight: str) ->
             "--sandbox",
             worker.get("sandbox") or "ws",
             "--effort",
-            worker.get("effort") or "medium",
+            worker.get("effort") or ROLE_MODE.get(worker.get("role"), ("implement", "ws", DEFAULT_EFFORT))[2],
         ]
         proc = _run(cmd, meight_home, cwd, capture=True)
         if proc.returncode != 0:
@@ -190,10 +193,35 @@ def _clean_result_text(result: str) -> str:
     return text
 
 
+def _strip_artifact_fence(text: str) -> str:
+    match = re.fullmatch(r"(?ms)\s*```(?:markdown|md)?\s*\n(.*?)\n```\s*", text)
+    if match:
+        return match.group(1).strip()
+    return text.strip()
+
+
+def _extract_artifact_body(result: str) -> str:
+    text = _clean_result_text(result)
+    marker = ARTIFACT_BODY_RE.search(text)
+    if marker:
+        return _strip_artifact_fence(marker.group("body"))
+
+    # Common fallback: a short blocked-write note followed by one complete
+    # fenced Markdown artifact. Salvage the artifact, not the wrapper note.
+    fences = re.findall(r"(?ms)```(?:markdown|md)?\s*\n(.*?)\n```", text)
+    for body in reversed(fences):
+        stripped = body.strip()
+        if _review_verdict(stripped) in {"PASS", "FAIL"}:
+            return stripped
+        if re.search(r"(?mi)(changed files|verification|verified|residual risks|risks|summary)", stripped):
+            return stripped
+    return text
+
+
 def _review_artifact_body(worker_name: str, result: str) -> str:
     if _review_verdict(result) not in {"PASS", "FAIL"}:
         return ""
-    text = _clean_result_text(result)
+    text = _extract_artifact_body(result)
     marker = re.search(r"(?mi)^Review result:\s*$", text)
     if marker:
         text = text[marker.end() :].strip()
@@ -208,7 +236,7 @@ def _review_artifact_body(worker_name: str, result: str) -> str:
 
 
 def _implementation_artifact_body(worker_name: str, result: str) -> str:
-    text = _clean_result_text(result)
+    text = _extract_artifact_body(result)
     if not text:
         return ""
     if re.search(r"(?mi)^\s*QUESTION\s*:", text):
@@ -356,6 +384,7 @@ def _dry_run(manifest: dict) -> None:
         print(
             f"- {worker['name']} role={worker.get('role')} mode={worker.get('mode')} "
             f"sandbox={worker.get('sandbox')} effort={worker.get('effort')} "
+            f"context_profile={worker.get('context_profile')} "
             f"files={', '.join(worker.get('files', []))} brief={worker.get('brief')}"
         )
 
@@ -458,7 +487,7 @@ def main() -> int:
     parser.add_argument("--spec-dir", type=Path)
     parser.add_argument("--wave")
     parser.add_argument("--meight", default="meight")
-    parser.add_argument("--profile", choices=("minimal", "full"), default="minimal")
+    parser.add_argument("--profile", choices=ALLOWED_CONTEXT_PROFILES, default="role")
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--meight-home", type=Path)
     parser.add_argument("--keep-home", action="store_true")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Interview Me"
+  short_description: "Clarify vague requests into confirmed specs"
+  default_prompt: "Use $interview-me to interview me one question at a time and turn this vague request into a confirmed spec."

@@ -22,8 +22,9 @@ This document is the implementation contract and verification record for
   talks JSON-RPC over stdio. One process multiplexes multiple threads through
   `MessageRouter`.
 - The SDK inherits the user's Codex config, including model, reasoning effort,
-  MCP servers, and authentication. Worker turns may override model and effort
-  per dispatch.
+  MCP servers, and authentication. This harness exposes only `high` and
+  `xhigh` worker effort; worker turns may override model and effort per
+  dispatch within that range.
 
 ### Verified SDK API Surface
 
@@ -38,7 +39,7 @@ h = th.turn(
     cwd=str,
     sandbox=Sandbox.workspace_write,
     model=None,
-    effort="low|medium|high|xhigh",
+    effort="high|xhigh",
     approval_mode=None,
     output_schema=None,
     service_tier=None,
@@ -110,7 +111,7 @@ repo unless the lead chooses a repo-local temp path.
   "cwd": "...",
   "sandbox": "workspace-write",
   "model": null,
-  "effort": "medium",
+  "effort": "high",
   "current_item": "commandExecution: pnpm typecheck:be (12s)",
   "current_item_started_at": null,
   "plan": ["[done] step1", "[active] step2"],
@@ -149,8 +150,8 @@ The command table must match the `python3 meight.py --help` subcommand list exac
 | `ping` | Check daemon health over `meight.sock` and print `pong` with the daemon pid. |
 | `doctor [--json]` | Passive health report. It must not mutate state. Report `MEIGHT_HOME`, socket, pid, lock state, heartbeat age, SDK import health, Codex CLI presence, redacted proxy/env presence, worker counts, stale workers, and corrupt status files. |
 | `recover [--dry-run] [--force]` | Dry-run-first stale daemon artifact cleanup. Default behavior is dry-run. `--force` must refuse live socket or held lock, snapshot recoverable metadata, then remove stale daemon artifacts only. |
-| `start <name> (--brief-file F\|- \| --brief TEXT) [--cwd DIR] [--sandbox ws\|workspace_write\|workspace-write\|ro\|read_only\|read-only\|full\|full_access\|full-access] [--model M] [--effort low\|medium\|high\|xhigh] [--fast \| --no-fast] [--no-preamble]` | Start a new worker with `thread_start` plus one turn. Defaults: `sandbox=ws`, `effort=medium`, `cwd=current directory`, `model` inherited from config. `--model` and `--effort` customize the worker model and reasoning effort. `--fast`/`--no-fast` toggles the codex Fast (priority) service tier for this worker; omitted = inherit `~/.codex/config.toml`. Reject duplicate active worker names. `--brief-file -` reads the brief from stdin. |
-| `dispatch <name> (--brief-file F\|- \| --brief TEXT) [--cwd DIR] [--sandbox ws\|workspace_write\|workspace-write\|ro\|read_only\|read-only\|full\|full_access\|full-access] [--model M] [--effort low\|medium\|high\|xhigh] [--fast \| --no-fast] [--no-preamble] [--timeout SEC] [--stall-timeout SEC]` | One-shot command: auto-start daemon if needed, `start`, `wait`, then print `result.md`. Default timeout is `1800` seconds. Exit code matches `wait`. Stall timeout is a passive checkpoint and never interrupts. |
+| `start <name> (--brief-file F\|- \| --brief TEXT) [--cwd DIR] [--sandbox ws\|workspace_write\|workspace-write\|ro\|read_only\|read-only\|full\|full_access\|full-access] [--model M] [--effort high\|xhigh] [--fast \| --no-fast] [--no-preamble]` | Start a new worker with `thread_start` plus one turn. Defaults: `sandbox=ws`, `effort=high`, `cwd=current directory`, `model` inherited from config. `--model` and `--effort` customize the worker model and reasoning effort. `--fast`/`--no-fast` toggles the codex Fast (priority) service tier for this worker; omitted = inherit `~/.codex/config.toml`. Reject duplicate active worker names. `--brief-file -` reads the brief from stdin. |
+| `dispatch <name> (--brief-file F\|- \| --brief TEXT) [--cwd DIR] [--sandbox ws\|workspace_write\|workspace-write\|ro\|read_only\|read-only\|full\|full_access\|full-access] [--model M] [--effort high\|xhigh] [--fast \| --no-fast] [--no-preamble] [--timeout SEC] [--stall-timeout SEC]` | One-shot command: auto-start daemon if needed, `start`, `wait`, then print `result.md`. Default timeout is `1800` seconds. Exit code matches `wait`. Stall timeout is a passive checkpoint and never interrupts. |
 | `follow <name> (--brief-file F\|- \| --brief TEXT) [--no-preamble]` | Start a new turn on the same thread for a terminal worker or a worker waiting on a final `QUESTION:`. Reset status, increment `turns`, and append to `result.md` and `events.log` with a separator. |
 | `reply <name> (--brief-file F\|- \| --brief TEXT) [--no-preamble] [--timeout SEC] [--stall-timeout SEC]` | One-shot answer path for `QUESTION:` blockers: `follow`, `wait`, then print only the latest turn result. Default timeout is `1800` seconds. Stall timeout is a passive checkpoint and never interrupts. |
 | `steer <name> TEXT` | Inject mid-turn text into a running turn. Return an error unless the worker is currently running. |
@@ -213,16 +214,22 @@ PASS|FAIL
 
 Each executable plan task should include:
 
-- `Worker role`: `coding|devops|review|consult|sa` or a clear alias.
+- `Worker role`: `coding|test|review|consult|sa` or a clear alias. The role contract is local to this skill in `roles/*.yaml`; `scripts/roles.py` is the loader. `devops`, `ops`, `ci`, `deploy`, and `infra` are compatibility aliases to `coding`, not first-class roles.
 - `Writable scope`: exact paths the worker may write. For review/consult, this is product read scope.
 - `Verification`: command or check the worker must run/report.
 - `Dependencies`: task numbers or `None`.
 - `Wave`: optional explicit wave number.
 - `Output artifact`: path for the worker report/review.
 
+Generated worker briefs must include the selected role YAML path, role prompt,
+preferred skills, resolved context profile, and the global skill policy from
+`roles/_defaults.yaml`.
+`doctor --json` must report global skill directory availability and
+`missing_role_skills` for all skills referenced by role YAML.
+
 `plan_to_tasks.py` assigns waves from dependencies, moves overlapping same-wave implementation scopes later, writes `.codex/specs/<slug>/tasks.md`, creates a minimal `spec.md` source pointer when absent, and can append a review wave. `scripts/run_plan.py` wraps `plan_to_tasks.py` plus `run_wave.py`; `--dry-run` previews workers before execution.
 
-For codex-agent-team waves, `scripts/prepare_wave.py` parses `tasks.md`, rejects same-wave write-scope overlap, and writes generated briefs plus `manifest.json`. `scripts/run_wave.py` can take either `--manifest` or `--spec-dir/--wave`; it supports `--dry-run`, `--profile minimal|full`, `--no-fix-wave`, `--auto-run-fix`, and `--max-fix-cycles`. It executes the manifest with `meight`, waits for workers, salvages complete PASS/FAIL review bodies from `result.md` when artifact writes are blocked, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md`, creates `Wave N: fix review findings` on review `FAIL`, optionally runs the fix wave(s) and reruns the original review until PASS or cycle limit, shuts down each isolated daemon, and returns nonzero on worker failure, blocked result, missing artifact, invalid review artifact, or review `FAIL`. A worker `completed` state is not sufficient if the expected artifact is missing or invalid.
+For codex2codex waves, `scripts/prepare_wave.py` parses `tasks.md`, rejects same-wave write-scope overlap, resolves `--profile role|minimal|standard|full` to each worker's concrete `context_profile`, and writes generated briefs plus `manifest.json`. `scripts/run_wave.py` can take either `--manifest` or `--spec-dir/--wave`; it supports `--dry-run`, `--profile role|minimal|standard|full`, `--no-fix-wave`, `--auto-run-fix`, and `--max-fix-cycles`. It executes the manifest with `meight`, waits for workers, salvages complete PASS/FAIL review bodies from `result.md` when artifact writes are blocked, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md`, creates `Wave N: fix review findings` on review `FAIL`, optionally runs the fix wave(s) and reruns the original review until PASS or cycle limit, shuts down each isolated daemon, and returns nonzero on worker failure, blocked result, missing artifact, invalid review artifact, or review `FAIL`. A worker `completed` state is not sufficient if the expected artifact is missing or invalid.
 
 ## Daemon Internals
 

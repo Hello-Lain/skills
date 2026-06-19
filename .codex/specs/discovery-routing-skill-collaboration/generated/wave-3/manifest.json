@@ -1,0 +1,21 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration",
+  "wave": "Wave 3",
+  "profile": "minimal",
+  "workers": [
+    {
+      "name": "devops-1",
+      "role": "devops",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "medium",
+      "files": [
+        ".codex/specs/discovery-routing-skill-collaboration/artifacts/task-5-validation.md"
+      ],
+      "verify": "rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py idea-refine && rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py interview-me && rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py spec2plan && rtk git diff -- idea-refine/SKILL.md interview-me/SKILL.md spec2plan/SKILL.md idea-refine/references/discovery-routing.md interview-me/references/discovery-routing.md spec2plan/references/discovery-routing.md",
+      "output": ".codex/specs/discovery-routing-skill-collaboration/artifacts/task-5-validation.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/generated/wave-3/devops-1.txt",
+      "raw_task": "- [ ] [devops] Task 5: Validate edited skill docs | `.codex/specs/discovery-routing-skill-collaboration/artifacts/task-5-validation.md` | Verify: `rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py idea-refine && rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py interview-me && rtk python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py spec2plan && rtk git diff -- idea-refine/SKILL.md interview-me/SKILL.md spec2plan/SKILL.md idea-refine/references/discovery-routing.md interview-me/references/discovery-routing.md spec2plan/references/discovery-routing.md` Output: `.codex/specs/discovery-routing-skill-collaboration/artifacts/task-5-validation.md`"
+    }
+  ]
+}

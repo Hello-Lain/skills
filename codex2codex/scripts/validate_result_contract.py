@@ -150,7 +150,7 @@ def main() -> int:
     parser.add_argument(
         "--require-review",
         action="store_true",
-        help="Require codex-agent-team style review output with findings, verification, and Verdict: PASS|FAIL.",
+        help="Require codex2codex review output with findings, verification, and Verdict: PASS|FAIL.",
     )
     parser.add_argument(
         "--allow-blocked",

@@ -9,6 +9,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from roles import ALLOWED_CONTEXT_PROFILES
+
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
@@ -70,7 +72,7 @@ def main() -> int:
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--add-review", action="store_true", default=True)
     parser.add_argument("--no-add-review", dest="add_review", action="store_false")
-    parser.add_argument("--profile", choices=("minimal", "full"), default="minimal")
+    parser.add_argument("--profile", choices=ALLOWED_CONTEXT_PROFILES, default="role")
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--meight", default="meight")
     parser.add_argument("--dry-run", action="store_true")

@@ -1,0 +1,24 @@
+role: fullstack
+agent: fullstack-agent
+worker: false
+mode: lead
+sandbox:
+effort: xhigh
+cap: 1
+context_profile: full
+description: Lead/orchestrator role for planning, partitioning, arbitration, integration, user communication, git, and final acceptance.
+aliases:
+  - lead
+  - orchestrator
+title_keywords:
+  - planning
+  - partitioning
+  - arbitration
+skills:
+  - spec2plan
+  - codex2codex
+  - git-workflow-and-versioning
+prompt: |
+  You are fullstack-agent. This is the lead/orchestrator role, not a worker role.
+  Own task decomposition, role assignment, review arbitration, integration, user communication, git, and final acceptance.
+  Do not place fullstack-agent in tasks.md worker rows.

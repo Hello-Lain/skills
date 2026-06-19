@@ -1,0 +1,49 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration",
+  "wave": "Wave 2",
+  "profile": "minimal",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "medium",
+      "files": [
+        "idea-refine/SKILL.md"
+      ],
+      "verify": "rtk grep -n \"Discovery Routing\\\\|interview-me\\\\|spec2plan\" idea-refine/SKILL.md",
+      "output": ".codex/specs/discovery-routing-skill-collaboration/artifacts/task-2-idea-refine.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/generated/wave-2/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 2: Update idea-refine handoff instructions | `idea-refine/SKILL.md` | Verify: `rtk grep -n \"Discovery Routing\\\\|interview-me\\\\|spec2plan\" idea-refine/SKILL.md` Output: `.codex/specs/discovery-routing-skill-collaboration/artifacts/task-2-idea-refine.md`"
+    },
+    {
+      "name": "coding-2",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "medium",
+      "files": [
+        "interview-me/SKILL.md"
+      ],
+      "verify": "rtk grep -n \"Discovery Routing\\\\|idea-refine\\\\|spec2plan\" interview-me/SKILL.md",
+      "output": ".codex/specs/discovery-routing-skill-collaboration/artifacts/task-3-interview-me.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/generated/wave-2/coding-2.txt",
+      "raw_task": "- [ ] [coding] Task 3: Update interview-me handoff instructions | `interview-me/SKILL.md` | Verify: `rtk grep -n \"Discovery Routing\\\\|idea-refine\\\\|spec2plan\" interview-me/SKILL.md` Output: `.codex/specs/discovery-routing-skill-collaboration/artifacts/task-3-interview-me.md`"
+    },
+    {
+      "name": "coding-3",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "medium",
+      "files": [
+        "spec2plan/SKILL.md"
+      ],
+      "verify": "rtk grep -n \"Discovery Routing\\\\|idea-refine\\\\|interview-me\" spec2plan/SKILL.md",
+      "output": ".codex/specs/discovery-routing-skill-collaboration/artifacts/task-4-spec2plan.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/discovery-routing-skill-collaboration/generated/wave-2/coding-3.txt",
+      "raw_task": "- [ ] [coding] Task 4: Update spec2plan collaboration gate | `spec2plan/SKILL.md` | Verify: `rtk grep -n \"Discovery Routing\\\\|idea-refine\\\\|interview-me\" spec2plan/SKILL.md` Output: `.codex/specs/discovery-routing-skill-collaboration/artifacts/task-4-spec2plan.md`"
+    }
+  ]
+}
