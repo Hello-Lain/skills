@@ -163,6 +163,13 @@ def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode:
         "approval and do not end with QUESTION. Instead finish with `ARTIFACT_BODY:` followed by the "
         "exact Markdown artifact body; run_wave.py will salvage that body into the requested path."
     )
+    patch_fallback = (
+        "If direct edit tooling fails after you have a scoped implementation, you may finish with "
+        "`PATCH_BODY:` followed by one complete apply_patch patch or unified diff. The patch may touch "
+        "only files listed in File scope, must produce real changes, and is applied only by run_wave.py "
+        "after writable-scope validation. Do not ask the lead to apply changes manually; lead fallback "
+        "is prohibited unless explicitly requested."
+    )
     if mode == "review":
         restrictions += (
             "; do not modify product files; write only the requested review artifact; "
@@ -172,7 +179,7 @@ def _brief(spec_dir: Path, wave: str, task: Task, index: int, output: str, mode:
     else:
         restrictions += (
             "; write the requested Output artifact with changed files, verification, and risks; "
-            f"{artifact_fallback}"
+            f"{artifact_fallback} {patch_fallback}"
         )
     return "\n".join(
         [

@@ -60,6 +60,55 @@ def _artifact_salvaged(repo_root: Path, output: str) -> bool:
         return False
 
 
+def _repo_relative_path(repo_root: Path, path_text: str) -> str:
+    path = Path(path_text)
+    try:
+        if path.is_absolute():
+            path = path.resolve().relative_to(repo_root.resolve())
+    except (OSError, ValueError):
+        pass
+    return path.as_posix().lstrip("./")
+
+
+def _is_in_scope(changed_path: str, scope_path: str) -> bool:
+    changed = changed_path.rstrip("/")
+    scope = scope_path.rstrip("/")
+    return changed == scope
+
+def _scope_allows_child(repo_root: Path, scope_path: str, *, explicit_dir: bool = False) -> bool:
+    if explicit_dir:
+        return True
+    return (repo_root / scope_path).is_dir()
+
+
+def _scope_entries(repo_root: Path, paths: list[str]) -> tuple[tuple[str, bool], ...]:
+    entries: list[tuple[str, bool]] = []
+    seen: set[tuple[str, bool]] = set()
+    for path in paths:
+        explicit_dir = path.strip().endswith("/")
+        scope_path = _repo_relative_path(repo_root, path)
+        entry = (scope_path, _scope_allows_child(repo_root, scope_path, explicit_dir=explicit_dir))
+        if entry not in seen:
+            entries.append(entry)
+            seen.add(entry)
+    return tuple(entries)
+
+
+def _validate_implementation_evidence(repo_root: Path, worker: dict, status: dict) -> list[str]:
+    scope = _scope_entries(repo_root, [path for path in worker.get("files", []) if path])
+    if not scope:
+        return []
+    changed = [_repo_relative_path(repo_root, path) for path in status.get("files_changed") or [] if path]
+    if any(
+        _is_in_scope(changed_path, scope_path)
+        or (allow_child and changed_path.startswith(scope_path.rstrip("/") + "/"))
+        for changed_path in changed
+        for scope_path, allow_child in scope
+    ):
+        return []
+    return [f"missing expected implementation evidence: no scoped files_changed for {[path for path, _ in scope]}"]
+
+
 def _validate_output_artifact(repo_root: Path, output: str) -> list[str]:
     if not output:
         return []
@@ -67,10 +116,13 @@ def _validate_output_artifact(repo_root: Path, output: str) -> list[str]:
     if not artifact.exists():
         return [f"missing output artifact: {artifact}"]
     try:
-        if not artifact.read_text(encoding="utf-8").strip():
+        text = artifact.read_text(encoding="utf-8")
+        if not text.strip():
             return [f"empty output artifact: {artifact}"]
     except OSError as exc:
         return [f"cannot read output artifact: {artifact}: {exc}"]
+    if BLOCKED_RE.search(text):
+        return [f"output artifact reports blocked: {artifact}"]
     return []
 
 
@@ -151,6 +203,7 @@ def main() -> int:
             errors.extend(_validate_review_artifact(args.validator, artifact))
         else:
             errors.extend(_validate_output_artifact(repo_root, worker.get("output") or ""))
+            errors.extend(f"{name}: {error}" for error in _validate_implementation_evidence(repo_root, worker, status))
 
     if warnings:
         for warning in warnings:

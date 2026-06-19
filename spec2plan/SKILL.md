@@ -16,6 +16,7 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 ## Resources
 
 - Always read `references/plan-contract.md` before drafting or validating a plan.
+- Before saving a plan or plan-adjacent artifact, read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
 - Read `references/discovery-routing.md` when the source artifact's maturity is ambiguous or the request may be an idea, direction, or incomplete spec rather than planning-ready requirements.
 - For `heavy`, also read `references/heavy-mode.md` and load `$codex2codex` from `/data/lcq/.codex/skills/codex2codex`.
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`.
@@ -37,10 +38,11 @@ idea-refine -> interview-me -> spec2plan
 
 ## Output
 
-- Default light path: project-level `.codex/plans/<task-slug>/plan.md` unless the user provides a path.
-- Default heavy path: project-level `.codex/plans/<task-slug>/plan.md` unless the user provides a path.
-- If the source spec lives at `.codex/specs/<slug>/spec.md`, reuse `<slug>` for the plan directory: `.codex/plans/<slug>/plan.md`.
-- Keep per-phase heavy artifacts under `.codex/plans/<task-slug>/subagents/`.
+- Default light path: project-level `.codex/work/<yyyyMMdd>-<topic-slug>/plan.md` unless the user provides a path.
+- Default heavy path: project-level `.codex/work/<yyyyMMdd>-<topic-slug>/plan.md` unless the user provides a path.
+- If the source spec lives at `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md`, reuse that topic workspace for the plan: `.codex/work/<yyyyMMdd>-<topic-slug>/plan.md`.
+- If the source spec is outside the shared workspace, create or reuse `.codex/work/<yyyyMMdd>-<topic-slug>/`, record the external source path in `manifest.yaml`, and write the plan there unless the user provides a path.
+- Keep per-phase heavy artifacts under `.codex/work/<yyyyMMdd>-<topic-slug>/subagents/`.
 - Write plans, questions, and final responses in the user's language.
 - Keep commands, paths, env vars, identifiers, package names, API names, and errors exact.
 
@@ -57,7 +59,7 @@ idea-refine -> interview-me -> spec2plan
 1. Main agent inspects only enough context to build a compact task packet: objective, spec source, repo status, constraints, likely files/docs, output path, output language, redaction rules, executable plan fields, and `no implementation`.
 2. Invoke `$codex2codex` inside a task subagent as the adaptive multi-agent shell; pass this skill's heavy-mode packet, contract, worker phases, validators, and artifact paths.
 3. Require `$codex2codex` to coordinate read-only `planner`, `reviewer`, and `synthesizer` workers through supervised meight loops; it may add consult/arbiter workers if needed.
-4. Save each terminal phase artifact under `.codex/plans/<task-slug>/subagents/<phase>.md`, then validate: `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
+4. Save each terminal phase artifact under `.codex/work/<yyyyMMdd>-<topic-slug>/subagents/<phase>.md`, then validate: `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
 5. Write `plan.md` from the synthesizer artifact body exactly; do not replace it with main-agent synthesis.
 6. Run `scripts/validate_plan_contract.py <plan.md> --mode heavy`.
 7. Report generated path, artifact dir, validation status, `$codex2codex` cleanup status, key risks/open questions, and that implementation/ops were not executed.
@@ -78,6 +80,6 @@ idea-refine -> interview-me -> spec2plan
 - Set `Worker role` to `coding`, `devops`, `review`, `consult`, or `sa`; use `review` for independent PASS/FAIL review tasks.
 - Put exact repo-relative paths in `Writable scope`; conservative directory globs are acceptable only when exact files are not knowable before implementation.
 - Put exact commands/checks in `Verification`; if not runnable yet, state the concrete future command plus prerequisite.
-- Put `Output artifact` under `.codex/specs/<slug>/artifacts/` or `review*.md` so `$codex2codex scripts/plan_to_tasks.py` can compile the plan into `tasks.md`.
+- Put `Output artifact` under `.codex/work/<yyyyMMdd>-<topic-slug>/artifacts/` or `review*.md` in that workspace so `$codex2codex scripts/plan_to_tasks.py` can compile the plan into `tasks.md`.
 - Ensure artifact parent directories are creatable before execution, and prefer one artifact per worker so `$codex2codex` can validate or salvage outputs deterministically.
 - Before execution, run `$codex2codex scripts/run_plan.py <plan.md> --dry-run` when available; treat missing scopes, overlapping writes, or bad artifact paths as plan defects.

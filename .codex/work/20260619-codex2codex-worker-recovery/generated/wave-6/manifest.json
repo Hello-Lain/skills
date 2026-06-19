@@ -1,0 +1,26 @@
+{
+  "spec_dir": ".codex/work/20260619-codex2codex-worker-recovery",
+  "wave": "Wave 6",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "codex2codex/SKILL.md",
+        "codex2codex/README.md",
+        "codex2codex/ARCHITECTURE.md",
+        "codex2codex/scripts/prepare_wave.py"
+      ],
+      "verify": "rtk grep -n \"lead fallback\\\\|PATCH_BODY\\\\|INFRA_FAILED\\\\|CONTRACT_FAILED\\\\|TASK_BLOCKED\" codex2codex/SKILL.md codex2codex/README.md codex2codex/ARCHITECTURE.md codex2codex/scripts/prepare_wave.py",
+      "output": ".codex/work/20260619-codex2codex-worker-recovery/artifacts/task-7-docs.md",
+      "brief": ".codex/work/20260619-codex2codex-worker-recovery/generated/wave-6/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 7: Update worker prompts and documentation | `codex2codex/SKILL.md`, `codex2codex/README.md`, `codex2codex/ARCHITECTURE.md`, `codex2codex/scripts/prepare_wave.py` | Verify: `rtk grep -n \"lead fallback\\\\|PATCH_BODY\\\\|INFRA_FAILED\\\\|CONTRACT_FAILED\\\\|TASK_BLOCKED\" codex2codex/SKILL.md codex2codex/README.md codex2codex/ARCHITECTURE.md codex2codex/scripts/prepare_wave.py` Output: `.codex/work/20260619-codex2codex-worker-recovery/artifacts/task-7-docs.md`"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+version: 1
+id: "work_20260619_codex2codex_worker_recovery"
+slug: "20260619-codex2codex-worker-recovery"
+title: "Codex2Codex Worker Recovery"
+created_at: "2026-06-19T18:43:51+08:00"
+updated_at: "2026-06-19T18:50:21+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - stage: "spec"
+    file: "spec.md"
+    by: "interview-me"
+    at: "2026-06-19T18:43:51+08:00"
+  - stage: "plan"
+    file: "plan.md"
+    by: "spec2plan"
+    at: "2026-06-19T18:50:21+08:00"

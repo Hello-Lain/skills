@@ -166,6 +166,12 @@ def main() -> int:
         return 1
 
     stripped = text.strip()
+    if args.require_review:
+        review_errors = _validate_review(text)
+        if review_errors:
+            print("INVALID: " + "; ".join(review_errors), file=sys.stderr)
+            return 1
+
     if len(stripped) < args.min_chars:
         print(f"INVALID: result too short ({len(stripped)} < {args.min_chars})", file=sys.stderr)
         return 1
@@ -196,12 +202,6 @@ def main() -> int:
         handoff_errors = _validate_handoff(text)
         if handoff_errors:
             print("INVALID: " + "; ".join(handoff_errors), file=sys.stderr)
-            return 1
-
-    if args.require_review:
-        review_errors = _validate_review(text)
-        if review_errors:
-            print("INVALID: " + "; ".join(review_errors), file=sys.stderr)
             return 1
 
     forbidden = [needle for needle in args.must_not_contain if needle in text]

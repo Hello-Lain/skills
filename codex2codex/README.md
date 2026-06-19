@@ -124,9 +124,17 @@ python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --prof
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --profile full
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --no-fix-wave
 python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 2: review" --auto-run-fix --max-fix-cycles 2
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --same-worker-restarts 1 --fresh-worker-restarts 1
+python scripts/run_wave.py --spec-dir .codex/specs/<slug> --wave "Wave 1" --no-preflight --preflight-timeout 30
 ```
 
 Default profile is `role`: generated briefs resolve the YAML `context_profile` for each role. `minimal` reads only spec, task, listed files, and directly related tests. `standard` adds directly relevant design/decision/API context. `full` allows normal project context when needed. `prepare_wave.py` also injects the selected role's YAML prompt, preferred skills, global skill policy, resolved context profile, and role config path into each worker brief. On review `FAIL`, `run_wave.py` appends the next `Wave N: fix review findings` task unless `--no-fix-wave` is set. With `--auto-run-fix`, it runs generated fix wave(s), then reruns the original review until PASS or `--max-fix-cycles` is reached. If a worker cannot write the artifact, the generated brief tells it to finish with `ARTIFACT_BODY:` plus the exact Markdown artifact body; `run_wave.py` salvages only that body into the requested artifact path before validation. It also supports legacy fallback output that contains one complete fenced Markdown artifact.
+
+Recovery is bounded and explicit. `--same-worker-restarts` retries the original worker name after interruption; `--fresh-worker-restarts` starts a replacement worker and mirrors its terminal result back to the original manifest name for validation. Both flags accept `0..3` and default to `1`. `--preflight-timeout` bounds the static `meight doctor --json` readiness check, and `--no-preflight` skips it for intentional local debugging only. `run_plan.py` forwards these recovery flags to each wave.
+
+Runner outcomes use stable categories. `TRANSIENT_API` covers provider timeout, 5xx, unavailable provider, missing active credentials, and app-server/socket disconnects. `TOOL_INFRA` covers worker tool backend, approval backend, `apply_patch`, MCP/tool-call, and meight daemon/socket failures. Exhausted `TRANSIENT_API` or `TOOL_INFRA` becomes `INFRA_FAILED`. `PATCH_CONTEXT` covers stale hunks and patch context mismatch; `CONTRACT_FAIL` covers missing artifacts, blocked artifacts, missing review `Verdict: PASS|FAIL`, and missing expected file changes. Exhausted `PATCH_CONTEXT` or `CONTRACT_FAIL` becomes `CONTRACT_FAILED`. Real ambiguous requirements, design conflicts, writable-scope conflicts, or repo-unanswerable questions become `TASK_BLOCKED`.
+
+Implementation workers can use `PATCH_BODY:` only when direct edit tooling failed. The body must be a complete `apply_patch` patch or unified diff, must touch only paths listed in the worker file scope, and must produce a real diff. `run_wave.py` validates this before applying; out-of-scope paths, unsupported formats, no-op patches, or failed context are treated as recovery failures. Lead fallback is prohibited unless explicitly requested: the lead should not silently perform the worker's scoped edits after worker failure.
 
 Reuse that same path for every command in the request:
 
@@ -270,7 +278,7 @@ Plan/wave helpers:
 | `scripts/plan_to_tasks.py <plan.md>` | Compile executable `plan.md` task blocks into `.codex/specs/<slug>/tasks.md` waves. |
 | `scripts/run_plan.py <plan.md> [--dry-run]` | Compile plan, then preview or run each generated wave sequentially. |
 | `scripts/prepare_wave.py --spec-dir DIR --wave WAVE` | Compile one `tasks.md` wave into worker briefs and `manifest.json`. |
-| `scripts/run_wave.py --spec-dir DIR --wave WAVE` | Prepare, execute, validate, update task state, and create fix waves on review `FAIL`. |
+| `scripts/run_wave.py --spec-dir DIR --wave WAVE` | Prepare, preflight, execute, recover within retry budgets, validate, update task state, and create fix waves on review `FAIL`. |
 
 Worker state lives in `$MEIGHT_HOME/workers/<name>/`: `brief.md`, `status.json` (state machine + tokens + files changed + last activity), `events.log` (one line per meaningful event), `result.md` (final message per turn). Without `MEIGHT_HOME`, the CLI uses `<repo>/.meight/`; add `.meight/` to your global gitignore.
 

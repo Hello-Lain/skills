@@ -36,6 +36,28 @@ meight (CLI, ~/.local/bin)  ──── Unix socket, JSON-lines ────  p
 - `needs_input` carries a **source**: `"question"` (final-paragraph `QUESTION:` detected after a completed turn — a real, final state) vs `"tool"` (mid-turn tool/approval wait — transient). `classify_wait_state()` returns exit 3 **only for source=question**; a tool-wait that survives to stream-end is converted to `failed`. This distinction exists because an early review showed tool-waits masquerading as final states.
 - Non-question terminal transitions clear `needs_input_detail`/`source` (stale-question bug, found in review).
 
+## Runner Recovery
+
+`run_wave.py` adds a bounded recovery layer above the daemon state machine:
+
+- Preflight runs `meight doctor --json` before implementation waves to catch missing CLI/SDK/role-skill readiness as `TOOL_INFRA`; exhausted preflight exits as `INFRA_FAILED`.
+- Active `starting`/`running` workers that hit a checkpoint with stale progress are steered once with a scoped recovery brief; if they remain unhealthy, the runner interrupts before reusing the same worker name.
+- Terminal recoverable workers are followed on the same thread before restart. Same-name restarts and fresh replacement starts are bounded by `--same-worker-restarts` and `--fresh-worker-restarts` (`0..3`, default `1` each).
+- Replacement worker success is copied back to the original manifest worker directory so `validate_wave.py` validates the manifest contract rather than an ad hoc worker name.
+- `PATCH_BODY` is a runner-owned fallback, not lead fallback. Implementation workers may emit a complete `apply_patch` patch or unified diff when direct editing failed; the runner extracts paths, rejects absolute/traversal/out-of-scope paths, applies the patch, then requires real changed files.
+
+Recovery classification is deliberately small and terminal outcomes are stable:
+
+| Category | Examples | Exhausted outcome |
+|---|---|---|
+| `TRANSIENT_API` | provider timeout, 5xx, unavailable provider, no active credentials, app-server/socket disconnect | `INFRA_FAILED` |
+| `TOOL_INFRA` | tool backend, approval backend, `apply_patch`, MCP/tool-call, meight daemon/socket failure | `INFRA_FAILED` |
+| `PATCH_CONTEXT` | stale hunk, target changed, patch context mismatch, failed expected lines | `CONTRACT_FAILED` |
+| `CONTRACT_FAIL` | missing artifact, blocked artifact, missing review verdict, missing expected diff | `CONTRACT_FAILED` |
+| `TASK_BLOCKER` | real `QUESTION:`, ambiguous requirement, design conflict, writable-scope conflict, repo-unanswerable decision | `TASK_BLOCKED` |
+
+Validator gates stay authoritative after recovery. A worker can recover from infrastructure failure, but cannot pass with a blocked artifact, missing output artifact, missing implementation file change, missing verification evidence, or review output without `Verdict: PASS|FAIL`. Lead fallback is prohibited unless the orchestrator explicitly requests it; otherwise failed recovery must surface as `INFRA_FAILED`, `CONTRACT_FAILED`, or `TASK_BLOCKED`.
+
 ## Concurrency design
 
 Three locks, one direction — **adding any reverse acquisition is a deadlock**:

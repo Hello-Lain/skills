@@ -128,17 +128,17 @@ For codebase work, inspect relevant files before finalizing Commands, Project St
 
 ### 6. Confirm / Save / Hand Off
 
-Ask the user to confirm the spec. If they approve and want persistence, save it to the project-level `.codex/specs/[topic]/spec.md` by default, or their chosen path. Do not save before confirmation.
+Ask the user to confirm the spec. If they approve and want persistence, first read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or their chosen path. Do not save before confirmation.
 
-Prefer the project root's `.codex/specs/` directory so downstream skills can discover the spec cleanly. Use a kebab-case topic slug, for example `.codex/specs/auth-migration/spec.md`. If the current workspace is not a project/repo, ask for a path instead of guessing.
+Prefer the project root's `.codex/work/` topic workspace so downstream skills can discover the spec, lineage, and later plan cleanly. Use a dated kebab-case topic workspace, for example `.codex/work/20260619-auth-migration/spec.md`. If the interview started from an existing workspace artifact, reuse that workspace and set `lineage.spec` to the source artifact when applicable. If the current workspace is not a project/repo, ask for a path instead of guessing.
 
 After confirmation, downstream handoff:
 
 - Use `idea-refine` if the spec exposes multiple possible product directions or the chosen solution becomes untrusted.
-- Use `spec-driven-development` if the user wants the full gated SPECIFY -> PLAN -> TASKS -> IMPLEMENT process.
-- Use `spec2plan` when the confirmed spec should become executable tasks.
+- Use `spec2plan` when the confirmed spec should become executable tasks or a reviewed implementation plan.
+- Use `team-spec-workflow` when the confirmed spec needs delegated, file-disjoint implementation waves and review artifacts.
 
-For any handoff, follow the Handoff Contract in `references/discovery-routing.md`: state artifact maturity, why `interview-me` should stop, next skill, expected artifact, and carried assumptions or risks.
+For any handoff, follow the Handoff Contract in `references/discovery-routing.md`: state artifact maturity, why `interview-me` should stop, next skill, expected artifact, shared work directory, confirmed `spec.md` path, and carried assumptions or risks.
 
 ## Quality Gates
 

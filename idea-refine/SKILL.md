@@ -18,7 +18,7 @@ Refines raw ideas into sharp, actionable concepts worth building through structu
 This skill is primarily an interactive dialogue. Invoke it with an idea, and the agent will guide you through the process.
 
 ```bash
-# Optional: Initialize the project-level ideas directory
+# Optional: Initialize project-level idea helpers
 bash /mnt/skills/user/idea-refine/scripts/idea-refine.sh
 ```
 
@@ -39,7 +39,9 @@ Route out after a direction is recommended and the user confirms it. Hand off to
 
 ## Output
 
-The final output is a markdown one-pager saved to the project-level `.codex/ideas/[idea-name].md` by default (after user confirmation), containing:
+Before saving, read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
+
+The final output is a markdown one-pager saved by default (after user confirmation) to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md`, with `manifest.yaml` updated per the shared artifact contract. It contains:
 - Problem Statement
 - Recommended Direction
 - Key Assumptions
@@ -147,11 +149,11 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 - [Question that needs answering before building]
 ```
 
-If the user confirms the recommended direction and wants to continue, state the handoff explicitly: current artifact maturity is `direction`; `idea-refine` should stop; `interview-me` should produce a confirmed `spec`; carry forward assumptions, risks, rejected alternatives, and open questions. Do not draft the spec here unless the user separately invokes a spec-writing skill.
+If the user confirms the recommended direction and wants to continue, state the handoff explicitly: current artifact maturity is `direction`; `idea-refine` should stop; `interview-me` should produce a confirmed `spec`; carry forward the topic workspace path, `idea.md`, assumptions, risks, rejected alternatives, and open questions. Do not draft the spec here unless the user separately invokes a spec-writing skill.
 
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to `.codex/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
+Ask the user if they'd like to save this to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md` (or a location of their choosing). Only save if they confirm. When saving to the default location, save only canonical `idea.md`, mark artifact maturity as `direction`, and update `manifest.yaml` per the shared artifact contract.
 
 ### Anti-patterns to Avoid
 

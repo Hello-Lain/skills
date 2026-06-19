@@ -1,0 +1,27 @@
+{
+  "spec_dir": ".codex/work/20260619-codex2codex-worker-recovery",
+  "wave": "Wave 8: fix review findings",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "run_wave.py",
+        "src/target.py/child.txt",
+        "src/target.py",
+        "codex2codex/scripts/run_wave.py",
+        "codex2codex/scripts/validate_wave.py"
+      ],
+      "verify": "python3 -m unittest discover codex2codex/scripts -p \"test_*.py\" && python3 codex2codex/scripts/run_plan.py .codex/work/20260619-codex2codex-worker-recovery/plan.md --dry-run",
+      "output": "",
+      "brief": ".codex/work/20260619-codex2codex-worker-recovery/generated/wave-8-fix-review-findings/coding-1.txt",
+      "raw_task": "- [ ] [coding] Fix review findings from `/data/lcq/.codex/skills/.codex/work/20260619-codex2codex-worker-recovery/review.md` | `run_wave.py`, `src/target.py/child.txt`, `src/target.py`, `codex2codex/scripts/run_wave.py`, `codex2codex/scripts/validate_wave.py` | Verify: python3 -m unittest discover codex2codex/scripts -p \"test_*.py\" && python3 codex2codex/scripts/run_plan.py .codex/work/20260619-codex2codex-worker-recovery/plan.md --dry-run"
+    }
+  ]
+}

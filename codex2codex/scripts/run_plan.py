@@ -16,6 +16,16 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
 
+def _bounded_nonnegative_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be an integer") from exc
+    if parsed < 0 or parsed > 3:
+        raise argparse.ArgumentTypeError("must be between 0 and 3")
+    return parsed
+
+
 def _compile_plan(plan_path: Path, spec_dir: Path | None, force: bool, add_review: bool) -> dict:
     script = Path(__file__).with_name("plan_to_tasks.py")
     cmd = [sys.executable, str(script), str(plan_path), "--json"]
@@ -61,6 +71,11 @@ def _run_wave(spec_dir: Path, wave: str, args: argparse.Namespace) -> int:
     if args.auto_run_fix:
         cmd.append("--auto-run-fix")
         cmd.extend(["--max-fix-cycles", str(args.max_fix_cycles)])
+    cmd.extend(["--same-worker-restarts", str(args.same_worker_restarts)])
+    cmd.extend(["--fresh-worker-restarts", str(args.fresh_worker_restarts)])
+    if args.no_preflight:
+        cmd.append("--no-preflight")
+    cmd.extend(["--preflight-timeout", str(args.preflight_timeout)])
     proc = subprocess.run(cmd, text=True, check=False)
     return proc.returncode
 
@@ -82,6 +97,10 @@ def main() -> int:
     parser.add_argument("--no-fix-wave", action="store_true")
     parser.add_argument("--auto-run-fix", action="store_true")
     parser.add_argument("--max-fix-cycles", type=int, default=1)
+    parser.add_argument("--same-worker-restarts", type=_bounded_nonnegative_int, default=1)
+    parser.add_argument("--fresh-worker-restarts", type=_bounded_nonnegative_int, default=1)
+    parser.add_argument("--no-preflight", action="store_true")
+    parser.add_argument("--preflight-timeout", type=int, default=30)
     args = parser.parse_args()
 
     dry_run_dir: Path | None = None

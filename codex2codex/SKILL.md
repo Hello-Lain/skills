@@ -67,7 +67,9 @@ Restrictions:
 ```
 
 One worker = one role, one scope, one output artifact. Workers must not edit outside scope, commit, push, talk to user, or invoke `/codex2codex`. Review workers use workspace-write only so they can write review artifacts; their product scope is read-only by instruction. Workers may end with `QUESTION:` for blockers, wrong assumptions, or better paths.
+Lead fallback is prohibited unless explicitly requested: the lead must not silently implement worker-scoped changes after worker failure. Use runner recovery, validated `PATCH_BODY`, a fix wave, or fail the wave with an explicit category.
 If an artifact write is blocked by approval/tooling/credentials, workers must not ask for approval or end with `QUESTION:`. They must finish with `ARTIFACT_BODY:` followed by the exact Markdown artifact body so `run_wave.py` can salvage only that body into the requested path.
+If direct edit tooling fails after scoped implementation work, implementation workers may provide `PATCH_BODY:` as a last-resort fallback. The body must be a complete `apply_patch` patch or unified diff, touch only listed file-scope paths, and produce real changes. `run_wave.py` validates writable scope before applying; out-of-scope paths, unsupported formats, no-change patches, or stale context fail recovery rather than authorizing lead fallback.
 
 ## Meight Loop
 
@@ -84,8 +86,9 @@ If an artifact write is blocked by approval/tooling/credentials, workers must no
 
 - Any material bug/security/regression/interface mismatch/missing verification => review `FAIL`.
 - Any scoped `FAIL` => wave fails; `run_wave.py` creates the next fix wave unless `--no-fix-wave`; add `--auto-run-fix` to run fix wave(s) and rerun the original review, bounded by `--max-fix-cycles`.
-- Missing expected artifact or blocked terminal result => wave fails even if `meight wait` returned `0`.
+- Missing expected artifact, blocked terminal result, missing review `Verdict: PASS|FAIL`, or missing expected implementation diff => wave fails even if `meight wait` returned `0`.
 - If artifact write tooling is blocked but the worker final output contains `ARTIFACT_BODY:` or one complete fenced Markdown artifact, `run_wave.py` may salvage implementation and review artifacts into the requested path and continue validation.
+- Recovery categories are explicit: `TRANSIENT_API` and `TOOL_INFRA` exhaust as `INFRA_FAILED`; `PATCH_CONTEXT` and `CONTRACT_FAIL` exhaust as `CONTRACT_FAILED`; real blockers exhaust as `TASK_BLOCKED`.
 - When a worker is continued after `QUESTION:`, validate only the final turn for unresolved blockers; earlier resolved blocker text must not fail the wave by itself.
 - Never stream raw events/logs/transcripts into lead context.
 - Use `meight doctor --json` for routine global-skill availability checks; avoid live worker smoke tests unless debugging worker execution.
@@ -101,6 +104,6 @@ Prefer upstream validators. Otherwise check:
 - decisions captured in `decisions.md`;
 - no raw transcript/secret leak.
 
-Use `scripts/run_plan.py <plan.md> --dry-run` when starting from a plan; it compiles `### Task N` sections into waves and appends a review wave unless `--no-add-review`. Use `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"` for existing tasks. `run_wave.py` prepares role-profile briefs by default, starts workers, waits, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md` on success, creates a fix wave on review `FAIL`, shuts down `meight`, and returns nonzero on worker failure, blocked result, missing artifact, or review `FAIL`. Use `--auto-run-fix` for FAIL -> fix -> rerun review loops, `--dry-run` to preview workers, and `--profile minimal|standard|full` only when overriding role budgets. For manual runs, use `--manifest`, `validate_result_contract.py`, and `validate_wave.py` directly.
+Use `scripts/run_plan.py <plan.md> --dry-run` when starting from a plan; it compiles `### Task N` sections into waves and appends a review wave unless `--no-add-review`. Use `scripts/run_wave.py --spec-dir <dir> --wave "<wave>"` for existing tasks. `run_wave.py` prepares role-profile briefs by default, preflights worker readiness, starts workers, waits, runs `validate_wave.py`, updates `tasks.md` and enriched `review-summary.md` on success, creates a fix wave on review `FAIL`, shuts down `meight`, and returns nonzero on worker failure, blocked result, missing artifact, or review `FAIL`. Use `--same-worker-restarts N` and `--fresh-worker-restarts N` for bounded recovery retries, `--no-preflight` only when intentionally bypassing static readiness checks, `--auto-run-fix` for FAIL -> fix -> rerun review loops, `--dry-run` to preview workers, and `--profile minimal|standard|full` only when overriding role budgets. For manual runs, use `--manifest`, `validate_result_contract.py`, and `validate_wave.py` directly.
 
 Return only: mode/wave, workers, artifacts, verdicts, verification, decisions/blockers, cleanup status, raw data omitted.
