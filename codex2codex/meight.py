@@ -33,6 +33,8 @@ STATUS_THROTTLE_SEC = 2.0
 EVENT_LINE_MAX = 300
 HEARTBEAT_SEC = 5.0
 STALL_WARN_SEC = 600.0
+GENERIC_WORKER_STALL = "WORKER_STALL"
+PRE_FIRST_ITEM_STALL = "PRE_FIRST_ITEM_STALL"
 
 # Bidirectional workers: automatically prepend this before start/follow briefs (disable with --no-preamble)
 PREAMBLE = """[Harness protocol — applies on top of the task below]
@@ -149,6 +151,24 @@ def activity_age_seconds(st: dict) -> int | None:
     ]
     ages = [a for a in ages if a is not None]
     return min(ages) if ages else None
+
+def _has_token_usage(st: dict) -> bool:
+    tokens = st.get("tokens") or {}
+    return any(int(tokens.get(key) or 0) > 0 for key in ("input", "cached", "output"))
+
+def classify_worker_stall(st: dict, stall_warn_sec: float = STALL_WARN_SEC) -> str | None:
+    active_age = activity_age_seconds(st)
+    if (st.get("state") not in ("starting", "running")
+            or active_age is None
+            or active_age < stall_warn_sec):
+        return None
+    if (st.get("turn_id")
+            and not st.get("current_item")
+            and not st.get("current_item_started_at")
+            and not st.get("first_item_started_at")
+            and not _has_token_usage(st)):
+        return PRE_FIRST_ITEM_STALL
+    return GENERIC_WORKER_STALL
 
 def file_age_seconds(path: Path) -> int | None:
     try:
@@ -296,6 +316,7 @@ class Worker:
             "service_tier": self.service_tier,
             "current_item": None,
             "current_item_started_at": None,
+            "first_item_started_at": None,
             "plan": [],
             "files_changed": [],
             "tokens": {"input": 0, "cached": 0, "output": 0},
@@ -377,6 +398,7 @@ class Worker:
     def _handle_event(self, method: str, p: dict) -> None:
         if method == "turn/started":
             self.status["turn_id"] = dig(p, "turn", "id")
+            self.status["first_item_started_at"] = None
             if self.status["state"] == "starting":
                 self.status["state"] = "running"
             self.log_event(method, f"turn={self.status['turn_id']}")
@@ -387,6 +409,8 @@ class Worker:
             self._current_item_label = describe_item(item)
             self._current_item_since = time.monotonic()
             self.status["current_item_started_at"] = now_iso()
+            if not self.status.get("first_item_started_at"):
+                self.status["first_item_started_at"] = self.status["current_item_started_at"]
             if item.get("type") == "agentMessage":
                 self._agent_msg_buf = ""
             if self.status["state"] in ("starting", "needs_input"):
@@ -1143,13 +1167,16 @@ def worker_diagnostics(home: Path, stall_warn_sec: float = STALL_WARN_SEC) -> tu
         active_age = activity_age_seconds(st)
         item_age = age_seconds_from_iso(st.get("current_item_started_at"))
         state = st.get("state", "unknown")
-        stalled = state in ("starting", "running") and active_age is not None and active_age >= stall_warn_sec
+        stalled_reason_code = classify_worker_stall(st, stall_warn_sec)
+        stalled = stalled_reason_code is not None
         st["updated_age_sec"] = updated_age
         st["activity_age_sec"] = active_age
         st["current_item_age_sec"] = item_age
         st["stalled"] = stalled
+        st["stall_classification"] = stalled_reason_code
         st["stalled_reason"] = (
-            f"no worker activity for {active_age}s (threshold {int(stall_warn_sec)}s)"
+            f"{stalled_reason_code}: no worker activity for {active_age}s "
+            f"(threshold {int(stall_warn_sec)}s)"
             if stalled else None
         )
         if not st.get("last_event"):
@@ -1338,7 +1365,7 @@ def cmd_status(args, home: Path) -> int:
             if dst.get("name") == name:
                 st.update({k: v for k, v in dst.items()
                            if k in ("updated_age_sec", "activity_age_sec", "current_item_age_sec",
-                                    "stalled", "stalled_reason", "last_event")})
+                                    "stalled", "stall_classification", "stalled_reason", "last_event")})
                 break
         if getattr(args, "json", False):
             print(json.dumps(st, ensure_ascii=False, indent=2))
@@ -1367,7 +1394,7 @@ def cmd_status(args, home: Path) -> int:
     for st in statuses:
         st.update({k: v for k, v in diag_by_name.get(st.get("name"), {}).items()
                    if k in ("updated_age_sec", "activity_age_sec", "current_item_age_sec",
-                            "stalled", "stalled_reason", "last_event")})
+                            "stalled", "stall_classification", "stalled_reason", "last_event")})
     if getattr(args, "json", False):
         print(json.dumps(statuses, ensure_ascii=False, indent=2))
     else:

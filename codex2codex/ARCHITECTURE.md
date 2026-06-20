@@ -42,6 +42,8 @@ meight (CLI, ~/.local/bin)  ──── Unix socket, JSON-lines ────  p
 
 - Preflight runs `meight doctor --json` before implementation waves to catch missing CLI/SDK/role-skill readiness as `TOOL_INFRA`; exhausted preflight exits as `INFRA_FAILED`.
 - Active `starting`/`running` workers that hit a checkpoint with stale progress are steered once with a scoped recovery brief; if they remain unhealthy, the runner interrupts before reusing the same worker name.
+- `PRE_FIRST_ITEM_STALL` has priority over generic stale-worker handling. It means the worker reached `turn/started` but no item ever started in that turn, no token usage exists, and no current item arrived before the active wait became stale. This is classified as an infrastructure/app-server stream failure, not a task quality failure.
+- Recovery for `PRE_FIRST_ITEM_STALL` rotates the daemon/app-server into a fresh `MEIGHT_HOME`, runs a nonce smoke worker to prove the new stream path, then retries the original worker once. Smoke failure or a second pre-first-item stall exhausts as infra recovery failure; the runner must not keep retrying.
 - Terminal recoverable workers are followed on the same thread before restart. Same-name restarts and fresh replacement starts are bounded by `--same-worker-restarts` and `--fresh-worker-restarts` (`0..3`, default `1` each).
 - Replacement worker success is copied back to the original manifest worker directory so `validate_wave.py` validates the manifest contract rather than an ad hoc worker name.
 - `PATCH_BODY` is a runner-owned fallback, not lead fallback. Implementation workers may emit a complete `apply_patch` patch or unified diff when direct editing failed; the runner extracts paths, rejects absolute/traversal/out-of-scope paths, applies the patch, then requires real changed files.
@@ -57,6 +59,8 @@ Recovery classification is deliberately small and terminal outcomes are stable:
 | `TASK_BLOCKER` | real `QUESTION:`, ambiguous requirement, design conflict, writable-scope conflict, repo-unanswerable decision | `TASK_BLOCKED` |
 
 Validator gates stay authoritative after recovery. A worker can recover from infrastructure failure, but cannot pass with a blocked artifact, missing output artifact, missing implementation file change, missing verification evidence, or review output without `Verdict: PASS|FAIL`. Lead fallback is prohibited unless the orchestrator explicitly requests it; otherwise failed recovery must surface as `INFRA_FAILED`, `CONTRACT_FAILED`, or `TASK_BLOCKED`.
+
+Recovery cleanup and reporting are part of the contract: every rotated `MEIGHT_HOME` must be shut down and removed unless debugging/resume was explicitly requested, completed or blocked sidecar workers must not be left alive, and artifacts may include only redacted summaries of stall class, nonce smoke result, retry count, cleanup status, and paths. Raw worker transcripts, raw event streams, credentials, and private logs must not be copied into lead context or artifacts.
 
 ## Concurrency design
 

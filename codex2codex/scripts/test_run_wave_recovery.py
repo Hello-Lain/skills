@@ -122,10 +122,21 @@ class RunWaveRecoveryTaxonomyTest(unittest.TestCase):
         self.assertEqual(decision.action, run_wave.RECOVERY_RETRY)
         self.assertIsNone(decision.terminal_category)
 
+    def test_pre_first_item_stall_is_infra_recoverable(self) -> None:
+        decision = run_wave.recovery_decision(
+            run_wave.PRE_FIRST_ITEM_STALL,
+            attempts=0,
+            max_attempts=1,
+        )
+
+        self.assertEqual(decision.action, run_wave.RECOVERY_RETRY)
+        self.assertIsNone(decision.terminal_category)
+
     def test_recoverable_failure_stops_with_terminal_category_after_budget(self) -> None:
         fixtures = [
             (run_wave.TRANSIENT_API, run_wave.INFRA_FAILED),
             (run_wave.TOOL_INFRA, run_wave.INFRA_FAILED),
+            (run_wave.PRE_FIRST_ITEM_STALL, run_wave.INFRA_FAILED),
             (run_wave.PATCH_CONTEXT, run_wave.CONTRACT_FAILED),
             (run_wave.CONTRACT_FAIL, run_wave.CONTRACT_FAILED),
         ]
@@ -609,6 +620,244 @@ class RunWaveRecoveryLoopTest(unittest.TestCase):
         self.assertEqual([cmd[1] for cmd in calls], ["wait", "status"])
         self.assertIn("terminal_category=INFRA_FAILED", stderr.getvalue())
         self.assertIn("reason=recovery budget exhausted", stderr.getvalue())
+
+    def test_pre_first_item_stall_rotates_smokes_and_retries_once(self) -> None:
+        calls: list[tuple[str, str, str]] = []
+        original_home_seen: Path | None = None
+
+        def fake_run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False):
+            nonlocal original_home_seen
+            original_home_seen = original_home_seen or meight_home
+            calls.append((cmd[1], cmd[2] if len(cmd) > 2 else "", str(meight_home)))
+            if cmd[1] == "wait":
+                if cmd[2] == "coding-1":
+                    return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="")
+                return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+            if cmd[1] == "status":
+                if cmd[2] == "coding-1" and meight_home == original_home_seen:
+                    status = {
+                        "name": "coding-1",
+                        "state": "running",
+                        "stalled": True,
+                        "stall_classification": run_wave.PRE_FIRST_ITEM_STALL,
+                        "stalled_reason": f"{run_wave.PRE_FIRST_ITEM_STALL}: no worker activity for 30s",
+                    }
+                else:
+                    status = {"name": cmd[2], "state": "completed", "files_changed": []}
+                return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(status), stderr="")
+            if cmd[1] == "start" and cmd[2] == "coding-1-nonce-smoke":
+                worker_dir = meight_home / "workers" / cmd[2]
+                worker_dir.mkdir(parents=True, exist_ok=True)
+                (worker_dir / "result.md").write_text("coding-1-nonce-smoke", encoding="utf-8")
+            if cmd[1] == "start" and cmd[2] == "coding-1-recovery-1":
+                worker_dir = meight_home / "workers" / cmd[2]
+                worker_dir.mkdir(parents=True, exist_ok=True)
+                (worker_dir / "status.json").write_text(
+                    json.dumps({"name": cmd[2], "state": "completed", "files_changed": []}),
+                    encoding="utf-8",
+                )
+                (worker_dir / "result.md").write_text("Changed files\nVerification: ok\n", encoding="utf-8")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        original_run = run_wave._run
+        run_wave._run = fake_run
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                run_dir = root / "runs" / "wave-1"
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = run_wave._wait_worker_with_recovery(
+                        self._worker(),
+                        root / "meight",
+                        root,
+                        "meight",
+                        5,
+                        run_dir=run_dir,
+                        wave="Wave 1",
+                    )
+                attempts = [
+                    json.loads(line)
+                    for line in (run_dir / "coding-1" / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+                ]
+                summary = json.loads((run_dir / "coding-1" / "summary.json").read_text(encoding="utf-8"))
+        finally:
+            run_wave._run = original_run
+
+        self.assertEqual(code, 0)
+        self.assertIn(("shutdown", "", str(original_home_seen)), calls)
+        self.assertIn(("start", "coding-1-nonce-smoke", calls[-4][2]), calls)
+        self.assertIn(("start", "coding-1-recovery-1", calls[-2][2]), calls)
+        self.assertNotEqual(calls[-2][2], str(original_home_seen))
+        self.assertEqual(summary["category"], run_wave.PRE_FIRST_ITEM_STALL)
+        self.assertEqual(summary["final_outcome"], "success")
+        self.assertEqual(
+            [item["action"] for item in attempts],
+            ["rotate-daemon-app-server", "fresh-meight-home", "nonce-smoke-worker"],
+        )
+        self.assertTrue(all("result_tail" not in item["progress_signals"] for item in attempts))
+
+    def test_pre_first_item_stall_smoke_failure_does_not_retry_original_worker(self) -> None:
+        calls: list[list[str]] = []
+
+        def fake_run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False):
+            calls.append(cmd)
+            if cmd[1] == "wait":
+                if cmd[2] == "coding-1-nonce-smoke":
+                    return subprocess.CompletedProcess(cmd, 2, stdout="", stderr="")
+                return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="")
+            if cmd[1] == "status":
+                status = {
+                    "name": cmd[2],
+                    "state": "running",
+                    "stalled": True,
+                    "stall_classification": run_wave.PRE_FIRST_ITEM_STALL,
+                    "stalled_reason": f"{run_wave.PRE_FIRST_ITEM_STALL}: no worker activity for 30s",
+                }
+                return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(status), stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        original_run = run_wave._run
+        run_wave._run = fake_run
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = run_wave._wait_worker_with_recovery(
+                        self._worker(),
+                        Path(temp) / "meight",
+                        Path(temp),
+                        "meight",
+                        5,
+                    )
+        finally:
+            run_wave._run = original_run
+
+        self.assertNotEqual(code, 0)
+        self.assertIn(["start", "coding-1-nonce-smoke"], [cmd[1:3] for cmd in calls])
+        self.assertNotIn(["start", "coding-1-recovery-1"], [cmd[1:3] for cmd in calls])
+
+    def test_pre_first_item_stall_respects_zero_fresh_restart_budget(self) -> None:
+        calls: list[list[str]] = []
+
+        def fake_run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False):
+            calls.append(cmd)
+            if cmd[1] == "wait":
+                return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="")
+            if cmd[1] == "status":
+                status = {
+                    "name": cmd[2],
+                    "state": "running",
+                    "stalled": True,
+                    "stall_classification": run_wave.PRE_FIRST_ITEM_STALL,
+                    "stalled_reason": f"{run_wave.PRE_FIRST_ITEM_STALL}: no worker activity for 30s",
+                }
+                return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(status), stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        original_run = run_wave._run
+        run_wave._run = fake_run
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                run_dir = root / "runs" / "wave-1"
+                with contextlib.redirect_stderr(io.StringIO()) as stderr:
+                    code = run_wave._wait_worker_with_recovery(
+                        self._worker(),
+                        root / "meight",
+                        root,
+                        "meight",
+                        5,
+                        fresh_worker_restarts=0,
+                        run_dir=run_dir,
+                        wave="Wave 1",
+                    )
+                summary = json.loads((run_dir / "coding-1" / "summary.json").read_text(encoding="utf-8"))
+        finally:
+            run_wave._run = original_run
+
+        self.assertNotEqual(code, 0)
+        self.assertEqual([cmd[1] for cmd in calls], ["wait", "status"])
+        self.assertEqual(summary["category"], run_wave.PRE_FIRST_ITEM_STALL)
+        self.assertEqual(summary["terminal_category"], run_wave.INFRA_FAILED)
+        self.assertIn("pre-first-item recovery disabled", stderr.getvalue())
+
+    def test_pre_first_item_stall_retry_contract_failure_reports_contract_failed(self) -> None:
+        calls: list[list[str]] = []
+        first_home: Path | None = None
+
+        def fake_run(cmd: list[str], meight_home: Path, cwd: Path, capture: bool = False):
+            nonlocal first_home
+            first_home = first_home or meight_home
+            calls.append(cmd)
+            if cmd[1] == "wait":
+                if meight_home == first_home and cmd[2] == "coding-1":
+                    return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="")
+                worker_dir = meight_home / "workers" / cmd[2]
+                worker_dir.mkdir(parents=True, exist_ok=True)
+                (worker_dir / "status.json").write_text(
+                    json.dumps({"name": cmd[2], "state": "completed", "files_changed": []}),
+                    encoding="utf-8",
+                )
+                if cmd[2] == "coding-1-nonce-smoke":
+                    (worker_dir / "result.md").write_text("coding-1-nonce-smoke", encoding="utf-8")
+                else:
+                    (worker_dir / "result.md").write_text("Changed files\nVerification: ok\n", encoding="utf-8")
+                return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+            if cmd[1] == "status":
+                if meight_home == first_home and cmd[2] == "coding-1":
+                    status = {
+                        "name": "coding-1",
+                        "state": "running",
+                        "stalled": True,
+                        "stall_classification": run_wave.PRE_FIRST_ITEM_STALL,
+                        "stalled_reason": f"{run_wave.PRE_FIRST_ITEM_STALL}: no worker activity for 30s",
+                    }
+                else:
+                    status = {"name": cmd[2], "state": "completed", "files_changed": []}
+                return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(status), stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        original_run = run_wave._run
+        run_wave._run = fake_run
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                run_dir = root / "runs" / "wave-1"
+                artifact = root / "artifact.md"
+                artifact.write_text("## Summary\n- Claimed.\n\n## Verification\n- ok.\n", encoding="utf-8")
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = run_wave._wait_worker_with_recovery(
+                        {
+                            **self._worker(),
+                            "mode": "implement",
+                            "files": ["src/target.py"],
+                            "output": "artifact.md",
+                        },
+                        root / "meight",
+                        root,
+                        "meight",
+                        5,
+                        run_dir=run_dir,
+                        wave="Wave 1",
+                    )
+                attempts = [
+                    json.loads(line)
+                    for line in (run_dir / "coding-1" / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+                ]
+                summary = json.loads((run_dir / "coding-1" / "summary.json").read_text(encoding="utf-8"))
+        finally:
+            run_wave._run = original_run
+
+        self.assertNotEqual(code, 0)
+        self.assertEqual(attempts[-1]["category"], run_wave.CONTRACT_FAIL)
+        self.assertEqual(attempts[-1]["final_outcome"], run_wave.CONTRACT_FAILED)
+        self.assertEqual(attempts[-1]["reason"], "pre-first-item retry contract failed")
+        self.assertEqual(summary["category"], run_wave.CONTRACT_FAIL)
+        self.assertEqual(summary["terminal_category"], run_wave.CONTRACT_FAILED)
+
+    def test_nonce_smoke_requires_exact_result(self) -> None:
+        self.assertTrue(run_wave._smoke_nonce_verified("coding-1-nonce-smoke", "coding-1-nonce-smoke"))
+        self.assertFalse(run_wave._smoke_nonce_verified("ok coding-1-nonce-smoke", "coding-1-nonce-smoke"))
+        self.assertFalse(run_wave._smoke_nonce_verified("coding-1-nonce-smoke extra", "coding-1-nonce-smoke"))
 
     def test_preflight_rejects_missing_meight_before_starting_workers(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -1,0 +1,42 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "wave": "Wave 3",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "codex2codex/SKILL.md",
+        "codex2codex/ARCHITECTURE.md",
+        ".codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md"
+      ],
+      "verify": "rg \"PRE_FIRST_ITEM_STALL|nonce smoke|MEIGHT_HOME\" codex2codex/SKILL.md codex2codex/ARCHITECTURE.md",
+      "output": ".codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-3/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 3: 更新 codex2codex 恢复文档 | `codex2codex/SKILL.md`, `codex2codex/ARCHITECTURE.md`, `.codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md` | Verify: `rg \"PRE_FIRST_ITEM_STALL|nonce smoke|MEIGHT_HOME\" codex2codex/SKILL.md codex2codex/ARCHITECTURE.md` Output: `.codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md`"
+    },
+    {
+      "name": "coding-2",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "spec2plan/references/heavy-mode.md",
+        ".codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md"
+      ],
+      "verify": "rg \"compact synthesis|SPEC2PLAN_ARTIFACT_V1|main-agent fallback|dry-run\" spec2plan/references/heavy-mode.md",
+      "output": ".codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-3/coding-2.txt",
+      "raw_task": "- [ ] [coding] Task 4: 更新 spec2plan 重型合成指南 | `spec2plan/references/heavy-mode.md`, `.codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md` | Verify: `rg \"compact synthesis|SPEC2PLAN_ARTIFACT_V1|main-agent fallback|dry-run\" spec2plan/references/heavy-mode.md` Output: `.codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md`"
+    }
+  ]
+}

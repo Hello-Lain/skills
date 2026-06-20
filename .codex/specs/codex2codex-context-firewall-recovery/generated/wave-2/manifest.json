@@ -1,0 +1,25 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "wave": "Wave 2",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "codex2codex/scripts/run_wave.py",
+        "codex2codex/scripts/test_run_wave_recovery.py",
+        ".codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md"
+      ],
+      "verify": "``python codex2codex/scripts/test_run_wave_recovery.py`; `python codex2codex/scripts/test_worker_recovery_contracts.py``",
+      "output": ".codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-2/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 2: 实现恢复决策与一次重试 | `codex2codex/scripts/run_wave.py`, `codex2codex/scripts/test_run_wave_recovery.py`, `.codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md` | Verify: ``python codex2codex/scripts/test_run_wave_recovery.py`; `python codex2codex/scripts/test_worker_recovery_contracts.py`` Output: `.codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md`"
+    }
+  ]
+}

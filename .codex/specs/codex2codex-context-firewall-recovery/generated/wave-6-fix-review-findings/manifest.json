@@ -1,0 +1,24 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "wave": "Wave 6: fix review findings",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "run_wave.py",
+        "meight.py"
+      ],
+      "verify": "Review artifact inspection only; no mutation required.",
+      "output": "",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-6-fix-review-findings/coding-1.txt",
+      "raw_task": "- [ ] [coding] Fix review findings from `/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/review.md` | `run_wave.py`, `meight.py` | Verify: Review artifact inspection only; no mutation required."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "artifact": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/review.md",
+  "source": "main-agent-user-authorized-after-subagent-infra-failure",
+  "verdict": "PASS",
+  "wave": "Wave 5",
+  "worker": "main-agent-review"
+}

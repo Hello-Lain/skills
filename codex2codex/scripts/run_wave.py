@@ -27,6 +27,7 @@ TOOL_INFRA = "TOOL_INFRA"
 PATCH_CONTEXT = "PATCH_CONTEXT"
 TASK_BLOCKER = "TASK_BLOCKER"
 CONTRACT_FAIL = "CONTRACT_FAIL"
+PRE_FIRST_ITEM_STALL = "PRE_FIRST_ITEM_STALL"
 INFRA_FAILED = "INFRA_FAILED"
 CONTRACT_FAILED = "CONTRACT_FAILED"
 TASK_BLOCKED = "TASK_BLOCKED"
@@ -36,7 +37,7 @@ RECOVERY_STOP = "stop"
 ACTIVE_WORKER_STATES = {"starting", "running"}
 TERMINAL_WORKER_STATES = {"completed", "failed", "interrupted"}
 
-RECOVERABLE_FAILURES = {TRANSIENT_API, TOOL_INFRA, PATCH_CONTEXT, CONTRACT_FAIL}
+RECOVERABLE_FAILURES = {TRANSIENT_API, TOOL_INFRA, PATCH_CONTEXT, CONTRACT_FAIL, PRE_FIRST_ITEM_STALL}
 TERMINAL_FAILURES = {TASK_BLOCKER}
 
 TRANSIENT_API_RE = re.compile(
@@ -106,6 +107,7 @@ CONTRACT_FAIL_RE = re.compile(
 TERMINAL_BY_FAILURE = {
     TRANSIENT_API: INFRA_FAILED,
     TOOL_INFRA: INFRA_FAILED,
+    PRE_FIRST_ITEM_STALL: INFRA_FAILED,
     PATCH_CONTEXT: CONTRACT_FAILED,
     CONTRACT_FAIL: CONTRACT_FAILED,
     TASK_BLOCKER: TASK_BLOCKED,
@@ -339,11 +341,35 @@ def _steer_brief(worker_name: str, reason: str) -> str:
     )
 
 
+def _smoke_brief(nonce: str) -> str:
+    return "\n".join(
+        [
+            "[run_wave smoke worker]",
+            f"Nonce: {nonce}",
+            "This is an infrastructure smoke check only.",
+            "Reply with only the exact nonce. Do not inspect project files or modify anything.",
+        ]
+    )
+
+def _write_smoke_brief(worker_run_dir: Path | None, nonce: str) -> Path:
+    if worker_run_dir is not None:
+        worker_run_dir.mkdir(parents=True, exist_ok=True)
+        path = worker_run_dir / f"{nonce}.brief.md"
+    else:
+        temp_dir = Path(tempfile.mkdtemp(prefix="run-wave-smoke-"))
+        path = temp_dir / f"{nonce}.brief.md"
+    path.write_text(_smoke_brief(nonce), encoding="utf-8")
+    return path
+
 def _copy_worker_outcome(meight_home: Path, source: str, dest: str) -> None:
+    _copy_worker_outcome_between_homes(meight_home, source, meight_home, dest)
+
+def _copy_worker_outcome_between_homes(source_home: Path, source: str, dest_home: Path, dest: str) -> None:
     if source == dest:
-        return
-    source_dir = meight_home / "workers" / source
-    dest_dir = meight_home / "workers" / dest
+        if source_home == dest_home:
+            return
+    source_dir = source_home / "workers" / source
+    dest_dir = dest_home / "workers" / dest
     dest_dir.mkdir(parents=True, exist_ok=True)
     status_path = source_dir / "status.json"
     if status_path.exists():
@@ -404,6 +430,17 @@ def _progress_changed(before: dict, after: dict) -> bool:
         if before.get(key) != after.get(key):
             return True
     return False
+
+def _summary_progress_signals(snapshot: dict) -> dict:
+    return {key: value for key, value in snapshot.items() if key != "result_tail"}
+
+
+def _recovery_terminal_reason(category: str | None, *, smoke_ok: bool) -> str:
+    if not smoke_ok:
+        return "nonce smoke worker failed"
+    if category == PRE_FIRST_ITEM_STALL:
+        return "pre-first-item retry exhausted"
+    return "pre-first-item retry contract failed"
 
 
 def _append_attempt(run_dir: Path | None, record: dict) -> None:
@@ -926,6 +963,191 @@ def _wait_worker_with_recovery(
         snapshot = _progress_snapshot(meight_home, active_name, cwd, worker, status)
         progress = previous_snapshot is None or _progress_changed(previous_snapshot, snapshot)
         previous_snapshot = snapshot
+        if _is_pre_first_item_stall(status):
+            reason = str(status.get("stalled_reason") or "pre-first item stall")
+            if fresh_restarts >= fresh_worker_restarts:
+                final_category = PRE_FIRST_ITEM_STALL
+                terminal_category = TERMINAL_BY_FAILURE.get(final_category, INFRA_FAILED)
+                exhausted = RecoveryDecision(
+                    final_category,
+                    RECOVERY_STOP,
+                    terminal_category,
+                    "fresh worker restart budget exhausted; pre-first-item recovery disabled",
+                )
+                _append_attempt(
+                    worker_run_dir,
+                    {
+                        "wave": wave,
+                        "worker": original_name,
+                        "active_worker": active_name,
+                        "attempt": attempt,
+                        "category": final_category,
+                        "action": "terminal",
+                        "reason": exhausted.reason,
+                        "progress": progress,
+                        "progress_signals": _summary_progress_signals(snapshot),
+                        "artifact_path": worker.get("output"),
+                        "final_outcome": terminal_category,
+                    },
+                )
+                _write_worker_summary(
+                    worker_run_dir,
+                    {
+                        "worker": original_name,
+                        "active_worker": active_name,
+                        "attempt": attempt,
+                        "category": final_category,
+                        "terminal_category": terminal_category,
+                        "artifact_path": worker.get("output"),
+                        "exit_code": wait_code or 1,
+                    },
+                )
+                _print_recovery_exhausted(original_name, exhausted)
+                return wait_code or 1
+            final_category = TOOL_INFRA
+            fresh_restarts += 1
+            fresh_home = _new_home(cwd)
+            recovery_name = f"{original_name}-recovery-{fresh_restarts}"
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": active_name,
+                    "attempt": attempt,
+                    "category": PRE_FIRST_ITEM_STALL,
+                    "action": "rotate-daemon-app-server",
+                    "reason": reason,
+                    "progress": progress,
+                    "progress_signals": _summary_progress_signals(snapshot),
+                    "artifact_path": worker.get("output"),
+                },
+            )
+            if status.get("state") in ACTIVE_WORKER_STATES:
+                _run_worker_control([meight, "interrupt", active_name], meight_home, cwd)
+                _wait_worker_once(active_name, meight_home, cwd, meight, timeout)
+            _shutdown_workers(meight, meight_home, cwd)
+            smoke_ok = False
+            try:
+                _append_attempt(
+                    worker_run_dir,
+                    {
+                        "wave": wave,
+                        "worker": original_name,
+                        "active_worker": recovery_name,
+                        "attempt": attempt,
+                        "category": PRE_FIRST_ITEM_STALL,
+                        "action": "fresh-meight-home",
+                        "reason": f"created fresh MEIGHT_HOME for {recovery_name}",
+                        "progress": progress,
+                        "progress_signals": _summary_progress_signals(snapshot),
+                        "artifact_path": worker.get("output"),
+                    },
+                )
+                smoke_ok = _run_nonce_smoke_worker(
+                    worker_run_dir=worker_run_dir,
+                    fresh_home=fresh_home,
+                    cwd=cwd,
+                    meight=meight,
+                    timeout=timeout,
+                    original_name=original_name,
+                )
+                _append_attempt(
+                    worker_run_dir,
+                    {
+                        "wave": wave,
+                        "worker": original_name,
+                        "active_worker": recovery_name,
+                        "attempt": attempt,
+                        "category": PRE_FIRST_ITEM_STALL,
+                        "action": "nonce-smoke-worker",
+                        "reason": "smoke worker completed" if smoke_ok else "smoke worker failed",
+                        "progress": progress,
+                        "progress_signals": _summary_progress_signals(snapshot),
+                        "artifact_path": worker.get("output"),
+                    },
+                )
+                if smoke_ok:
+                    _start_worker(worker, fresh_home, cwd, meight, name=recovery_name)
+                    retry_code = _wait_worker_once(recovery_name, fresh_home, cwd, meight, timeout)
+                    if retry_code == 0:
+                        patch_failure = _finish_worker_or_patch_failure(worker, fresh_home, recovery_name, original_name, cwd)
+                        result = _worker_result(fresh_home, original_name)
+                        _salvage_worker_artifact(worker, cwd, original_name, result)
+                        contract_failure = _completed_worker_contract_failure(
+                            worker,
+                            cwd,
+                            _worker_status(fresh_home, original_name, cwd, meight),
+                            result,
+                        )
+                        if patch_failure is None and contract_failure is None:
+                            _copy_worker_outcome_between_homes(fresh_home, original_name, meight_home, original_name)
+                            _record_worker_success(
+                                worker,
+                                cwd,
+                                worker_run_dir,
+                                wave=wave,
+                                original_name=original_name,
+                                active_name=recovery_name,
+                                attempt=attempt + 1,
+                                category=PRE_FIRST_ITEM_STALL,
+                                source="pre-first-item-retry",
+                            )
+                            return 0
+                        if patch_failure is None:
+                            patch_failure = contract_failure
+                        if patch_failure is not None:
+                            final_category = patch_failure.category or CONTRACT_FAIL
+                            wait_code = 1
+                    if patch_failure is None:
+                        final_status = _worker_status(fresh_home, recovery_name, cwd, meight)
+                        final_category = classify_worker_failure(
+                            status=final_status,
+                            result=_worker_result(fresh_home, recovery_name),
+                        ) or TOOL_INFRA
+                    wait_code = retry_code or 1
+            finally:
+                _shutdown_workers(meight, fresh_home, cwd)
+                shutil.rmtree(fresh_home, ignore_errors=True)
+            terminal_category = TERMINAL_BY_FAILURE.get(final_category, INFRA_FAILED)
+            reason = _recovery_terminal_reason(final_category, smoke_ok=smoke_ok)
+            exhausted = RecoveryDecision(final_category, RECOVERY_STOP, terminal_category, reason)
+            _append_attempt(
+                worker_run_dir,
+                {
+                    "wave": wave,
+                    "worker": original_name,
+                    "active_worker": recovery_name,
+                    "attempt": attempt,
+                    "category": final_category,
+                    "action": "retry-once-terminal",
+                    "reason": reason,
+                    "progress": progress,
+                    "progress_signals": _summary_progress_signals(snapshot),
+                    "artifact_path": worker.get("output"),
+                    "final_outcome": terminal_category,
+                },
+            )
+            _write_worker_summary(
+                worker_run_dir,
+                {
+                    "worker": original_name,
+                    "active_worker": recovery_name,
+                    "attempt": attempt,
+                    "category": final_category,
+                    "terminal_category": terminal_category,
+                    "artifact_path": worker.get("output"),
+                    "exit_code": wait_code or 1,
+                    "recovery": [
+                        "rotate-daemon-app-server",
+                        "fresh-meight-home",
+                        "nonce-smoke-worker",
+                        "retry-once",
+                    ],
+                },
+            )
+            _print_recovery_exhausted(original_name, exhausted)
+            return wait_code or 1
         if status.get("state") in ACTIVE_WORKER_STATES and status.get("stalled"):
             reason = str(status.get("stalled_reason") or "active worker stalled")
             _append_attempt(
@@ -1180,6 +1402,55 @@ def _worker_result(meight_home: Path, name: str) -> str:
     except OSError:
         return ""
 
+
+def _is_pre_first_item_stall(status: dict) -> bool:
+    return (
+        status.get("stall_classification") == PRE_FIRST_ITEM_STALL
+        or str(status.get("stalled_reason") or "").startswith(f"{PRE_FIRST_ITEM_STALL}:")
+    )
+
+
+def _smoke_nonce_verified(result: str, nonce: str) -> bool:
+    return result.strip() == nonce
+
+
+def _nonce_smoke_status(fresh_home: Path, nonce: str, cwd: Path, meight: str) -> dict:
+    status = _worker_status(fresh_home, nonce, cwd, meight)
+    if not status:
+        worker_dir = fresh_home / "workers" / nonce
+        try:
+            return json.loads((worker_dir / "status.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+    return status
+
+
+def _run_nonce_smoke_worker(
+    *,
+    worker_run_dir: Path | None,
+    fresh_home: Path,
+    cwd: Path,
+    meight: str,
+    timeout: int,
+    original_name: str,
+) -> bool:
+    nonce = f"{original_name}-nonce-smoke"
+    brief = _write_smoke_brief(worker_run_dir, nonce)
+    smoke_worker = {
+        "name": nonce,
+        "brief": str(brief),
+        "sandbox": "ro",
+        "effort": "low",
+    }
+    _start_worker(smoke_worker, fresh_home, cwd, meight, name=nonce)
+    if _wait_worker_once(nonce, fresh_home, cwd, meight, timeout) != 0:
+        return False
+    status = _nonce_smoke_status(fresh_home, nonce, cwd, meight)
+    if status.get("state") != "completed":
+        return False
+    if str(status.get("name") or nonce) != nonce:
+        return False
+    return _smoke_nonce_verified(_worker_result(fresh_home, nonce), nonce)
 
 def _validate(manifest_path: Path, meight_home: Path, cwd: Path) -> int:
     validator = Path(__file__).with_name("validate_wave.py")

@@ -32,6 +32,7 @@ temp/
 *.log
 
 # Local env/secrets
+.venv/
 .env
 .env.*
 !.env.example
@@ -52,17 +53,11 @@ runs/
 wandb/
 mlruns/
 
-# Headroom local runtime state/logs.
-.headroom/
-headroom-cache/
-headroom-logs/
-
 # Plan Grill scratch artifacts.
 .plan-grill/
 
 # Large binaries should use Git LFS or external storage.
-codex2codex/.venv/lib/python3.10/site-packages/codex_cli_bin/bin/codex
-codex2codex/.wheelhouse/*.whl
+.wheelhouse/
 *.safetensors
 *.ckpt
 *.pt

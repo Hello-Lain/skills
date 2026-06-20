@@ -78,6 +78,8 @@ If direct edit tooling fails after scoped implementation work, implementation wo
 - `RUN_HOME=$(mktemp -d "${TMPDIR:-/tmp}/meight-${PWD##*/}-XXXXXX")`; prefix every command with `MEIGHT_HOME="$RUN_HOME"`.
 - Use `--cwd` for repo/worktree. Use `start` + checkpoint `wait`; `dispatch` only for tiny consults.
 - Exit `1`: read `status`; wait if healthy, `steer` if drifting, interrupt/restart once if stale.
+- `PRE_FIRST_ITEM_STALL`: worker reached `turn/started` but no item has ever started in that turn, no token usage exists, and no current item appears before stale timeout. Treat as infra/app-server stream failure, not task quality failure.
+- For `PRE_FIRST_ITEM_STALL`, runner recovery rotates daemon/app-server into a fresh `MEIGHT_HOME`, runs a nonce smoke worker first, then retries the original worker once. If smoke fails or the retry stalls again, report infra recovery failure; do not loop.
 - Exit `3`: answer `QUESTION:` with `reply`, or return repo-unanswerable questions upstream.
 - Read `result`; accept only if artifact/review contract passes. Exit `0` alone is not success.
 - End every wave/consult immediately after reading required results: `MEIGHT_HOME="$RUN_HOME" meight shutdown || MEIGHT_HOME="$RUN_HOME" meight shutdown --force || true`; remove `$RUN_HOME` unless debugging/resume requested.
@@ -95,7 +97,7 @@ If direct edit tooling fails after scoped implementation work, implementation wo
 - When a worker is continued after `QUESTION:`, validate only the final turn for unresolved blockers; earlier resolved blocker text must not fail the wave by itself.
 - Never stream raw events/logs/transcripts into lead context.
 - Use `meight doctor --json` for routine global-skill availability checks; avoid live worker smoke tests unless debugging worker execution.
-- Keep secrets/credentials/raw logs/private data out of artifacts and final summaries.
+- Keep secrets/credentials/raw logs/private data out of artifacts and final summaries. Recovery artifacts may summarize `PRE_FIRST_ITEM_STALL`, nonce smoke status, retry counts, cleanup, and redacted paths only; never include raw transcripts or event streams.
 - Git, user comms, irreversible decisions, and final acceptance stay with lead.
 
 ## Validate / Return

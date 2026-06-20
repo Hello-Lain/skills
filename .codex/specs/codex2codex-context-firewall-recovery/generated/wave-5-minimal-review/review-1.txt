@@ -1,0 +1,27 @@
+Use role: review-agent
+Instance: review-1
+Spec: /data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/spec.md
+Wave: Wave 5
+File scope:
+- codex2codex/meight.py
+- codex2codex/scripts/run_wave.py
+- codex2codex/scripts/test_worker_recovery_contracts.py
+- codex2codex/scripts/test_run_wave_recovery.py
+- codex2codex/SKILL.md
+- codex2codex/ARCHITECTURE.md
+- spec2plan/references/heavy-mode.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md
+Task: Independent final review after fixes. Review only listed files. Do not inspect or rely on `.codex/work/20260620-codex2codex-context-firewall/review.md`; it may contain stale failed review content and is only the output target. Do not fail on unrelated dirty files outside this scope, including `idea-refine/SKILL.md`.
+Required checks:
+- `meight.py` `classify_worker_stall`: `PRE_FIRST_ITEM_STALL` only when state is active, stale, `turn_id` exists, no current item, no current item timestamp, no `first_item_started_at`, and zero tokens. Item/token/current-item/past-item-start cases must not classify as `PRE_FIRST_ITEM_STALL`.
+- `meight.py` event handling: `first_item_started_at` is initialized, reset at `turn/started`, set at first `item/started`, and not cleared when current item fields clear.
+- `run_wave.py` recovery: `PRE_FIRST_ITEM_STALL` is recoverable infra; old daemon is interrupted/shutdown; fresh `MEIGHT_HOME`; exact nonce smoke; retry original worker once; no loop.
+- `run_wave.py` terminal mapping: smoke fail or repeat pre-first stall => `INFRA_FAILED`; retry contract failure => `CONTRACT_FAILED`; `--fresh-worker-restarts 0` disables fresh recovery.
+- Nonce smoke requires exact full-result nonce, not substring matching.
+- Docs in `codex2codex/SKILL.md`, `codex2codex/ARCHITECTURE.md`, and `spec2plan/references/heavy-mode.md` match the persistent first-item guard and prohibit main-agent fallback synthesis.
+- Artifacts report current validation counts: worker recovery 15, run_wave recovery 42, full unittest 70; dry-run is compile-only, not a quality gate.
+Verify: Static review plus optional targeted tests only if useful. Do not mutate product files.
+Output: .codex/work/20260620-codex2codex-context-firewall/review.md
+Restrictions: no commit, no push, no user communication, no /codex2codex recursion; do not modify product files; write only `.codex/work/20260620-codex2codex-context-firewall/review.md`; artifact must include Findings, Verification or Tests, and `Verdict: PASS` or `Verdict: FAIL`. If artifact writing is blocked, do not end with `QUESTION:`. Final answer must begin `ARTIFACT_BODY:` and include the complete Markdown review artifact.

@@ -1,0 +1,44 @@
+version: 1
+id: "work_20260621_context_governor"
+slug: "20260621-context-governor"
+title: "Decision-Grade Context Governor"
+created_at: "2026-06-21T00:43:40+08:00"
+updated_at: "2026-06-21T01:14:13+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: "idea.md"
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: "idea.md"
+  plan: "spec.md"
+source:
+  created_by: "idea-refine"
+  user_prompt_hash: null
+locks:
+  canonical_idea: "idea.md"
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T00:43:40+08:00"
+    action: "created"
+    artifact: "idea.md"
+    by: "idea-refine"
+  - at: "2026-06-21T00:46:31+08:00"
+    action: "created"
+    artifact: "spec.md"
+    by: "interview-me"
+  - at: "2026-06-21T01:11:21+08:00"
+    action: "created"
+    artifact: "plan.md"
+    by: "spec2plan"
+  - at: "2026-06-21T01:14:13+08:00"
+    action: "created"
+    artifact: "artifacts/implementation.md"
+    by: "spec2plan"
+  - at: "2026-06-21T01:14:13+08:00"
+    action: "created"
+    artifact: "artifacts/validation.md"
+    by: "spec2plan"

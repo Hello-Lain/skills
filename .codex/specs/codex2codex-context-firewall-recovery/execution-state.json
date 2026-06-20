@@ -1,0 +1,238 @@
+{
+  "history": [
+    {
+      "at": "2026-06-19T18:31:54+00:00",
+      "dry_run": false,
+      "event": "plan_compiled"
+    },
+    {
+      "at": "2026-06-19T18:40:35+00:00",
+      "event": "wave_result",
+      "exit_code": 0,
+      "wave": "Wave 1"
+    },
+    {
+      "at": "2026-06-19T18:51:14+00:00",
+      "event": "wave_result",
+      "exit_code": 0,
+      "wave": "Wave 2"
+    },
+    {
+      "at": "2026-06-19T18:53:57+00:00",
+      "event": "wave_result",
+      "exit_code": 0,
+      "wave": "Wave 3"
+    },
+    {
+      "at": "2026-06-19T18:56:30+00:00",
+      "event": "wave_result",
+      "exit_code": 0,
+      "wave": "Wave 4"
+    },
+    {
+      "at": "2026-06-19T19:04:59+00:00",
+      "event": "wave_result",
+      "exit_code": 1,
+      "wave": "Wave 5"
+    },
+    {
+      "at": "2026-06-19T19:28:44+00:00",
+      "event": "wave_result",
+      "exit_code": 2,
+      "wave": "Wave 5"
+    },
+    {
+      "at": "2026-06-20T03:13:19+00:00",
+      "event": "wave_result",
+      "exit_code": 1,
+      "wave": "Wave 5"
+    },
+    {
+      "at": "2026-06-20T03:20:52+00:00",
+      "event": "wave_result",
+      "exit_code": 2,
+      "wave": "Wave 5"
+    },
+    {
+      "at": "2026-06-20T04:12:47+00:00",
+      "event": "wave_result",
+      "exit_code": 0,
+      "source": "main-agent-user-authorized",
+      "wave": "Wave 5"
+    }
+  ],
+  "plan": {
+    "compiled_at": "2026-06-19T18:31:54+00:00",
+    "dry_run": false,
+    "plan_path": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/plan.md",
+    "status": "compiled",
+    "tasks_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/tasks.md",
+    "waves": [
+      "Wave 1",
+      "Wave 2",
+      "Wave 3",
+      "Wave 4",
+      "Wave 5"
+    ]
+  },
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "updated_at": "2026-06-20T04:12:47+00:00",
+  "version": 1,
+  "waves": {
+    "Wave 1": {
+      "cleanup": {
+        "shutdown_attempted": true,
+        "shutdown_ok": true
+      },
+      "completed_at": "2026-06-19T18:40:35+00:00",
+      "exit_code": 0,
+      "fix_waves": [],
+      "run_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-1",
+      "status": "success",
+      "validate_code": 0,
+      "wait_code": 0,
+      "workers": [
+        {
+          "files": [
+            "codex2codex/meight.py",
+            "codex2codex/scripts/test_worker_recovery_contracts.py",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md"
+          ],
+          "mode": "implement",
+          "name": "coding-1",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md",
+          "role": "coding",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-1/coding-1/summary.json"
+        }
+      ]
+    },
+    "Wave 2": {
+      "cleanup": {
+        "shutdown_attempted": true,
+        "shutdown_ok": true
+      },
+      "completed_at": "2026-06-19T18:51:14+00:00",
+      "exit_code": 0,
+      "fix_waves": [],
+      "run_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-2",
+      "status": "success",
+      "validate_code": 0,
+      "wait_code": 0,
+      "workers": [
+        {
+          "files": [
+            "codex2codex/scripts/run_wave.py",
+            "codex2codex/scripts/test_run_wave_recovery.py",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md"
+          ],
+          "mode": "implement",
+          "name": "coding-1",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md",
+          "role": "coding",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-2/coding-1/summary.json"
+        }
+      ]
+    },
+    "Wave 3": {
+      "cleanup": {
+        "shutdown_attempted": true,
+        "shutdown_ok": true
+      },
+      "completed_at": "2026-06-19T18:53:57+00:00",
+      "exit_code": 0,
+      "fix_waves": [],
+      "run_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-3",
+      "status": "success",
+      "validate_code": 0,
+      "wait_code": 0,
+      "workers": [
+        {
+          "files": [
+            "codex2codex/SKILL.md",
+            "codex2codex/ARCHITECTURE.md",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md"
+          ],
+          "mode": "implement",
+          "name": "coding-1",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md",
+          "role": "coding",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-3/coding-1/summary.json"
+        },
+        {
+          "files": [
+            "spec2plan/references/heavy-mode.md",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md"
+          ],
+          "mode": "implement",
+          "name": "coding-2",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md",
+          "role": "coding",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-3/coding-2/summary.json"
+        }
+      ]
+    },
+    "Wave 4": {
+      "cleanup": {
+        "shutdown_attempted": true,
+        "shutdown_ok": true
+      },
+      "completed_at": "2026-06-19T18:56:30+00:00",
+      "exit_code": 0,
+      "fix_waves": [],
+      "run_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-4",
+      "status": "success",
+      "validate_code": 0,
+      "wait_code": 0,
+      "workers": [
+        {
+          "files": [
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md"
+          ],
+          "mode": "implement",
+          "name": "coding-1",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md",
+          "role": "coding",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-4/coding-1/summary.json"
+        }
+      ]
+    },
+    "Wave 5": {
+      "cleanup": {
+        "shutdown_attempted": true,
+        "shutdown_ok": true
+      },
+      "completed_at": "2026-06-20T04:12:47+00:00",
+      "exit_code": 0,
+      "fix_waves": [],
+      "run_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-5",
+      "status": "success",
+      "validate_code": 0,
+      "wait_code": 0,
+      "workers": [
+        {
+          "active_worker": "main-agent-review",
+          "files": [
+            "codex2codex/meight.py",
+            "codex2codex/scripts/run_wave.py",
+            "codex2codex/scripts/test_worker_recovery_contracts.py",
+            "codex2codex/scripts/test_run_wave_recovery.py",
+            "codex2codex/scripts/test_meight_status_recovery.py",
+            "codex2codex/SKILL.md",
+            "codex2codex/ARCHITECTURE.md",
+            "spec2plan/references/heavy-mode.md",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md",
+            ".codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md",
+            ".codex/work/20260620-codex2codex-context-firewall/review.md"
+          ],
+          "mode": "review",
+          "name": "main-agent-review",
+          "note": "User authorized main-agent review after codex2codex review subagent infrastructure failure.",
+          "output": "/data/lcq/.codex/skills/.codex/work/20260620-codex2codex-context-firewall/review.md",
+          "role": "review",
+          "summary_path": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/runs/wave-5/main-agent-review/summary.json"
+        }
+      ]
+    }
+  }
+}

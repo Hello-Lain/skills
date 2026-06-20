@@ -83,11 +83,40 @@ class MeightStatusRecoveryTest(unittest.TestCase):
 
             self.assertEqual(corrupt, 0)
             self.assertTrue(by_name["active-stalled"]["stalled"])
+            self.assertEqual(
+                by_name["active-stalled"]["stall_classification"],
+                meight.GENERIC_WORKER_STALL,
+            )
             self.assertIn("no worker activity", by_name["active-stalled"]["stalled_reason"])
             self.assertFalse(by_name["failed-old"]["stalled"])
             self.assertEqual(by_name["failed-old"]["failure_detail"], "provider timeout")
             self.assertFalse(by_name["tool-wait"]["stalled"])
             self.assertEqual(by_name["tool-wait"]["needs_input_source"], "tool")
+
+    def test_worker_diagnostics_reports_pre_first_item_stall_classification(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp)
+            stale = (meight.now_kst() - timedelta(seconds=120)).isoformat(timespec="seconds")
+            self._write_status(
+                home,
+                "pre-first-item",
+                {
+                    "name": "pre-first-item",
+                    "state": "running",
+                    "turn_id": "turn-1",
+                    "updated_at": stale,
+                    "last_event_at": stale,
+                    "current_item": None,
+                    "current_item_started_at": None,
+                    "first_item_started_at": None,
+                    "tokens": {"input": 0, "cached": 0, "output": 0},
+                },
+            )
+
+            diagnostics, corrupt = meight.worker_diagnostics(home, stall_warn_sec=60)
+
+            self.assertEqual(corrupt, 0)
+            self.assertEqual(diagnostics[0]["stall_classification"], meight.PRE_FIRST_ITEM_STALL)
 
     def test_worker_diagnostics_preserves_question_need_input_detail(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -2,19 +2,65 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import timedelta
 from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 VALIDATE_WAVE = SCRIPT_DIR / "validate_wave.py"
 VALIDATE_RESULT = SCRIPT_DIR / "validate_result_contract.py"
+os.environ.setdefault("MEIGHT_NO_BUNDLED_PYTHON", "1")
+sys.path.insert(0, str(SCRIPT_DIR.parent))
+from meight import PRE_FIRST_ITEM_STALL, classify_worker_stall, now_kst  # noqa: E402
 
 
 class WorkerRecoveryContractsTest(unittest.TestCase):
+    def _stale_worker_status(self, **overrides: object) -> dict:
+        stale = (now_kst() - timedelta(seconds=30)).isoformat(timespec="seconds")
+        status = {
+            "state": "running",
+            "turn_id": "turn-1",
+            "updated_at": stale,
+            "last_event_at": stale,
+            "current_item": None,
+            "current_item_started_at": None,
+            "tokens": {"input": 0, "cached": 0, "output": 0},
+        }
+        status.update(overrides)
+        return status
+
+    def test_pre_first_item_stall_classification_has_priority(self) -> None:
+        status = self._stale_worker_status()
+
+        self.assertEqual(classify_worker_stall(status, 10), PRE_FIRST_ITEM_STALL)
+
+    def test_item_started_is_not_pre_first_item_stall(self) -> None:
+        status = self._stale_worker_status(current_item_started_at=now_kst().isoformat())
+
+        self.assertNotEqual(classify_worker_stall(status, 10), PRE_FIRST_ITEM_STALL)
+
+    def test_token_usage_is_not_pre_first_item_stall(self) -> None:
+        status = self._stale_worker_status(tokens={"input": 1, "cached": 0, "output": 0})
+
+        self.assertNotEqual(classify_worker_stall(status, 10), PRE_FIRST_ITEM_STALL)
+
+    def test_current_item_is_not_pre_first_item_stall(self) -> None:
+        status = self._stale_worker_status(current_item="tool call (12s)")
+
+        self.assertNotEqual(classify_worker_stall(status, 10), PRE_FIRST_ITEM_STALL)
+
+    def test_past_item_started_is_not_pre_first_item_stall(self) -> None:
+        status = self._stale_worker_status(
+            first_item_started_at=now_kst().isoformat(timespec="seconds")
+        )
+
+        self.assertNotEqual(classify_worker_stall(status, 10), PRE_FIRST_ITEM_STALL)
+
     def _repo(self, tmp: Path) -> Path:
         repo = tmp / "repo"
         (repo / ".codex" / "specs" / "worker-recovery").mkdir(parents=True)

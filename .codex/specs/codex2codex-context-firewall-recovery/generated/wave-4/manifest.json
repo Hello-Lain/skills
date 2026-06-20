@@ -1,0 +1,23 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "wave": "Wave 4",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        ".codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md"
+      ],
+      "verify": "``python codex2codex/scripts/test_worker_recovery_contracts.py`; `python codex2codex/scripts/test_run_wave_recovery.py`; `python spec2plan/scripts/validate_plan_contract.py .codex/work/20260620-codex2codex-context-firewall/plan.md --mode heavy`; `python codex2codex/scripts/run_plan.py .codex/work/20260620-codex2codex-context-firewall/plan.md --dry-run``",
+      "output": ".codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-4/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 5: 执行验证与结构预检 | `.codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md` | Verify: ``python codex2codex/scripts/test_worker_recovery_contracts.py`; `python codex2codex/scripts/test_run_wave_recovery.py`; `python spec2plan/scripts/validate_plan_contract.py .codex/work/20260620-codex2codex-context-firewall/plan.md --mode heavy`; `python codex2codex/scripts/run_plan.py .codex/work/20260620-codex2codex-context-firewall/plan.md --dry-run`` Output: `.codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md`"
+    }
+  ]
+}

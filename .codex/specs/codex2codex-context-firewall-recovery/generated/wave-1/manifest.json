@@ -1,0 +1,25 @@
+{
+  "spec_dir": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery",
+  "wave": "Wave 1",
+  "profile": "role",
+  "workers": [
+    {
+      "name": "coding-1",
+      "role": "coding",
+      "mode": "implement",
+      "sandbox": "ws",
+      "effort": "high",
+      "context_profile": "minimal",
+      "role_config": "/data/lcq/.codex/skills/codex2codex/roles/coding.yaml",
+      "files": [
+        "codex2codex/meight.py",
+        "codex2codex/scripts/test_worker_recovery_contracts.py",
+        ".codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md"
+      ],
+      "verify": "python codex2codex/scripts/test_worker_recovery_contracts.py",
+      "output": ".codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md",
+      "brief": "/data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/generated/wave-1/coding-1.txt",
+      "raw_task": "- [ ] [coding] Task 1: 定义预首项停滞分类 | `codex2codex/meight.py`, `codex2codex/scripts/test_worker_recovery_contracts.py`, `.codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md` | Verify: `python codex2codex/scripts/test_worker_recovery_contracts.py` Output: `.codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md`"
+    }
+  ]
+}

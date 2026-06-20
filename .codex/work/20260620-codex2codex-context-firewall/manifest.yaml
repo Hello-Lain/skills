@@ -1,0 +1,33 @@
+version: 1
+id: "work_20260620_codex2codex_context_firewall"
+slug: "20260620-codex2codex-context-firewall"
+title: "Codex2Codex Context Firewall"
+created_at: "2026-06-20T00:00:00+08:00"
+updated_at: "2026-06-20T02:23:20+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: "idea.md"
+  spec: null
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "idea.md"
+source:
+  created_by: "spec2plan"
+  user_prompt_hash: null
+locks:
+  canonical_idea: "idea.md"
+  canonical_spec: null
+  canonical_plan: "plan.md"
+history:
+  - event: "idea_saved"
+    at: "2026-06-20T00:00:00+08:00"
+    note: "User confirmed saving the idea direction and requested spec2plan directly."
+  - event: "spec2plan_heavy_blocked"
+    at: "2026-06-20T01:39:02+08:00"
+    note: "Planner and reviewer artifacts validated, but synthesizer worker stalled twice at turn start with no input/output. Heavy mode forbids main-agent fallback plan synthesis."
+  - event: "spec2plan_heavy_plan_saved"
+    at: "2026-06-20T02:23:20+08:00"
+    note: "Fresh MEIGHT_HOME plus compact synthesis packet produced a validated synthesizer artifact; plan.md was extracted exactly from the artifact body."

@@ -41,6 +41,8 @@ Route out after a direction is recommended and the user confirms it. Hand off to
 
 Before saving, read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
 
+The final direction is invalid unless the Mandatory Exit Gate passes. Do not produce a final recommended direction, artifact, or save handoff while any required gate item is missing.
+
 The final output is a markdown one-pager saved by default (after user confirmation) to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md`, with `manifest.yaml` updated per the shared artifact contract. It contains:
 - Problem Statement
 - Recommended Direction
@@ -155,6 +157,35 @@ If the user confirms the recommended direction and wants to continue, state the 
 
 Ask the user if they'd like to save this to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md` (or a location of their choosing). Only save if they confirm. When saving to the default location, save only canonical `idea.md`, mark artifact maturity as `direction`, and update `manifest.yaml` per the shared artifact contract.
 
+### Mandatory Exit Gate
+
+Before producing any final recommended direction, artifact, save prompt, or routing handoff, verify that every required item exists in the conversation or draft output. If any item is missing, do not finalize. Instead, respond with `BLOCKED: idea-refine exit gate failed: missing <items>.` Then complete the missing step before continuing.
+
+Required before final direction:
+
+- A crisp "How Might We" problem statement.
+- Target user and success criteria, either user-provided or explicitly inferred.
+- 3-5 sharpening questions, unless the missing facts are already explicit.
+- 5-8 idea variations.
+- 2-3 clustered directions.
+- Stress-test for each clustered direction against user value, feasibility, and differentiation.
+- Hidden assumptions for each direction, including what could kill it.
+- A recommended direction with rationale.
+- MVP scope.
+- Not Doing list.
+- Explicit save confirmation prompt before writing `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md`.
+
+Final output is invalid if it omits any of these sections:
+
+- Variations
+- Clusters
+- Stress-tests
+- Assumptions
+- Not Doing
+- Save-confirm question
+
+Fail closed. A partial final answer that sounds polished but skips the gate is a skill failure. Do not compensate by saying "can add later"; complete the missing gate item first.
+
 ### Anti-patterns to Avoid
 
 - **Don't generate 20+ ideas.** Quality over quantity. 5-8 well-considered variations beat 20 shallow ones.
@@ -189,9 +220,16 @@ After completing an ideation session:
 
 - [ ] A clear "How Might We" problem statement exists
 - [ ] The target user and success criteria are defined
+- [ ] 3-5 sharpening questions were asked, or the already-known facts were explicitly named
 - [ ] Multiple directions were explored, not just the first idea
+- [ ] 5-8 idea variations were listed
+- [ ] 2-3 directions were clustered
+- [ ] Each clustered direction was stress-tested for user value, feasibility, and differentiation
 - [ ] Hidden assumptions are explicitly listed with validation strategies
 - [ ] A "Not Doing" list makes trade-offs explicit
 - [ ] The output is a concrete artifact (markdown one-pager), not just conversation
 - [ ] The user confirmed the final direction before any implementation work
+- [ ] The user was asked whether to save the artifact before any file write
 - [ ] If routing is needed, the next skill is named using Discovery Routing (`interview-me` for specs, `spec2plan` only for confirmed specs or equivalent clear requirements)
+
+If any box is unchecked, do not produce the final direction. Emit `BLOCKED: idea-refine exit gate failed: missing <items>.` and resolve the missing items first.

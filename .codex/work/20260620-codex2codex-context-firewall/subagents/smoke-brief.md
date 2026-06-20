@@ -1,0 +1,5 @@
+Echo exactly:
+
+SPEC2PLAN_NONCE_20260620_CONTEXT_FIREWALL
+
+No extra text.

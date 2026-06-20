@@ -1,0 +1,32 @@
+Use role: review-agent
+Instance: review-1
+Spec: /data/lcq/.codex/skills/.codex/specs/codex2codex-context-firewall-recovery/spec.md
+Wave: Wave 5
+File scope:
+- codex2codex/meight.py
+- codex2codex/scripts/run_wave.py
+- codex2codex/scripts/test_worker_recovery_contracts.py
+- codex2codex/scripts/test_run_wave_recovery.py
+- codex2codex/SKILL.md
+- codex2codex/ARCHITECTURE.md
+- spec2plan/references/heavy-mode.md
+- .codex/work/20260620-codex2codex-context-firewall/plan.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task1-worker-classification.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task2-run-wave-recovery.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task3-codex2codex-docs.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task4-spec2plan-heavy-mode.md
+- .codex/work/20260620-codex2codex-context-firewall/artifacts/task5-validation.md
+- .codex/work/20260620-codex2codex-context-firewall/review.md
+Task: Independent final review after review-fix changes. Review only the listed plan scope and write the requested review artifact. Do not fail on unrelated pre-existing dirty changes outside this scope, including `idea-refine/SKILL.md`, unless they affect listed files.
+Required checks:
+- `PRE_FIRST_ITEM_STALL` classification is precise: turn started, no item has ever started in that turn (`first_item_started_at` absent), no token usage, no current item, stale activity; past-item-start/token/current-item cases are not misclassified.
+- `PRE_FIRST_ITEM_STALL` recovery is infra/app-server recovery: rotate/shutdown old daemon, fresh `MEIGHT_HOME`, exact nonce smoke, retry original worker once, no loop.
+- Retry contract failures after pre-first-item recovery terminate as `CONTRACT_FAILED`, not `INFRA_FAILED`.
+- Nonce smoke requires exact full-result nonce, not substring matching.
+- `--fresh-worker-restarts 0` disables fresh pre-first-item recovery.
+- Dry-run is documented and treated only as structure precheck, not quality gate.
+- `spec2plan` heavy mode still prohibits main-agent fallback synthesis and requires validated `SPEC2PLAN_ARTIFACT_V1` synthesizer output.
+- Validation artifacts reflect the current test counts and commands.
+Verify: Review artifact inspection only; optional static inspection/tests if useful. Do not mutate product files.
+Output: .codex/work/20260620-codex2codex-context-firewall/review.md
+Restrictions: no commit, no push, no user communication, no /codex2codex recursion; do not modify product files; write only `.codex/work/20260620-codex2codex-context-firewall/review.md`; artifact must include Findings, Verification or Tests, and `Verdict: PASS` or `Verdict: FAIL`. If writing the artifact is blocked, do not end with `QUESTION:`; final answer must begin `ARTIFACT_BODY:` and include the complete Markdown review artifact.
