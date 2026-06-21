@@ -16,6 +16,7 @@ Execute a `spec2plan` `plan.md` to completion. Own mode selection, context hygie
 - Re-running `scripts/compile_execution.py` preserves existing task statuses; use `--reset-status` only when intentionally restarting execution.
 - Use `scripts/validate_execution.py <plan-workspace>` before final success when `execution/tasks.json` exists.
 - Always use `/data/lcq/.codex/skills/context-engineering` for focused context, artifact quarantine, rehydration, decision packets, and context capsules.
+- For plans that create or materially update skills, require a Skill Production Gate report validated by `skill-tokenless/scripts/validate_skill_production.py` before final success.
 - Use `/data/lcq/.codex/skills/codex2codex` only when the user explicitly requests `codex2codex`.
 
 ## Intake
@@ -59,6 +60,7 @@ Completion requires:
 - acceptance criteria satisfied;
 - verification commands passed, or blocked with concrete cause;
 - review `PASS` for non-trivial plans, or documented review exemption;
+- Skill Production Gate report validated for new skills, material skill changes, validator/script changes, workflow/safety changes, or metadata changes;
 - no known functional gaps, material regressions, or unnecessary architecture complexity;
 - final report with mode, tasks, changed files, verification, review verdict, rework cycles, artifacts, blockers, and omitted raw data.
 - `scripts/validate_execution.py <plan-workspace>` passes when `execution/tasks.json` exists.

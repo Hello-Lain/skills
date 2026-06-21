@@ -14,6 +14,7 @@ Use when:
 Required gates:
 
 - Read current source from disk.
+- For generated, large, multi-hunk, or add-file payloads, run `python3 edit-orchestration/scripts/lint_apply_patch_payload.py <payload-file>` before `apply_patch`.
 - Use minimal `apply_patch`.
 - Inspect diff.
 - Run focused verification when behavior changes.

@@ -52,6 +52,17 @@ If a section does not apply, write `Not applicable` with a one-line reason. Do n
 - If a fact is unknown, put it under `Open Questions` or `Assumptions` and state why repo evidence cannot answer it.
 - Before final handoff, run `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`. This validator must also pass `plan2do/scripts/compile_execution.py` compatibility. If it fails, revise the plan from the exact validator errors and rerun until it passes, or stop with the blocking errors. Never hand off an invalid canonical plan.
 
+## Skill Production Plans
+
+When a plan creates or materially updates a skill, validator script, workflow/safety contract, or skill metadata:
+
+- Include `skill-tokenless/references/skill-production-gate.md` in `Evidence Inspected`.
+- Add exact production-gate files in the `Implementation Map`.
+- Add a task that writes a production report under `.codex/work/<topic>/artifacts/production-report.md`.
+- Add verification with `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/<topic>/artifacts/production-report.md --root <repo>`.
+- Add a final `reviewer` gate task unless the change is typo-only or formatting-only and review-exempt with reason.
+- In `Execution Handoff`, carry the production report path, reviewer report path, and any skipped gate reasons.
+
 ## Implementation Map
 
 Before `Task Breakdown`, anchor the plan to concrete repo evidence:

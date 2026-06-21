@@ -1,0 +1,31 @@
+# Task 4 Forward Tests
+
+- Status: complete
+- Context pack: `.codex/work/20260621-reviewer-v2/artifacts/context-wave3.md`
+- Lite route:
+  - Report: `.codex/work/20260621-reviewer-v2/artifacts/valid-lite-review.md`
+  - Review Mode: lite
+  - Review Route: inline
+  - Cleanup: not launched
+- Heavy route:
+  - Report: `.codex/work/20260621-reviewer-v2/artifacts/valid-heavy-review.md`
+  - Review Mode: heavy
+  - Review Route: subagent
+  - Cleanup: archive (agent `590aa8b2-0abd-4023-a879-26fd87f77e39`)
+  - Result: `REVISE` findings were fixed in rework cycle 2 and covered by validator self-test fixtures.
+- Mandatory isolation route:
+  - Report: `.codex/work/20260621-reviewer-v2/artifacts/mandatory-isolation-review.md`
+  - Review Mode: lite
+  - Review Route: subagent
+  - Cleanup: archive (agent `69a7107f-5eb4-4676-b967-012c4664b623`)
+- Rework records:
+  - `.codex/work/20260621-reviewer-v2/artifacts/rework-guidance-1.md`
+  - `.codex/work/20260621-reviewer-v2/artifacts/rework-guidance-2.md`
+- Stalled subagent cleanup:
+  - Agent `abb887a0-dda4-4655-abc2-1d8ac2776f83` exceeded useful wait budget during a broad heavy recheck, then was canceled and archived.
+- Verification:
+  - `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-v2/artifacts/valid-lite-review.md` -> `VALID`
+  - `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-v2/artifacts/valid-heavy-review.md` -> `VALID`
+  - `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-v2/artifacts/mandatory-isolation-review.md` -> `VALID`
+  - `python3 reviewer/scripts/validate_review_report.py --self-test` -> `VALID`
+  - `grep -n "Cleanup" .codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md` -> cleanup lines found for lite, heavy, and mandatory-isolation routes.

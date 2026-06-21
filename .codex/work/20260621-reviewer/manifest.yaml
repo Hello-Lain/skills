@@ -1,0 +1,38 @@
+version: 1
+id: "work_20260621_reviewer"
+slug: "20260621-reviewer"
+title: "reviewer"
+created_at: "2026-06-21T13:45:16+08:00"
+updated_at: "2026-06-21T14:25:00+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T13:45:16+08:00"
+    event: "confirmed_spec_created"
+    artifact: "spec.md"
+  - at: "2026-06-21T13:59:32+08:00"
+    event: "spec_refined"
+    artifact: "spec.md"
+    note: "Added mature review-loop, rubric, evidence, validator, adversarial, and escalation mechanisms from external agent/workflow projects."
+  - at: "2026-06-21T14:11:06+08:00"
+    event: "spec_renamed_and_refined"
+    artifact: "spec.md"
+    note: "Renamed skill target from revise-any to reviewer and made isolated reviewer subagent the default review path."
+  - at: "2026-06-21T14:25:00+08:00"
+    event: "plan_created"
+    artifact: "plan.md"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewer"
+  short_description: "Artifact quality review with isolated critique."
+  default_prompt: "Use $reviewer to review an artifact against its source goals and return PASS, REVISE, or BLOCK."

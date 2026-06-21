@@ -73,6 +73,8 @@ PASS requires:
 - Temporary fixtures, generated outputs, indexes, logs, and scratch files are removed.
 - Discovered failures are patched, retested, or listed as residual risk.
 
+For new or material skill changes, copy the Scenario Gate result into the Skill Production Gate report described in `skill-production-gate.md`.
+
 ## Fixture Design
 
 - Prefer `tmpdir="$(mktemp -d)"`; if the task needs the skill path, use `<skill-dir>/.tmp-forward-test/`.

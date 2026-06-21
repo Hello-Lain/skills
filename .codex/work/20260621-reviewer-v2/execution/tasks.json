@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Add reviewer report validator",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`reviewer/scripts/validate_review_report.py` exists, is executable through `python3`, validates good lite/heavy fixtures, rejects malformed fixtures, and uses no external dependencies.",
+      "verification": "Run `python3 reviewer/scripts/validate_review_report.py --self-test`.",
+      "pre_check_commands": "Run `test ! -e reviewer/scripts/validate_review_report.py`.",
+      "post_check_commands": "Run `python3 reviewer/scripts/validate_review_report.py --self-test`.",
+      "files_likely_touched": [
+        "reviewer/scripts/validate_review_report.py",
+        ".codex/work/20260621-reviewer-v2/artifacts/task1-validator.md"
+      ],
+      "writable_scope": [
+        "reviewer/scripts/validate_review_report.py",
+        ".codex/work/20260621-reviewer-v2/artifacts/task1-validator.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-v2/artifacts/task1-validator.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/artifacts/task1-validator.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 2,
+      "title": "Update reviewer v2 workflow docs",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`reviewer/SKILL.md` describes `lite`, `heavy`, and `blocked` preflight; `review-report-template.md` removes ambiguous sub-section `Verdict:` labels; `subagent-dispatch.md` requires archive or kill cleanup after report collection; all validator references point to `reviewer/scripts/validate_review_report.py`.",
+      "verification": "Run `grep -R \"Alignment Verdict\\\\|Quality Verdict\" -n reviewer/SKILL.md reviewer/references/review-report-template.md reviewer/references/subagent-dispatch.md || true` and verify no v2 template uses those ambiguous headings; run `python3 reviewer/scripts/validate_review_report.py --self-test`.",
+      "pre_check_commands": "Run `sed -n '1,220p' reviewer/SKILL.md` and `sed -n '1,180p' reviewer/references/review-report-template.md`.",
+      "post_check_commands": "Run `python3 reviewer/scripts/validate_review_report.py --self-test` and `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/reviewer`.",
+      "files_likely_touched": [
+        "reviewer/SKILL.md",
+        "reviewer/references/review-report-template.md",
+        "reviewer/references/subagent-dispatch.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task2-reviewer-docs.md"
+      ],
+      "writable_scope": [
+        "reviewer/SKILL.md",
+        "reviewer/references/review-report-template.md",
+        "reviewer/references/subagent-dispatch.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task2-reviewer-docs.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-v2/artifacts/task2-reviewer-docs.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/artifacts/task2-reviewer-docs.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "Clarify plan2do verification evidence",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`plan2do/references/execution-contract.md` names concrete accepted verification evidence examples, and `plan2do/scripts/validate_execution.py` missing-verification error names the same examples while preserving `_verification_evidence` behavior.",
+      "verification": "Run `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-reviewer` and confirm it still returns `VALID`.",
+      "pre_check_commands": "Run `grep -n \"missing verification evidence\\\\|Verification section\" plan2do/scripts/validate_execution.py plan2do/references/execution-contract.md`.",
+      "post_check_commands": "Run `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-reviewer`.",
+      "files_likely_touched": [
+        "plan2do/references/execution-contract.md",
+        "plan2do/scripts/validate_execution.py",
+        ".codex/work/20260621-reviewer-v2/artifacts/task3-plan2do-message.md"
+      ],
+      "writable_scope": [
+        "plan2do/references/execution-contract.md",
+        "plan2do/scripts/validate_execution.py",
+        ".codex/work/20260621-reviewer-v2/artifacts/task3-plan2do-message.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-v2/artifacts/task3-plan2do-message.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/artifacts/task3-plan2do-message.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Run reviewer v2 forward tests",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`valid-lite-review.md` passes validator, `valid-heavy-review.md` passes validator, mandatory-isolation behavior is recorded, and a cleanup status is recorded for every reviewer subagent launched by this task.",
+      "verification": "Run `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-v2/artifacts/valid-lite-review.md` and `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-v2/artifacts/valid-heavy-review.md`.",
+      "pre_check_commands": "Run `python3 reviewer/scripts/validate_review_report.py --self-test`.",
+      "post_check_commands": "Run validator commands for lite and heavy reports; run `grep -n \"Cleanup\" .codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md`.",
+      "files_likely_touched": [
+        ".codex/work/20260621-reviewer-v2/artifacts/valid-lite-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/valid-heavy-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/mandatory-isolation-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-reviewer-v2/artifacts/valid-lite-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/valid-heavy-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/mandatory-isolation-review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/artifacts/task4-forward-tests.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 5,
+      "title": "Final validation and reviewer audit",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Skill quick validation passes, reviewer report validator self-test passes, final reviewer audit returns `PASS`, `execution/tasks.json` marks all tasks complete, and `validate_execution.py` returns `VALID`.",
+      "verification": "Run `python3 reviewer/scripts/validate_review_report.py --self-test`, `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/reviewer`, and `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2`.",
+      "pre_check_commands": "Run `python3 reviewer/scripts/validate_review_report.py --self-test` and `git status --short`.",
+      "post_check_commands": "Run `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2`.",
+      "files_likely_touched": [
+        ".codex/work/20260621-reviewer-v2/review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task5-validation.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task5-verification.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-reviewer-v2/review.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task5-validation.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/task5-verification.md",
+        ".codex/work/20260621-reviewer-v2/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-v2/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-v2/review.md",
+      "estimated_scope": "M"
+    }
+  ]
+}

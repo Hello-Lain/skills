@@ -130,6 +130,16 @@ Review result must be either `Verdict: PASS` or `Verdict: FAIL`.
 
 Use `references/review-rubric.md` for PASS/FAIL conditions.
 
+## Skill Production Gate
+
+When the plan creates or materially updates skills, validator scripts, workflow/safety contracts, or skill metadata:
+
+- Require a production report under the plan workspace, normally `artifacts/production-report.md`.
+- Run `python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo>`.
+- Require the report to name changed files, deterministic validators, scenario gate evidence or skipped reason, reviewer gate verdict, cleanup proof, and reuse attribution.
+- Treat a missing or invalid production report as `VERIFY_FAILED`.
+- Do not mark final status `COMPLETE` while the production gate is missing, invalid, or blocked.
+
 ## Rework Guidance
 
 Before each fix cycle, write `<plan-workspace>/artifacts/rework-guidance[-N].md`:
@@ -193,6 +203,8 @@ Before reporting success:
 - Confirm review is `Verdict: PASS` for non-trivial plans or explicitly exempted with reason.
 - Confirm no unresolved failure class remains.
 - Confirm artifacts exist for execution, verification, review, rework cycles, and final report.
+- Confirm verification evidence is machine-visible: either a nonempty `artifacts/*verification*.md` file such as `artifacts/task5-verification.md` or `artifacts/<task>-verification.md`, or a final-report line beginning with `Verification` such as `Verification: <commands/outcomes>` or `- Verification: <commands/outcomes>`.
+- Do not rely on a `## Verification` heading alone; the validator matches a line beginning with `Verification`, optionally after a bullet marker.
 - If `<plan-workspace>/execution/tasks.json` exists, run `python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py <plan-workspace>` and require `VALID`.
 
 If any check fails, final status is `INCOMPLETE`, not success.

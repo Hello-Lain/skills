@@ -109,7 +109,11 @@ def validate_workspace(workspace: Path, *, require_review: bool = True) -> list[
         if not final_complete:
             errors.append(f"final report lacks 'Status: COMPLETE': {final_report_path}")
         if not _verification_evidence(workspace, final_report):
-            errors.append("missing verification evidence: add a *verification*.md artifact or a Verification section in final report")
+            errors.append(
+                "missing verification evidence: add a nonempty artifacts/*verification*.md file "
+                "such as artifacts/task5-verification.md, or include a final-report line beginning "
+                "with 'Verification' such as '- Verification: <commands/outcomes>'"
+            )
 
     for task in tasks:
         number = task.get("number", "<unknown>")

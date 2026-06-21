@@ -18,6 +18,7 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 - Always read `references/plan-contract.md` before drafting or validating a plan.
 - Before saving a plan or plan-adjacent artifact, read the shared artifact contract at `references/artifact-contract.md`.
 - Read `references/discovery-routing.md` when the source artifact's maturity is ambiguous or the request may be an idea, direction, or incomplete spec rather than planning-ready requirements.
+- For plans that create or materially update skills, include the Skill Production Gate from `skill-tokenless/references/skill-production-gate.md` as an executable task and final acceptance gate.
 - For `heavy`, also read `references/heavy-mode.md` and load `$codex2codex` from `/data/lcq/.codex/skills/codex2codex`.
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`; this hard gate also checks `plan2do/scripts/compile_execution.py` compatibility.
 - Validate heavy worker artifacts with `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
@@ -93,3 +94,4 @@ idea-refine -> interview-me -> spec2plan
 - Ensure artifact parent directories are creatable before execution, and prefer one artifact per worker so `$codex2codex` can validate or salvage outputs deterministically.
 - Add `Plan Self-Review` before `Execution Decision` and explicitly confirm task executability, test coverage, unknown handling, rollback/abort specificity, and fresh-agent handoff.
 - Before execution, run `$codex2codex scripts/run_plan.py <plan.md> --dry-run` when available; treat missing scopes, overlapping writes, or bad artifact paths as plan defects.
+- For new skills, material skill updates, validator/script changes, workflow/safety changes, or metadata changes, add a production report task that runs `python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo>`.

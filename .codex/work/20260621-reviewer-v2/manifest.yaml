@@ -1,0 +1,32 @@
+version: 1
+id: "work_20260621_reviewer_v2"
+slug: "20260621-reviewer-v2"
+title: "reviewer v2"
+created_at: "2026-06-21T16:13:13+08:00"
+updated_at: "2026-06-21T16:20:00+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: "/data/lcq/.codex/skills/.codex/work/20260621-reviewer/artifacts/debug-skill-audit.md"
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T16:13:13+08:00"
+    event: "confirmed_spec_created"
+    artifact: "spec.md"
+    note: "Created from debug-skill findings and user-confirmed reviewer v2 scope: lite/heavy routing, report validator, subagent cleanup, source checks, and plan2do validation clarity."
+  - at: "2026-06-21T16:20:00+08:00"
+    event: "plan_created"
+    artifact: "plan.md"
+    note: "Created by spec2plan for primary-agent plan2do execution."

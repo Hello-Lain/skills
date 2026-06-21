@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Add Skill Production Gate contract and validator",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "`skill-tokenless` exposes the production gate; `.system/skill-creator` requires it for new/material skills; `validate_skill_production.py --self-test` passes.",
+      "verification": "`python3 skill-tokenless/scripts/validate_skill_production.py --self-test`; `python3 .system/skill-creator/scripts/quick_validate.py skill-tokenless`; `python3 .system/skill-creator/scripts/quick_validate.py .system/skill-creator`",
+      "pre_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py skill-tokenless",
+      "post_check_commands": "python3 skill-tokenless/scripts/validate_skill_production.py --self-test",
+      "files_likely_touched": [
+        "skill-tokenless/SKILL.md",
+        "skill-tokenless/references/skill-production-gate.md",
+        "skill-tokenless/references/validation.md",
+        "skill-tokenless/references/testing.md",
+        "skill-tokenless/scripts/validate_skill_production.py",
+        ".system/skill-creator/SKILL.md"
+      ],
+      "writable_scope": [
+        "skill-tokenless/SKILL.md",
+        "skill-tokenless/references/skill-production-gate.md",
+        "skill-tokenless/references/validation.md",
+        "skill-tokenless/references/testing.md",
+        "skill-tokenless/scripts/validate_skill_production.py",
+        ".system/skill-creator/SKILL.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task1-execution.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task1-verification.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-production-gate/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/artifacts/task1-execution.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 2,
+      "title": "Correct reviewer subagent health policy",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "`reviewer` docs state the binding abnormal-only diagnostic policy; healthy running subagents are not canceled or archived; confirmed abnormal state leads to `BLOCK` or narrower relaunch with cleanup; reviewer validation still passes.",
+      "verification": "`python3 reviewer/scripts/validate_review_report.py --self-test`; `python3 .system/skill-creator/scripts/quick_validate.py reviewer`",
+      "pre_check_commands": "python3 reviewer/scripts/validate_review_report.py --self-test",
+      "post_check_commands": "python3 reviewer/scripts/validate_review_report.py --self-test",
+      "files_likely_touched": [
+        "reviewer/SKILL.md",
+        "reviewer/references/subagent-dispatch.md"
+      ],
+      "writable_scope": [
+        "reviewer/SKILL.md",
+        "reviewer/references/subagent-dispatch.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task2-execution.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task2-verification.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-production-gate/artifacts/task2-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/artifacts/task2-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 3,
+      "title": "Add apply_patch payload preflight helper",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "`edit-orchestration` docs mention preflight helper; helper self-test catches malformed add-file and missing patch boundary cases.",
+      "verification": "`python3 edit-orchestration/scripts/lint_apply_patch_payload.py --self-test`; `python3 .system/skill-creator/scripts/quick_validate.py edit-orchestration`",
+      "pre_check_commands": "python3 edit-orchestration/scripts/self_check_edit_tools.py --tool ast-grep --json",
+      "post_check_commands": "python3 edit-orchestration/scripts/lint_apply_patch_payload.py --self-test",
+      "files_likely_touched": [
+        "edit-orchestration/references/apply-patch.md",
+        "edit-orchestration/references/route-matrix.md",
+        "edit-orchestration/scripts/lint_apply_patch_payload.py"
+      ],
+      "writable_scope": [
+        "edit-orchestration/references/apply-patch.md",
+        "edit-orchestration/references/route-matrix.md",
+        "edit-orchestration/scripts/lint_apply_patch_payload.py",
+        ".codex/work/20260621-skill-production-gate/artifacts/task3-execution.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task3-verification.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-production-gate/artifacts/task3-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/artifacts/task3-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Integrate production gate into plan and execution contracts",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "`spec2plan` plan contract requires production-gate tasks for skill work; `plan2do` execution contract requires production reports before final acceptance of material skill work.",
+      "verification": "`python3 spec2plan/scripts/validate_plan_contract.py .codex/work/20260621-skill-production-gate/plan.md --mode light`; `python3 .system/skill-creator/scripts/quick_validate.py plan2do`; `python3 .system/skill-creator/scripts/quick_validate.py spec2plan`",
+      "pre_check_commands": "python3 spec2plan/scripts/validate_plan_contract.py .codex/work/20260621-skill-production-gate/plan.md --mode light",
+      "post_check_commands": "python3 spec2plan/scripts/validate_plan_contract.py .codex/work/20260621-skill-production-gate/plan.md --mode light",
+      "files_likely_touched": [
+        "spec2plan/SKILL.md",
+        "spec2plan/references/plan-contract.md",
+        "plan2do/SKILL.md",
+        "plan2do/references/execution-contract.md"
+      ],
+      "writable_scope": [
+        "spec2plan/SKILL.md",
+        "spec2plan/references/plan-contract.md",
+        "plan2do/SKILL.md",
+        "plan2do/references/execution-contract.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task4-execution.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task4-verification.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-production-gate/artifacts/task4-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/artifacts/task4-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "Final validation and review gate",
+      "role": "review",
+      "wave": 4,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "All planned commands pass; production report validates; reviewer gate returns `PASS`; execution validator returns `VALID`.",
+      "verification": "`python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-skill-production-gate/artifacts/production-report.md --root /data/lcq/.codex/skills`; `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-skill-production-gate/review.md --root /data/lcq/.codex/skills`; `python3 plan2do/scripts/validate_execution.py .codex/work/20260621-skill-production-gate`",
+      "pre_check_commands": "python3 plan2do/scripts/compile_execution.py .codex/work/20260621-skill-production-gate/plan.md",
+      "post_check_commands": "python3 plan2do/scripts/validate_execution.py .codex/work/20260621-skill-production-gate",
+      "files_likely_touched": [
+        ".codex/work/20260621-skill-production-gate/artifacts/production-report.md",
+        ".codex/work/20260621-skill-production-gate/review.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/final-report.md",
+        ".codex/work/20260621-skill-production-gate/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-skill-production-gate/artifacts/production-report.md",
+        ".codex/work/20260621-skill-production-gate/review.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task5-execution.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/task5-verification.md",
+        ".codex/work/20260621-skill-production-gate/artifacts/final-report.md",
+        ".codex/work/20260621-skill-production-gate/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-production-gate/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-production-gate/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

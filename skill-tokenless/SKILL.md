@@ -1,11 +1,11 @@
 ---
 name: skill-tokenless
-description: "Use when reducing Codex skill token cost, shrinking SKILL.md, moving rare detail to references, shortening agents/openai.yaml, or auditing a skill for bloat without behavior loss."
+description: "Use when reducing Codex skill token cost, shrinking SKILL.md, moving rare detail to references, shortening agents/openai.yaml, auditing a skill for bloat without behavior loss, or running the final Skill Production Gate for new skills, material skill updates, validator/script changes, workflow/safety changes, and skill metadata changes."
 ---
 
 # Skill Tokenless
 
-Shrink a Codex skill without changing what it can do.
+Shrink or production-gate a Codex skill without losing behavior.
 
 ## Contract
 
@@ -18,7 +18,7 @@ Shrink a Codex skill without changing what it can do.
 
 ## With Skill Creator
 
-After `$skill-creator` drafts or updates a skill, run this as the final design pass before validation. Preserve all `skill-creator` requirements: valid frontmatter, required `SKILL.md`, recommended `agents/openai.yaml`, useful resource dirs, and `quick_validate.py`.
+After `$skill-creator` drafts or updates a skill, run this as the final design pass before validation. For new or material skill changes, also run the Skill Production Gate in `references/skill-production-gate.md`.
 
 ## Workflow
 
@@ -33,7 +33,8 @@ After `$skill-creator` drafts or updates a skill, run this as the final design p
    - `agents/openai.yaml`: short `short_description`; one-sentence `default_prompt` mentioning `$skill-name`.
 6. GREEN/REFACTOR for material edits: run scenario or micro-tests from `references/testing.md`; patch real failures; retest once or record blocker.
 7. Validate: run `quick_validate.py`, counts, grep gates, explicit cleanup command, diff review. Use `references/validation.md`.
-8. Report: changed files, line/word delta, preserved gates, RED/GREEN or Scenario Gate result, skipped RED reason if any, validation result, residual risks.
+8. Production Gate: for new/material skill changes, write and validate a production report with `scripts/validate_skill_production.py`. Use `references/skill-production-gate.md`.
+9. Report: changed files, line/word delta, preserved gates, RED/GREEN or Scenario Gate result, production gate result or skipped reason, validation result, residual risks.
 
 ## Compression Patterns
 
@@ -49,6 +50,7 @@ After `$skill-creator` drafts or updates a skill, run this as the final design p
 
 - Read `references/testing.md` before creating, materially changing, or pressure-testing a skill.
 - Read `references/validation.md` before editing and before final reporting.
+- Read `references/skill-production-gate.md` before finalizing any new skill, material skill update, validator/script change, workflow/safety change, or skill metadata change.
 
 ## Hard Stops
 

@@ -229,7 +229,8 @@ Skill creation involves these steps:
 3. Initialize the skill (run init_skill.py)
 4. Edit the skill (implement resources and write SKILL.md)
 5. Validate the skill (run quick_validate.py)
-6. Iterate based on real usage and forward-test complex skills.
+6. For new or material skills, run `skill-tokenless` as the Skill Production Gate before final acceptance.
+7. Iterate based on real usage and forward-test complex skills.
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
 
@@ -369,7 +370,19 @@ scripts/quick_validate.py <path/to/skill-folder>
 
 The validation script checks YAML frontmatter format, required fields, and naming rules. If validation fails, fix the reported issues and run the command again.
 
-### Step 6: Iterate
+### Step 6: Skill Production Gate
+
+For new skills and material updates, run `/data/lcq/.codex/skills/skill-tokenless` after `quick_validate.py`.
+
+The gate must preserve behavior, keep `SKILL.md` lean, run deterministic validators, include RED/GREEN or scenario evidence when behavior can change, run `reviewer`, and save a production report that passes:
+
+```bash
+python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root /data/lcq/.codex/skills
+```
+
+Skip this only for typo-only or formatting-only edits that cannot affect triggering, workflow, validation, safety, scripts, or output quality.
+
+### Step 7: Iterate
 
 After testing the skill, you may detect the skill is complex enough that it requires forward-testing; or users may request improvements.
 

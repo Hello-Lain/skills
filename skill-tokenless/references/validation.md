@@ -31,6 +31,13 @@ rtk proxy bash -lc 'test ! -e "$1/.tmp-forward-test"' _ <skill-dir>
 git -C <repo> status --short <skill-dir>
 ```
 
+For new skills, material skill changes, validator/script changes, workflow/safety changes, or metadata changes, also validate the production report:
+
+```bash
+python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo>
+python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py --self-test
+```
+
 Default validator mode is required for normal hyphen-case skills.
 Do not write cleanup checks as `rtk test ! -e ...`; `rtk test` is the RTK test-output filter, not the shell `test` builtin.
 
@@ -62,6 +69,7 @@ Include:
 - RED/GREEN, micro-test, or Scenario Gate result.
 - Skipped RED reason, if no RED probe ran.
 - Validator result.
+- Production Gate result or skipped reason.
 - Cleanup result.
 - Diff review summary.
 - Residual risks.

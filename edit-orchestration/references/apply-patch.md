@@ -9,10 +9,11 @@ Use `apply_patch` for precise manual edits. Do not use shell/Python to create or
 ## Workflow
 
 1. Inspect first: read target snippets with line numbers or exact text. Check `git status` when repo state may collide with user work.
-2. Patch small: one logical change per patch when possible; split risky multi-file edits.
-3. Anchor precisely: include 2-5 stable context lines around each edit; prefer unique nearby symbols over whitespace-only context.
-4. Preserve user work: never revert unrelated dirty changes. If target text differs unexpectedly, stop and re-read.
-5. Verify: run targeted reads, grep, formatter/tests if relevant, then inspect diff.
+2. Preflight risky payloads: for generated, large, multi-hunk, or add-file patches, save the payload to a temp file and run `python3 edit-orchestration/scripts/lint_apply_patch_payload.py <payload-file>` before submitting it.
+3. Patch small: one logical change per patch when possible; split risky multi-file edits.
+4. Anchor precisely: include 2-5 stable context lines around each edit; prefer unique nearby symbols over whitespace-only context.
+5. Preserve user work: never revert unrelated dirty changes. If target text differs unexpectedly, stop and re-read.
+6. Verify: run targeted reads, grep, formatter/tests if relevant, then inspect diff.
 
 ## Patch Forms
 
@@ -62,6 +63,7 @@ Move:
 - Keep grammar exact: `*** Begin Patch`, hunks, `*** End Patch`.
 - Prefix every added line in added files with `+`, including blank lines as `+`.
 - Do not include prose, JSON, markdown fences, or shell commands inside the freeform tool input.
+- For complex payloads, preflight common grammar mistakes with `scripts/lint_apply_patch_payload.py`; this does not replace `apply_patch` or diff review.
 - Avoid giant replace-all patches; patch the smallest stable block.
 - For repeated text, add context until the hunk is unique.
 - For generated/minified/lock files, prefer the project tool that owns the file, then inspect diff.
