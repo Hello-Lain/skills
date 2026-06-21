@@ -2,6 +2,33 @@
 
 Use this stable structure for every skill audit. Keep raw logs, long diffs, and external pages out of the report; cite paths, commands, URLs, or short excerpts.
 
+## Trace Mode Template
+
+Use this compact artifact during or immediately after a task. It captures trajectory evidence without deep audit overhead.
+
+```markdown
+# Debug Skill Trace: <skill or chain>
+
+- Mode: trace
+- Skill(s):
+- Task:
+- Trigger:
+- Loaded instructions:
+- Decisions:
+- Actions:
+- Failures / friction:
+- Recovery:
+- Validators:
+- Outcome:
+- Optimization hints:
+- Redaction: <none|applied>
+- Human approval required before edits: yes
+```
+
+Trace mode does not recommend edits by itself. Convert to deep audit mode before making candidate recommendations.
+
+## Deep Audit Template
+
 ```markdown
 # Debug Skill Report: <skill>
 
@@ -53,11 +80,19 @@ Use this stable structure for every skill audit. Keep raw logs, long diffs, and 
 - Reuse-to-candidate mapping:
 
 ## Candidate Improvements
-| Candidate | Target surface | Reuse source | Summary | Benefit | Risk | Fitness |
+| Candidate | Target surface | Reuse source | Summary | Benefit | Risk / maintenance cost | Fitness / safety |
 | --- | --- | --- | --- | --- | --- | --- |
 | A | | | | | | |
 | B | | | | | | |
 | C | | | | | | |
+
+## Promotion Gates
+- Evidence sufficient:
+- Real user-visible impact:
+- Observable behavior improvement:
+- Constraints pass:
+- Rollback clear:
+- Human approval before execution:
 
 ## Recommendation
 - Recommended action:

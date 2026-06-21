@@ -132,6 +132,14 @@ Before finalizing, read `references/spec-quality-rubric.md`, use its template, a
 
 For codebase work, inspect relevant files before finalizing Commands, Project Structure, Testing Strategy, or integration constraints. Reference concrete paths when useful.
 
+After explicit user approval and spec quality checks, use `reviewer` as a lite gate before treating `spec.md` as downstream-ready. Read `/data/lcq/.codex/skills/reviewer/references/lite-gate-integration.md`, send a compact packet with the restated intent, confirmed spec path or content, this skill contract, assumptions, open questions, and requested route `lite`, then consume the verdict:
+
+- `PASS`: continue to save or downstream handoff.
+- `REVISE`: patch only the spec artifact and rerun the spec quality check; stop after three total self-repair cycles without `PASS`.
+- `BLOCK`: stop and report the missing evidence, source conflict, or unsafe review condition.
+
+Reviewer lite must not replace explicit `yes`, one-question interviewing, the spec quality rubric, or canonical save conflict rules.
+
 ### 6. Save / Hand Off
 
 After the user explicitly answers `yes` to the restated intent, produce the final spec and save it automatically. First read the shared artifact contract at `/data/lcq/.codex/skills/spec2plan/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or to the user's chosen path when provided. Do not save before explicit `yes`.
@@ -161,6 +169,7 @@ Before finishing, verify:
 - Vague terms were converted into measurable criteria or open questions.
 - Spec separates requirements, constraints, assumptions, risks, acceptance checks.
 - User explicitly confirmed the restated intent before the final spec was treated as authoritative.
+- `reviewer-lite` returned `PASS` before downstream handoff, or a `REVISE`/`BLOCK` stopped the workflow with evidence.
 - Confirmed specs are saved automatically after explicit `yes`, unless conflict rules require asking before overwrite.
 - No implementation plan or code was produced before spec confirmation.
 

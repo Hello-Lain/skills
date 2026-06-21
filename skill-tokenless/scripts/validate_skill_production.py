@@ -22,6 +22,7 @@ VERDICTS = {"PASS", "BLOCK"}
 FINAL_REVIEWER_VERDICTS = {"PASS", "REVISE", "BLOCK"}
 DRAFT_REVIEWER_VERDICTS = FINAL_REVIEWER_VERDICTS | {"PENDING"}
 CLEANUP_VALUES = ("archive", "kill", "not launched", "unavailable")
+VALIDATOR_OUTCOMES = {"PASS", "BLOCK", "SKIPPED"}
 
 
 def _field(text: str, name: str) -> str | None:
@@ -45,6 +46,19 @@ def _has_table_row(section: str) -> bool:
     rows = [line for line in section.splitlines() if line.strip().startswith("|")]
     data_rows = [line for line in rows if "---" not in line and "Source" not in line]
     return bool(data_rows)
+
+
+def _validator_outcomes(section: str) -> list[str]:
+    outcomes: list[str] = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith(("#", "|")) or ":" not in stripped:
+            continue
+        tail = stripped.rsplit(":", 1)[1].strip()
+        match = re.match(r"^(PASS|BLOCK|SKIPPED)\b", tail)
+        if match and match.group(1) in VALIDATOR_OUTCOMES:
+            outcomes.append(match.group(1))
+    return outcomes
 
 
 def _validate_paths(section: str, root: Path) -> list[str]:
@@ -102,7 +116,8 @@ def validate_report(path: Path, *, root: Path | None = None, stage: str = "final
             errors.append(f"missing or empty section: {heading}")
 
     validators = _section(text, "## Deterministic Validators")
-    if validators and not re.search(r"\b(PASS|BLOCK|SKIPPED)\b", validators):
+    validator_outcomes = _validator_outcomes(validators)
+    if validators and not validator_outcomes:
         errors.append("Deterministic Validators must include PASS, BLOCK, or SKIPPED outcomes")
 
     reviewer = _section(text, "## Reviewer Gate")
@@ -129,7 +144,7 @@ def validate_report(path: Path, *, root: Path | None = None, stage: str = "final
     if changed:
         errors.extend(_validate_paths(changed, root))
 
-    if verdict == "PASS" and re.search(r"\bBLOCK\b", validators):
+    if verdict == "PASS" and "BLOCK" in validator_outcomes:
         errors.append("PASS production report cannot include BLOCK validator outcomes")
     if stage == "final" and verdict == "PASS":
         if reviewer_verdict in {"BLOCK", "REVISE"}:
@@ -212,6 +227,24 @@ def run_self_test() -> list[str]:
             ("missing unbackticked changed path", valid.read_text(encoding="utf-8").replace(f"`{existing}`", "/definitely/missing/skill.md"), "final", False),
             ("unavailable changed path", valid.read_text(encoding="utf-8").replace(f"`{existing}`", "`/definitely/missing/skill.md` unavailable"), "final", True),
             ("pass with revise", valid.read_text(encoding="utf-8").replace("- Verdict: PASS\n- Report", "- Verdict: REVISE\n- Report"), "final", False),
+            (
+                "validator command contains block token",
+                valid.read_text(encoding="utf-8").replace(
+                    "`python3 skill-tokenless/scripts/validate_skill_production.py --self-test`: PASS",
+                    "`rg -n \"PASS|REVISE|BLOCK\" .codex/work/report.md`: PASS",
+                ),
+                "final",
+                True,
+            ),
+            (
+                "pass with explicit block validator outcome",
+                valid.read_text(encoding="utf-8").replace(
+                    "`python3 skill-tokenless/scripts/validate_skill_production.py --self-test`: PASS",
+                    "`python3 skill-tokenless/scripts/validate_skill_production.py --self-test`: BLOCK",
+                ),
+                "final",
+                False,
+            ),
         ]
         for index, (name, text, stage, should_pass) in enumerate(cases, 1):
             report = tmp_path / f"case-{index}.md"

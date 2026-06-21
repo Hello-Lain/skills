@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate",
+  "task_count": 7,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Add reviewer integration guide",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`reviewer` documents insertion, replacement, packet shape, verdict handling, three-cycle `REVISE`, immediate `BLOCK`, escalation, and consumer pushback.",
+      "verification": "rg -n \"Lite Gate Integration|reviewer-lite|PASS|REVISE|BLOCK|three\" reviewer/SKILL.md reviewer/references/lite-gate-integration.md",
+      "pre_check_commands": "sed -n '1,180p' reviewer/SKILL.md",
+      "post_check_commands": "rg -n \"Lite Gate Integration|reviewer-lite|three|BLOCK\" reviewer",
+      "files_likely_touched": [
+        "reviewer/SKILL.md",
+        "reviewer/references/lite-gate-integration.md"
+      ],
+      "writable_scope": [
+        "reviewer/SKILL.md",
+        "reviewer/references/lite-gate-integration.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task1-reviewer-guide.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task1-reviewer-guide.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Patch idea-refine gate",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`idea-refine` preserves its exit gate, save confirmation, and direction-only boundary while delegating artifact review to `reviewer-lite`.",
+      "verification": "rg -n \"reviewer-lite|REVISE|BLOCK|lite-gate-integration\" idea-refine/SKILL.md",
+      "pre_check_commands": "sed -n '120,235p' idea-refine/SKILL.md",
+      "post_check_commands": "rg -n \"Mandatory Exit Gate|reviewer-lite|Save-confirm|Not Doing\" idea-refine/SKILL.md",
+      "files_likely_touched": [
+        "idea-refine/SKILL.md"
+      ],
+      "writable_scope": [
+        "idea-refine/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task2-idea-refine.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task2-idea-refine.md",
+      "estimated_scope": "XS"
+    },
+    {
+      "number": 3,
+      "title": "Patch interview-me gate",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`interview-me` preserves one-question flow, explicit yes, automatic save behavior, and spec quality rubric while delegating artifact review to `reviewer-lite`.",
+      "verification": "rg -n \"reviewer-lite|REVISE|BLOCK|lite-gate-integration\" interview-me/SKILL.md",
+      "pre_check_commands": "sed -n '90,179p' interview-me/SKILL.md",
+      "post_check_commands": "rg -n \"explicit|reviewer-lite|spec-quality-rubric|Quality Gates\" interview-me/SKILL.md",
+      "files_likely_touched": [
+        "interview-me/SKILL.md"
+      ],
+      "writable_scope": [
+        "interview-me/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task3-interview-me.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task3-interview-me.md",
+      "estimated_scope": "XS"
+    },
+    {
+      "number": 4,
+      "title": "Patch spec2plan gate",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`spec2plan` references reviewer-lite for artifact quality, preserves plan validator, preserves heavy mode rules, and preserves Skill Production Gate requirements.",
+      "verification": "rg -n \"reviewer-lite|validate_plan_contract.py|Skill Production Gate|REVISE|BLOCK|lite-gate-integration\" spec2plan/SKILL.md",
+      "pre_check_commands": "sed -n '16,97p' spec2plan/SKILL.md",
+      "post_check_commands": "rg -n \"validate_plan_contract.py|reviewer-lite|Skill Production Gate\" spec2plan/SKILL.md",
+      "files_likely_touched": [
+        "spec2plan/SKILL.md"
+      ],
+      "writable_scope": [
+        "spec2plan/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task4-spec2plan.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task4-spec2plan.md",
+      "estimated_scope": "XS"
+    },
+    {
+      "number": 5,
+      "title": "Patch plan2do gate",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`plan2do` delegates non-trivial review through reviewer, preserves execution ownership, preserves `validate_execution.py`, and preserves Skill Production Gate requirements.",
+      "verification": "rg -n \"reviewer-lite|reviewer|validate_execution.py|Skill Production Gate|REVISE|BLOCK|lite-gate-integration\" plan2do/SKILL.md",
+      "pre_check_commands": "sed -n '1,78p' plan2do/SKILL.md",
+      "post_check_commands": "rg -n \"validate_execution.py|reviewer|false completion|Skill Production Gate\" plan2do/SKILL.md",
+      "files_likely_touched": [
+        "plan2do/SKILL.md"
+      ],
+      "writable_scope": [
+        "plan2do/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task5-plan2do.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task5-plan2do.md",
+      "estimated_scope": "XS"
+    },
+    {
+      "number": 6,
+      "title": "Validate and draft production evidence",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Validation commands complete or record concrete blockers; draft production report validates with stage `draft`; draft final report exists; debug-skill trace names skill usage, friction, and candidate optimization points.",
+      "verification": "python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-reviewer-lite-gate/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft",
+      "pre_check_commands": "git diff --check -- reviewer idea-refine interview-me spec2plan plan2do .codex/work/20260621-reviewer-lite-gate",
+      "post_check_commands": "python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-reviewer-lite-gate/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft",
+      "files_likely_touched": [
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/task6-validation.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/debug-skill-trace.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/production-report.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/task6-validation.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/debug-skill-trace.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/production-report.md",
+        ".codex/work/20260621-reviewer-lite-gate/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/artifacts/task6-validation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/artifacts/task6-validation.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 7,
+      "title": "Run reviewer gate",
+      "role": "review",
+      "wave": 4,
+      "dependencies": [
+        6
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`.codex/work/20260621-reviewer-lite-gate/review.md` contains one top-level `Verdict:` and passes `reviewer/scripts/validate_review_report.py`; `PASS` continues, `REVISE` triggers bounded rework, and `BLOCK` stops.",
+      "verification": "python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-lite-gate/review.md",
+      "pre_check_commands": "python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-reviewer-lite-gate --stage draft --require-production-report --require-final-report",
+      "post_check_commands": "python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-reviewer-lite-gate/review.md",
+      "files_likely_touched": [
+        ".codex/work/20260621-reviewer-lite-gate/review.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-reviewer-lite-gate/review.md"
+      ],
+      "output_artifact": ".codex/work/20260621-reviewer-lite-gate/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-reviewer-lite-gate/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

@@ -23,6 +23,7 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`; this hard gate also checks `plan2do/scripts/compile_execution.py` compatibility.
 - Validate heavy worker artifacts with `scripts/validate_subagent_artifact.py <phase> <artifact.md>`.
 - Validation is a hard gate: after drafting a candidate `plan.md`, run the validator; if it fails, revise the draft from the exact errors and rerun. Do not report, hand off, or treat a plan as saved-ready until validation passes.
+- For reviewer-lite plan handoff gates, read `/data/lcq/.codex/skills/reviewer/references/lite-gate-integration.md`; this never replaces `validate_plan_contract.py` or heavy-mode worker validation.
 
 ## Discovery Routing Gate
 
@@ -55,7 +56,8 @@ idea-refine -> interview-me -> spec2plan
 3. Main agent writes the plan directly.
 4. Run `scripts/validate_plan_contract.py <plan.md> --mode light`, including execution compiler compatibility.
 5. If validation fails, patch the draft from the validator errors and rerun step 4. Repeat until `VALID`, or stop with the exact blocking errors.
-6. Report path, validation status, key risks/open questions, and that implementation was not executed.
+6. Run reviewer-lite on the validated plan before reporting it as handoff-ready when the plan will drive downstream execution. On `REVISE`, patch the plan, rerun the validator, and request focused recheck for at most three total self-repair cycles; on `BLOCK`, stop with the blocker.
+7. Report path, validation status, reviewer-lite verdict when run, key risks/open questions, and that implementation was not executed.
 
 ## Heavy Workflow
 
@@ -95,3 +97,4 @@ idea-refine -> interview-me -> spec2plan
 - Add `Plan Self-Review` before `Execution Decision` and explicitly confirm task executability, test coverage, unknown handling, rollback/abort specificity, and fresh-agent handoff.
 - Before execution, run `$codex2codex scripts/run_plan.py <plan.md> --dry-run` when available; treat missing scopes, overlapping writes, or bad artifact paths as plan defects.
 - For new skills, material skill updates, validator/script changes, workflow/safety changes, or metadata changes, add a production report task that runs `python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage draft`, then `python3 plan2do/scripts/pre_review_ready.py <plan-workspace> --stage draft --require-production-report --require-final-report` before final reviewer launch, then `python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage final` after reviewer completion.
+- Consumer review is delegated to `reviewer`; do not copy reviewer rubrics into plans or this skill. Preserve deterministic validators as hard gates.

@@ -1,0 +1,33 @@
+version: 1
+id: "work_20260621_reviewer_lite_gate"
+slug: "20260621-reviewer-lite-gate"
+title: "Reviewer Lite Gate Integration"
+created_at: "2026-06-21T21:08:21+08:00"
+updated_at: "2026-06-21T21:43:30+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T21:08:21+08:00"
+    action: "created confirmed spec"
+    artifact: "spec.md"
+  - at: "2026-06-21T21:18:00+08:00"
+    action: "created executable plan"
+    artifact: "plan.md"
+  - at: "2026-06-21T21:43:30+08:00"
+    action: "completed plan2do execution with reviewer PASS"
+    artifact: "artifacts/final-report.md"

@@ -36,6 +36,10 @@ Lite reviews stay inline by default and avoid broad file reads. Heavy reviews de
 
 Every report must include `Review Mode` and `Review Route`.
 
+## Lite Gate Integration
+
+When another skill needs to insert `reviewer` or replace a local review step with `reviewer`, read `references/lite-gate-integration.md`. Keep consumer skills thin: they choose the artifact boundary, pass a compact packet, preserve their own validators and user gates, then consume `PASS`, `REVISE`, or `BLOCK` without copying reviewer rubrics.
+
 ## Subagent Default
 
 For heavy reviews, send only the review packet to the reviewer subagent. Do not pass the full main-thread conversation, irrelevant private context, raw transcripts, hidden conclusions, or the intended verdict.

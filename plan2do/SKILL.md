@@ -44,7 +44,7 @@ If the plan creates or updates `plan2do` itself, do not claim the skill was avai
 2. Execute tasks in dependency order, respecting writable scope and preserving unrelated dirty work.
 3. Store large logs, raw diffs, review notes, context packs, and execution summaries under the plan workspace `artifacts/`.
 4. Run task verification from the plan whenever safe.
-5. Review changed behavior for functional completeness, regression risk, architecture simplicity, and over-engineering.
+5. Review changed behavior for functional completeness, regression risk, architecture simplicity, and over-engineering. Delegate non-trivial artifact review to `reviewer`; for small low-risk artifacts use reviewer-lite via `/data/lcq/.codex/skills/reviewer/references/lite-gate-integration.md`, and for material workflow, safety, validator, or execution-route changes use reviewer heavy routing.
 6. If review or verification fails, write primary-agent rework guidance before fixing.
 7. Repeat bounded rework, then validate `execution/tasks.json` artifacts when present.
 8. Either pass or stop with a blocker report.
@@ -63,6 +63,7 @@ Completion requires:
 - review `PASS` for non-trivial plans, or documented review exemption;
 - Skill Production Gate report validated for new skills, material skill changes, validator/script changes, workflow/safety changes, or metadata changes;
 - pre-review readiness passes before launching final reviewer when the plan has `execution/tasks.json`;
+- reviewer verdict consumed consistently: `PASS` allows completion, `REVISE` triggers bounded rework and focused recheck, and `BLOCK` stops immediately;
 - no known functional gaps, material regressions, or unnecessary architecture complexity;
 - final report with mode, tasks, changed files, verification, review verdict, rework cycles, artifacts, blockers, and omitted raw data.
 - `scripts/validate_execution.py <plan-workspace>` passes when `execution/tasks.json` exists.
@@ -72,6 +73,8 @@ False completion is forbidden: failing verification, failed review, missing arti
 ## Rework
 
 Use at most two fix cycles per failed task or review scope unless the user changes the limit. Before each cycle, write rework guidance that names the evidence, defect, required change, writable scope, and verification. If the same issue persists after the limit, stop with a blocker report.
+
+For reviewer-lite gates owned by a producing skill contract, allow at most three total self-repair cycles only when that contract explicitly says so. Otherwise keep this skill's two-cycle rework limit.
 
 ## Completion
 

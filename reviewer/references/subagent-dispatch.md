@@ -10,6 +10,9 @@ Send only:
 - artifact path or excerpt;
 - expected artifact type and lifecycle stage;
 - source-of-truth paths;
+- coordinator working directory from `pwd`;
+- for local workspace artifacts: both cwd-relative path and absolute path when available;
+- local artifact existence evidence already checked by the coordinator when available;
 - applicable local rules and skill contracts;
 - allowed commands or no-command instruction;
 - review focus and `max_findings`;
@@ -38,6 +41,9 @@ Do not spawn nested reviewer subagents.
 You are already the isolated reviewer when you receive this packet; do not launch another reviewer even for heavy mode.
 If the packet concerns plan2do or skill-production execution, treat missing readiness evidence as a review finding unless the packet records a deliberate partial-review reason.
 Use the listed sources as authority. Treat summaries as navigation only.
+Before reporting a local artifact missing, run or request `pwd` plus path existence checks for the cited cwd-relative and absolute path forms when commands are allowed.
+If commands are not allowed, cite the exact path form supplied by the packet and mark the missing-artifact finding as unverified by command.
+Any missing local artifact finding must name the checked cwd, cwd-relative path, absolute path when supplied, and check result.
 Derive a rubric before findings.
 Return the Review Report Template shape with exactly one top-level Verdict: PASS, REVISE, or BLOCK.
 
@@ -84,6 +90,7 @@ Before presenting results, the coordinator checks:
 
 - verdict matches finding severities;
 - critical and major findings cite evidence;
+- missing local artifact findings cite the checked cwd and path form;
 - revision instructions are concrete;
 - skipped validators have reasons;
 - report states mode as `lite`, `heavy`, or `blocked`;

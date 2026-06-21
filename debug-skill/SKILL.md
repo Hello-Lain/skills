@@ -15,7 +15,12 @@ Quality beats speed; unnecessary overhead is still a defect.
 Default to audit and recommend. Do not modify the target skill unless the user explicitly asks for optimization execution.
 ```
 
-## Workflow
+## Modes
+
+- **Trace mode**: use during or immediately after a task to capture lightweight skill trajectory evidence: trigger, loaded skills, decisions, actions, failures, recovery, validators, outcome, and optimization hints. Do not require web search or full candidate scoring.
+- **Deep audit mode**: use when judging whether a skill helped or harmed, producing reuse-backed recommendations, scoring Hermes-style candidates, or preparing a larger optimization spec. This mode uses the full workflow below.
+
+## Deep Audit Workflow
 
 1. **Resolve target and evidence**
    - Identify the target skill by name or path.
@@ -65,11 +70,12 @@ Use `scripts/skill_audit_core.py` for deterministic primitives:
 ```bash
 python3 debug-skill/scripts/skill_audit_core.py --skill context-engineering
 python3 debug-skill/scripts/skill_audit_core.py --skill context-engineering --json
+python3 debug-skill/scripts/skill_audit_core.py --trace-skeleton context-engineering
 python3 debug-skill/scripts/skill_audit_core.py --report-skeleton context-engineering
 python3 debug-skill/scripts/skill_audit_core.py --self-test
 ```
 
-The helper adapts Hermes parser, dataset, constraint, fitness, and redaction patterns without requiring Hermes, DSPy, GEPA, OpenAI, or private history access.
+The helper adapts Hermes parser, dataset, trace, constraint, fitness, candidate, promotion-gate, and redaction patterns without requiring Hermes, DSPy, GEPA, OpenAI, or private history access.
 
 ## References
 
@@ -93,3 +99,4 @@ The helper adapts Hermes parser, dataset, constraint, fitness, and redaction pat
 - Candidate improvements include benefit, risk, target surface, and fitness.
 - Candidate improvements cite which reuse source they draw from, or explicitly state `none`.
 - Recommendation is actionable and does not overreach into auto-modification.
+- Trace mode artifacts include redaction status and `Human approval required before edits: yes`.

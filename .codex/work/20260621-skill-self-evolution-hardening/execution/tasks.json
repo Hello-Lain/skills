@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening",
+  "task_count": 6,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Harden reviewer path dispatch",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`reviewer/references/subagent-dispatch.md` requires coordinator cwd, cwd-relative path, absolute path, existence evidence, `pwd`, and checked path citation in missing-artifact findings; `.codex/work/20260621-skill-self-evolution-hardening/artifacts/reviewer-path-scenario.md` records the scenario.",
+      "verification": "rg -n \"cwd-relative|absolute|pwd|existence|missing\" reviewer/references/subagent-dispatch.md .codex/work/20260621-skill-self-evolution-hardening/artifacts/reviewer-path-scenario.md",
+      "pre_check_commands": "sed -n '1,130p' reviewer/references/subagent-dispatch.md",
+      "post_check_commands": "rg -n \"cwd-relative|absolute|pwd|existence|missing\" reviewer/references/subagent-dispatch.md .codex/work/20260621-skill-self-evolution-hardening/artifacts/reviewer-path-scenario.md",
+      "files_likely_touched": [
+        "reviewer/references/subagent-dispatch.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/reviewer-path-scenario.md"
+      ],
+      "writable_scope": [
+        "reviewer/references/subagent-dispatch.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/reviewer-path-scenario.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task1-reviewer-path-hardening.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/artifacts/task1-reviewer-path-hardening.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Clarify pre-review readiness contracts",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`spec2plan/references/plan-contract.md` warns plan authors against pending non-review finalization tasks before draft readiness; `plan2do/references/execution-contract.md` states coordinator finalization after reviewer is acceptance work, not a pending non-review task before reviewer launch; self-test demonstrates pending non-review tasks block draft readiness.",
+      "verification": "python3 plan2do/scripts/pre_review_ready.py --self-test",
+      "pre_check_commands": "sed -n '1,180p' spec2plan/references/plan-contract.md && sed -n '1,190p' plan2do/references/execution-contract.md",
+      "post_check_commands": "python3 plan2do/scripts/pre_review_ready.py --self-test",
+      "files_likely_touched": [
+        "spec2plan/references/plan-contract.md",
+        "plan2do/references/execution-contract.md"
+      ],
+      "writable_scope": [
+        "spec2plan/references/plan-contract.md",
+        "plan2do/references/execution-contract.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task2-readiness-modeling.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/artifacts/task2-readiness-modeling.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 3,
+      "title": "Fix production validator outcome parsing",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`validate_report` treats ``rg -n \"PASS|REVISE|BLOCK\" ...`: PASS`` as PASS; an explicit `: BLOCK` outcome still blocks a PASS production report; self-test passes.",
+      "verification": "python3 skill-tokenless/scripts/validate_skill_production.py --self-test",
+      "pre_check_commands": "sed -n '1,260p' skill-tokenless/scripts/validate_skill_production.py",
+      "post_check_commands": "python3 skill-tokenless/scripts/validate_skill_production.py --self-test",
+      "files_likely_touched": [
+        "skill-tokenless/scripts/validate_skill_production.py"
+      ],
+      "writable_scope": [
+        "skill-tokenless/scripts/validate_skill_production.py"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task3-production-validator.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/artifacts/task3-production-validator.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Add debug-skill trace and audit protocol",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`debug-skill/SKILL.md` names trace mode and deep audit mode; `debug-skill/references/report-template.md` and `debug-skill/references/hermes-reuse.md` include trace fields, constraint gates, fitness dimensions, candidate improvements, promotion gates, redaction, and human approval; `skill_audit_core.py --self-test` covers the trace skeleton.",
+      "verification": "python3 debug-skill/scripts/skill_audit_core.py --self-test",
+      "pre_check_commands": "sed -n '1,140p' debug-skill/SKILL.md && sed -n '1,140p' debug-skill/references/report-template.md && sed -n '1,120p' debug-skill/references/hermes-reuse.md && python3 debug-skill/scripts/skill_audit_core.py --self-test",
+      "post_check_commands": "python3 debug-skill/scripts/skill_audit_core.py --self-test",
+      "files_likely_touched": [
+        "debug-skill/SKILL.md",
+        "debug-skill/references/report-template.md",
+        "debug-skill/references/hermes-reuse.md",
+        "debug-skill/scripts/skill_audit_core.py"
+      ],
+      "writable_scope": [
+        "debug-skill/SKILL.md",
+        "debug-skill/references/report-template.md",
+        "debug-skill/references/hermes-reuse.md",
+        "debug-skill/scripts/skill_audit_core.py"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task4-debug-skill-protocol.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/artifacts/task4-debug-skill-protocol.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 5,
+      "title": "Validate and draft production gate",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "changed skill directories pass `quick_validate.py`; changed script self-tests pass; `git diff --check` passes; `.codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md` validates with `--stage draft`; draft pre-review readiness passes with only review task pending.",
+      "verification": "python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft && python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-skill-self-evolution-hardening --stage draft --require-production-report --require-final-report",
+      "pre_check_commands": "git status --short",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py reviewer && python3 .system/skill-creator/scripts/quick_validate.py debug-skill && python3 .system/skill-creator/scripts/quick_validate.py spec2plan && python3 .system/skill-creator/scripts/quick_validate.py plan2do && python3 .system/skill-creator/scripts/quick_validate.py skill-tokenless && python3 skill-tokenless/scripts/validate_skill_production.py --self-test && python3 plan2do/scripts/pre_review_ready.py --self-test && python3 debug-skill/scripts/skill_audit_core.py --self-test && git diff --check -- reviewer spec2plan plan2do skill-tokenless debug-skill .codex/work/20260621-skill-self-evolution-hardening && python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft && python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-skill-self-evolution-hardening --stage draft --require-production-report --require-final-report",
+      "files_likely_touched": [
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/context-wave1.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task1-reviewer-path-hardening.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task2-readiness-modeling.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task3-production-validator.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task4-debug-skill-protocol.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/context-wave1.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task1-reviewer-path-hardening.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task2-readiness-modeling.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task3-production-validator.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task4-debug-skill-protocol.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/artifacts/task5-production-gate-draft.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/artifacts/task5-production-gate-draft.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 6,
+      "title": "Final reviewer and acceptance gate",
+      "role": "review",
+      "wave": 4,
+      "dependencies": [
+        5
+      ],
+      "status": "complete",
+      "acceptance_criteria": "reviewer report validates with `python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-skill-self-evolution-hardening/review-final.md`; reviewer verdict is `PASS`; production report validates with `--stage final`; final pre-review readiness and execution validation pass.",
+      "verification": "python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-skill-self-evolution-hardening/review-final.md && python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final && python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-skill-self-evolution-hardening --stage final --require-production-report --require-final-report && python3 plan2do/scripts/validate_execution.py .codex/work/20260621-skill-self-evolution-hardening",
+      "pre_check_commands": "python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-skill-self-evolution-hardening --stage draft --require-production-report --require-final-report",
+      "post_check_commands": "python3 reviewer/scripts/validate_review_report.py .codex/work/20260621-skill-self-evolution-hardening/review-final.md && python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final && python3 plan2do/scripts/pre_review_ready.py .codex/work/20260621-skill-self-evolution-hardening --stage final --require-production-report --require-final-report && python3 plan2do/scripts/validate_execution.py .codex/work/20260621-skill-self-evolution-hardening",
+      "files_likely_touched": [
+        ".codex/work/20260621-skill-self-evolution-hardening/review-final.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/final-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-skill-self-evolution-hardening/review-final.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/production-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/artifacts/final-report.md",
+        ".codex/work/20260621-skill-self-evolution-hardening/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-skill-self-evolution-hardening/review-final.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-skill-self-evolution-hardening/review-final.md",
+      "estimated_scope": "M"
+    }
+  ]
+}

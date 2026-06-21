@@ -85,6 +85,8 @@ python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py <plan-worksp
 ```
 
 Do not launch a reviewer when draft readiness fails unless the artifact records a deliberate partial-review reason and the reviewer packet states the missing evidence.
+Draft readiness permits only review-role tasks to remain pending. Every non-review task must be complete with a nonempty output artifact before reviewer launch.
+Coordinator finalization after reviewer completion is final acceptance work, not an executable pending non-review task that can remain open during draft readiness.
 
 ## Primary-Agent Mode
 

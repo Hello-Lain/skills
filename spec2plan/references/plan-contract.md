@@ -64,6 +64,7 @@ When a plan creates or materially updates a skill, validator script, workflow/sa
 - Add final verification with `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/<topic>/artifacts/production-report.md --root <repo> --stage final` after reviewer completion.
 - Add a final `reviewer` gate task unless the change is typo-only or formatting-only and review-exempt with reason.
 - In `Execution Handoff`, carry the production report path, reviewer report path, and any skipped gate reasons.
+- For draft pre-review readiness, all non-review tasks must be complete with artifacts before reviewer launch. Only final `review` gate tasks may remain pending at draft readiness; coordinator final acceptance after reviewer completion is not a separate pending non-review task before reviewer launch.
 
 ## Implementation Map
 
@@ -127,6 +128,7 @@ Each task should be executable by another agent without rereading the raw spec. 
 - `Writable scope` must use exact repo-relative paths or conservative directory globs; do not write "TBD" in final plans.
 - `Output artifact` should be under `.codex/work/<yyyyMMdd>-<topic-slug>/artifacts/` for implementation/consult tasks and `.codex/work/<yyyyMMdd>-<topic-slug>/review*.md` for reviews.
 - Add a final review task/wave for multi-worker implementation unless the work is docs-only or explicitly review-exempt.
+- Do not model post-review coordinator finalization as a pending non-review task when the plan must pass draft pre-review readiness. Put reviewer completion, final production-report validation, and final acceptance evidence in the final review gate task or in `Execution Handoff`.
 - `Parallelization` must name wave groups and explain why same-wave tasks are safe to run together.
 - Artifact parent dirs must be creatable before execution; plan setup should create them or name the command that will.
 - Plans intended for `$codex2codex` must pass `scripts/run_plan.py <plan.md> --dry-run` or explicitly record why dry-run is unavailable.

@@ -157,6 +157,16 @@ If the user confirms the recommended direction and wants to continue, state the 
 
 Ask the user if they'd like to save this to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md` (or a location of their choosing). Only save if they confirm. When saving to the default location, save only canonical `idea.md`, mark artifact maturity as `direction`, and update `manifest.yaml` per the shared artifact contract.
 
+### Reviewer Lite Gate
+
+After the Mandatory Exit Gate passes and before treating the final direction as artifact-ready or handoff-ready, use `reviewer` as a lite gate. Read `/data/lcq/.codex/skills/reviewer/references/lite-gate-integration.md`, send a compact packet with the user goal, draft direction, this skill contract, save-confirm state, and requested route `lite`, then consume the verdict:
+
+- `PASS`: continue to save confirmation or routing handoff.
+- `REVISE`: revise only the direction artifact, then request focused recheck; stop after three total self-repair cycles without `PASS`.
+- `BLOCK`: stop and report the missing evidence, source conflict, or unsafe review condition.
+
+Do not let reviewer lite replace sharpening questions, variations, clusters, stress-tests, assumptions, MVP, Not Doing, or explicit save confirmation.
+
 ### Mandatory Exit Gate
 
 Before producing any final recommended direction, artifact, save prompt, or routing handoff, verify that every required item exists in the conversation or draft output. If any item is missing, do not finalize. Instead, respond with `BLOCKED: idea-refine exit gate failed: missing <items>.` Then complete the missing step before continuing.
@@ -230,6 +240,7 @@ After completing an ideation session:
 - [ ] The output is a concrete artifact (markdown one-pager), not just conversation
 - [ ] The user confirmed the final direction before any implementation work
 - [ ] The user was asked whether to save the artifact before any file write
+- [ ] `reviewer-lite` returned `PASS` before treating the direction as artifact-ready or handoff-ready, or a `REVISE`/`BLOCK` stopped the workflow with evidence
 - [ ] If routing is needed, the next skill is named using Discovery Routing (`interview-me` for specs, `spec2plan` only for confirmed specs or equivalent clear requirements)
 
 If any box is unchecked, do not produce the final direction. Emit `BLOCKED: idea-refine exit gate failed: missing <items>.` and resolve the missing items first.
