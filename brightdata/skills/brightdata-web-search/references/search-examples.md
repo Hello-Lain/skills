@@ -64,3 +64,27 @@ jq -r '.results[].content // empty' pqc.json \
     | grep -iE 'access denied|just a moment|captcha|cloudflare' \
     && echo "WARN: one or more results returned a block page"
 ```
+
+## Example 5 — Discover API for research/RAG
+
+Prefer raw REST when the task asks for research material, RAG corpus candidates, or high-relevance sources:
+
+```bash
+task_id=$(curl -sS -X POST https://api.brightdata.com/discover \
+    -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"query":"MLLM hallucination mitigation","intent":"recent papers, benchmarks, code repositories, and technical posts that propose or evaluate mitigation methods","mode":"deep","num_results":20,"include_content":true,"language":"en","country":"US"}' \
+    | jq -r '.task_id')
+
+while :; do
+    resp=$(curl -sS "https://api.brightdata.com/discover?task_id=$task_id" \
+        -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN")
+    [ "$(jq -r '.status' <<<"$resp")" = "done" ] && break
+    sleep 3
+done
+
+jq -r '.results[] | [.relevance_score, .title, .link] | @tsv' <<<"$resp"
+jq -r '.results[].content // empty' <<<"$resp" \
+    | grep -iE 'access denied|just a moment|captcha|cloudflare' \
+    && echo "WARN: one or more results returned a block page"
+```

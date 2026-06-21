@@ -62,9 +62,34 @@ xargs -a urls.txt -n 1 -P 4 -I {} bash -c '
 
 ## `search` vs `discover` decision
 
-Default to `search` for keyword-exactness tasks (SEO research, "what ranks for X"). Default to `discover` when the user's description is a topic, intent, or concept rather than a keyword ("pages about how companies adopt LLMs", "recent articles on post-quantum crypto").
+Default to `search` for keyword-exactness tasks (SEO research, "what ranks for X"). Default to Discover when the user's description is a topic, intent, or concept rather than a keyword ("pages about how companies adopt LLMs", "recent articles on post-quantum crypto").
 
 Rule of thumb: if the user's phrasing is a complete sentence or describes intent, `discover`. If it's a short keyword string, `search`.
+
+For research, RAG, or high-relevance discovery, read `discover-api.md` and prefer raw REST over CLI so you can choose `mode` (`fast`/`deep`) and request `include_content:true`.
+
+## Research/RAG Discover API pattern
+
+Use one sharp topic `query`, one goal-shaped `intent`, `mode:"deep"` for coverage or `mode:"fast"` for interaction, and `include_content:true` when the next step is summarization or RAG ingestion.
+
+```bash
+task_id=$(curl -sS -X POST https://api.brightdata.com/discover \
+    -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"query":"MLLM hallucination mitigation","intent":"recent papers, benchmarks, code repositories, and technical posts that propose or evaluate mitigation methods","mode":"deep","num_results":20,"include_content":true,"language":"en","country":"US"}' \
+    | jq -r '.task_id')
+
+while :; do
+    resp=$(curl -sS "https://api.brightdata.com/discover?task_id=$task_id" \
+        -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN")
+    [ "$(jq -r '.status' <<<"$resp")" = "done" ] && break
+    sleep 3
+done
+
+jq '.results | length' <<<"$resp"
+```
+
+Gate results by non-empty `results[]`, useful `content`, no block-page signatures, and source diversity before feeding an LLM.
 
 ## Pagination with `search`
 

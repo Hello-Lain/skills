@@ -1,16 +1,19 @@
 ---
 name: search
-description: Search the web via the Bright Data CLI — `bdata search` for Google/Bing/Yandex SERP, `bdata discover` for intent-ranked semantic results. Use when the user wants SERP results, needs URLs to feed into scraping, or wants semantic web discovery with optional page content. Hands off to `scrape` once target URLs are chosen. Requires the Bright Data CLI; proactively guides install + login if missing.
+description: Search the web via Bright Data — `bdata search` for Google/Bing/Yandex SERP, `bdata discover` for simple intent-ranked semantic results, and Discover API raw REST for research/RAG/high-relevance source discovery. Use when the user wants SERP results, needs URLs to feed into scraping, or wants semantic web discovery with optional page content.
 ---
 
 # Bright Data — Search
 
-Find things on the web. Two commands live in this skill:
+Find things on the web. Route by search intent:
 
 - **`bdata search`** — classic keyword SERP (Google/Bing/Yandex). Best when you want "what ranks for keyword X."
-- **`bdata discover`** — AI intent-ranked discovery with optional page content. Best when you want "pages about topic Y that match intent Z."
+- **Discover API** — AI intent-ranked discovery with optional page content. Best for research, RAG, high-relevance source discovery, or "pages about topic Y that match goal Z."
+- **`bdata discover`** — CLI wrapper for simple Discover jobs when CLI setup already exists.
 
-## Setup gate (run first)
+## Setup gate (run after choosing surface)
+
+For raw REST Discover, skip the CLI gate and verify `BRIGHTDATA_API_TOKEN` plus Discover account access instead (see `discover-api.md`). For CLI surfaces, run:
 
 ```bash
 if ! command -v bdata >/dev/null 2>&1; then
@@ -20,7 +23,7 @@ elif ! bdata zones >/dev/null 2>&1; then
 fi
 ```
 
-Halt and route to `bright-data-best-practices-cli-setup.md` if either check fails.
+Halt and route to `bright-data-best-practices-cli-setup.md` if a selected CLI surface fails either check. Do **not** block REST Discover just because `bdata` is missing.
 
 ## Pick your path
 
@@ -29,6 +32,7 @@ Halt and route to `bright-data-best-practices-cli-setup.md` if either check fail
 | Single keyword query, just SERP | `bdata search "<query>" --engine google --json --pretty` |
 | Paginated SERP (more results) | loop `--page 0`, `--page 1`, … (0-indexed) |
 | Multiple queries | shell loop over a queries file |
+| Research / RAG / high-relevance source discovery | read `discover-api.md`; use raw REST with sharp `intent`, `mode`, and often `include_content` |
 | Intent-ranked / semantic (not keyword) | `bdata discover "<query>" --intent "<intent>" --num-results 20` |
 | Want page bodies along with results, one pass | `bdata discover ... --include-content` |
 | News / images / shopping SERP | `bdata search "<query>" --type news` (or `images`, `shopping`) |
@@ -76,6 +80,7 @@ Full flag reference: [`search-flags.md`](search-flags.md).
 |---|---|
 | "What Google ranks for this exact keyword" | `search` |
 | "Pages that match this meaning/intent" | `discover` |
+| Research/RAG/high-relevance sources with bodies | Discover API raw REST, usually `include_content:true` |
 | "News / images / shopping vertical SERP" | `search --type <vertical>` |
 | "Results + page bodies in one call" | `discover --include-content` |
 | "Dedup / semantic ranking across queries" | `discover` |
@@ -112,3 +117,4 @@ Full flag reference: [`search-flags.md`](search-flags.md).
 - [`search-flags.md`](search-flags.md) — full flags for `search` and `discover` with when-to-use notes.
 - [`search-patterns.md`](search-patterns.md) — multi-query dedup, SERP → filter → scrape pipeline, `search` vs `discover` decision, legacy `curl` fallback, shared verification checklist.
 - [`search-examples.md`](search-examples.md) — (1) single Google query, (2) localized Bing, (3) batch queries + dedup into URL list, (4) `discover --include-content` end-to-end.
+- [`discover-api.md`](discover-api.md) — REST-first Discover workflow for research/RAG/high-relevance retrieval.

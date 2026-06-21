@@ -17,7 +17,8 @@ metadata:
 
 # Bright Data — Discover API
 
-Discover is **intent-ranked semantic web search**. You give it a `query` plus an
+Discover is **intent-ranked semantic web search**. Use it by default for
+research, RAG, and high-relevance source discovery. You give it a `query` plus an
 `intent`, and it returns results scored by AI relevance — optionally with the full
 parsed page content. It is the right primitive when result *quality/relevance*
 matters more than raw keyword rank.
@@ -39,8 +40,10 @@ advanced parameters such as `mode`.
 
 | You are… | Use |
 |---|---|
-| In a terminal, one-off or scripted | CLI: `bdata discover` |
-| Need one-off or scripted Discover results | CLI: `bdata discover` |
+| Doing research/RAG/high-relevance discovery | **Raw REST** with sharp `intent`, `mode`, and usually `include_content:true` |
+| Need low latency | **Raw REST** with `mode:"fast"` |
+| Need broad coverage | **Raw REST** with `mode:"deep"` |
+| In a terminal, simple one-off and CLI is ready | CLI: `bdata discover` |
 | Need `mode` (deep/fast/zeroRanking) or `include_images` | **Raw REST** |
 
 ### CLI — `bdata discover`
@@ -69,7 +72,11 @@ Results live at `.results[]`; each has `title`, `link`, `description`,
 `relevance_score`, and `content` when `--include-content`. Full CLI flag list:
 [`search` reference → `search-flags.md`](search-flags.md).
 
-### Raw REST (full control, incl. `mode`)
+### Raw REST (preferred for research/RAG/high relevance)
+
+Use raw REST when the task asks for research material, RAG corpus candidates,
+high-relevance pages, parsed content, latency/depth control, or image metadata.
+
 ```bash
 # 1) Trigger
 task_id=$(curl -s -X POST https://api.brightdata.com/discover \

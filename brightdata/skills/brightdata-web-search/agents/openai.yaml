@@ -1,4 +1,4 @@
 interface:
   display_name: "Bright Data Web Search"
-  short_description: "SERP and Discover search"
-  default_prompt: "Use $brightdata-web-search to run Bright Data SERP or Discover search and return sourced URLs."
+  short_description: "SERP, Discover API, and RAG search"
+  default_prompt: "Use $brightdata-web-search to run Bright Data SERP or Discover API research/RAG search and return sourced URLs."
