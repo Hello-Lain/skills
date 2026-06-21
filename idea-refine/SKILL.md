@@ -39,7 +39,7 @@ Route out after a direction is recommended and the user confirms it. Hand off to
 
 ## Output
 
-Before saving, read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
+Before saving, read the shared artifact contract at `/data/lcq/.codex/skills/spec2plan/references/artifact-contract.md`.
 
 The final direction is invalid unless the Mandatory Exit Gate passes. Do not produce a final recommended direction, artifact, or save handoff while any required gate item is missing.
 

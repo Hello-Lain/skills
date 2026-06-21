@@ -122,7 +122,7 @@ Require an explicit yes before writing the final spec. "Whatever you think", "so
 
 An explicit `yes` to this restatement means:
 - Write the final spec.
-- Read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
+- Read the shared artifact contract at `/data/lcq/.codex/skills/spec2plan/references/artifact-contract.md`.
 - Save the confirmed spec automatically to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md`, or to the reused topic workspace when the interview started from an existing workspace artifact.
 - Do not ask a separate "save?" question unless the canonical `spec.md` already exists and replacement intent is unclear.
 
@@ -134,7 +134,7 @@ For codebase work, inspect relevant files before finalizing Commands, Project St
 
 ### 6. Save / Hand Off
 
-After the user explicitly answers `yes` to the restated intent, produce the final spec and save it automatically. First read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or to the user's chosen path when provided. Do not save before explicit `yes`.
+After the user explicitly answers `yes` to the restated intent, produce the final spec and save it automatically. First read the shared artifact contract at `/data/lcq/.codex/skills/spec2plan/references/artifact-contract.md`, then save the confirmed spec to `.codex/work/<yyyyMMdd>-<topic-slug>/spec.md` by default, or to the user's chosen path when provided. Do not save before explicit `yes`.
 
 Prefer the project root's `.codex/work/` topic workspace so downstream skills can discover the spec, lineage, and later plan cleanly. Use a dated kebab-case topic workspace, for example `.codex/work/20260619-auth-migration/spec.md`. If the interview started from an existing workspace artifact, reuse that workspace and set `lineage.spec` to the source artifact when applicable. If the current workspace is not a project/repo, ask for a path instead of guessing.
 

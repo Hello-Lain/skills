@@ -16,7 +16,7 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 ## Resources
 
 - Always read `references/plan-contract.md` before drafting or validating a plan.
-- Before saving a plan or plan-adjacent artifact, read the skills-root shared contract at `/data/lcq/.codex/skills/references/artifact-contract.md`.
+- Before saving a plan or plan-adjacent artifact, read the shared artifact contract at `references/artifact-contract.md`.
 - Read `references/discovery-routing.md` when the source artifact's maturity is ambiguous or the request may be an idea, direction, or incomplete spec rather than planning-ready requirements.
 - For `heavy`, also read `references/heavy-mode.md` and load `$codex2codex` from `/data/lcq/.codex/skills/codex2codex`.
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`; this hard gate also checks `plan2do/scripts/compile_execution.py` compatibility.
