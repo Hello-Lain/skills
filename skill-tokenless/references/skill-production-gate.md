@@ -27,6 +27,8 @@ Skip only for typo-only or formatting-only edits that cannot change behavior. St
    - Run a RED/GREEN, mock forward test, or documented scenario probe for material changes.
    - If skipped, state why the change cannot affect behavior.
 5. Reviewer Gate:
+   - Before launch, validate the report as draft: `python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage draft`.
+   - Before launch, run readiness when execution state exists: `python3 plan2do/scripts/pre_review_ready.py <plan-workspace> --stage draft --require-production-report --require-final-report`.
    - Use `reviewer` for the final artifact.
    - Use `lite` only when the change is small, local, low-risk, and deterministic validators cover the risk.
    - Use heavy subagent review for new skills, material workflow changes, validators, safety gates, execution/planning routes, or prior failures.
@@ -34,7 +36,16 @@ Skip only for typo-only or formatting-only edits that cannot change behavior. St
    - Record subagent cleanup as `archive`, `kill`, `not launched`, or `unavailable with reason`.
    - Record temp fixture cleanup.
 7. Production Report:
-   - Save a production report and validate it with `skill-tokenless/scripts/validate_skill_production.py`.
+   - Save a draft production report before reviewer launch.
+   - Update the report after reviewer completion.
+   - Validate final report with `skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage final`.
+
+## Draft / Final Lifecycle
+
+- `draft`: allowed before reviewer runs. Reviewer Gate `Verdict` may be `PENDING` or omitted only when cleanup records `not launched` or `unavailable`.
+- `final`: required before final success. Reviewer Gate `Verdict` must be `PASS`, `REVISE`, or `BLOCK`.
+- A `PASS` final production report requires reviewer `PASS` and cannot include reviewer `REVISE` or `BLOCK`.
+- Both stages require Behavior Lock, Token Budget, Deterministic Validators, Scenario Gate, Reviewer Gate, Reuse Attribution, Changed Files, and Residual Risks.
 
 ## Reviewer Subagent Health Policy
 
@@ -122,7 +133,8 @@ Known source patterns:
 ## Validation
 
 ```bash
-python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root /data/lcq/.codex/skills
+python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root /data/lcq/.codex/skills --stage draft
+python3 skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root /data/lcq/.codex/skills --stage final
 python3 skill-tokenless/scripts/validate_skill_production.py --self-test
 ```
 

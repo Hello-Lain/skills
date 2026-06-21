@@ -17,7 +17,7 @@ Review from evidence, not vibes. Run preflight, choose lite/heavy/blocked, deriv
 
 1. Identify artifact, source goal, expected stage, artifact type, requested options, and obvious risk signals.
 2. Run route preflight before broad context loading or subagent launch.
-3. Rehydrate source evidence in order: latest user goal, applicable `AGENTS.md`, upstream artifact, relevant `SKILL.md` and linked contracts, current files/tests/commands needed to judge material claims, then external sources only when current/niche/high-stakes or requested.
+3. Rehydrate source evidence in order: latest user goal, applicable `AGENTS.md`, upstream artifact, relevant `SKILL.md` and linked contracts, current files/tests/commands needed to judge material claims, readiness evidence when reviewing plan2do/skill-production results, then external sources only when current/niche/high-stakes or requested.
 4. Build a compact review packet with goal, stage, artifact path/content, source list, constraints, validators, allowed commands, requested focus/options, and route.
 5. Derive rubric before findings.
 6. Review source alignment and intrinsic quality separately.
@@ -43,6 +43,7 @@ For heavy reviews, send only the review packet to the reviewer subagent. Do not 
 The main agent coordinates only:
 
 - assemble packet;
+- confirm `plan2do/scripts/pre_review_ready.py <plan-workspace> --stage draft --require-production-report --require-final-report` passed before final reviewer launch when the packet reviews skill-production execution artifacts, or record a deliberate partial-review reason;
 - launch reviewer when route requires it;
 - receive synthesized report;
 - validate saved report with `reviewer/scripts/validate_review_report.py`;

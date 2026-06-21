@@ -59,7 +59,9 @@ When a plan creates or materially updates a skill, validator script, workflow/sa
 - Include `skill-tokenless/references/skill-production-gate.md` in `Evidence Inspected`.
 - Add exact production-gate files in the `Implementation Map`.
 - Add a task that writes a production report under `.codex/work/<topic>/artifacts/production-report.md`.
-- Add verification with `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/<topic>/artifacts/production-report.md --root <repo>`.
+- Add verification with `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/<topic>/artifacts/production-report.md --root <repo> --stage draft` before reviewer launch.
+- Add pre-review verification with `python3 plan2do/scripts/pre_review_ready.py .codex/work/<topic> --stage draft --require-production-report --require-final-report`.
+- Add final verification with `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/<topic>/artifacts/production-report.md --root <repo> --stage final` after reviewer completion.
 - Add a final `reviewer` gate task unless the change is typo-only or formatting-only and review-exempt with reason.
 - In `Execution Handoff`, carry the production report path, reviewer report path, and any skipped gate reasons.
 

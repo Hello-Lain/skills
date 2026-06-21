@@ -68,6 +68,24 @@ Treat `<plan-workspace>/execution/tasks.json` as the task checklist. If compilat
 During execution, update each task status to `complete` only after its output artifact and verification evidence exist. Leave failed work as `pending` or `blocked`; final success requires every task status to be `complete`.
 Re-running the compiler preserves existing task statuses by default; use `--reset-status` only when intentionally restarting execution.
 
+## Pre-Review Readiness Gate
+
+Before launching a final reviewer for skill production work, run:
+
+```bash
+python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py <plan-workspace> --stage draft --require-production-report --require-final-report
+```
+
+This gate checks `execution/tasks.json`, non-review task artifacts, non-review task status, draft production report validity, and final-report presence. It intentionally allows an unfinished review task in draft stage so reviewer launch does not self-deadlock.
+
+After reviewer completes and the production report is updated, run:
+
+```bash
+python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py <plan-workspace> --stage final --require-production-report --require-final-report
+```
+
+Do not launch a reviewer when draft readiness fails unless the artifact records a deliberate partial-review reason and the reviewer packet states the missing evidence.
+
 ## Primary-Agent Mode
 
 Primary-agent mode is the default.
@@ -135,7 +153,8 @@ Use `references/review-rubric.md` for PASS/FAIL conditions.
 When the plan creates or materially updates skills, validator scripts, workflow/safety contracts, or skill metadata:
 
 - Require a production report under the plan workspace, normally `artifacts/production-report.md`.
-- Run `python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo>`.
+- Run `python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage draft` before reviewer launch.
+- Run `python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py <production-report.md> --root <repo> --stage final` before final success.
 - Require the report to name changed files, deterministic validators, scenario gate evidence or skipped reason, reviewer gate verdict, cleanup proof, and reuse attribution.
 - Treat a missing or invalid production report as `VERIFY_FAILED`.
 - Do not mark final status `COMPLETE` while the production gate is missing, invalid, or blocked.

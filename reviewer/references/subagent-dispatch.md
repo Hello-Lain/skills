@@ -15,6 +15,7 @@ Send only:
 - review focus and `max_findings`;
 - review mode and route;
 - output schema requirement;
+- readiness evidence for plan2do/skill-production reviews, such as `python3 plan2do/scripts/pre_review_ready.py <plan-workspace> --stage draft --require-production-report --require-final-report`;
 - read-only instruction;
 - no nested subagents instruction;
 - cleanup requirement: archive or kill the reviewer subagent after report collection when supported;
@@ -35,6 +36,7 @@ Use reviewer behavior to review the artifact described in this packet.
 Stay read-only. Do not edit files, git state, config, or generated outputs.
 Do not spawn nested reviewer subagents.
 You are already the isolated reviewer when you receive this packet; do not launch another reviewer even for heavy mode.
+If the packet concerns plan2do or skill-production execution, treat missing readiness evidence as a review finding unless the packet records a deliberate partial-review reason.
 Use the listed sources as authority. Treat summaries as navigation only.
 Derive a rubric before findings.
 Return the Review Report Template shape with exactly one top-level Verdict: PASS, REVISE, or BLOCK.
