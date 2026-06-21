@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bright Data MCP Tools"
+  short_description: "Route Bright Data MCP tools"
+  default_prompt: "Use $brightdata-mcp-tools to configure or choose Bright Data MCP search, scrape, and extract tools."

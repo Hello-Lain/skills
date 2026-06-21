@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bright Data"
+  short_description: "Router for Bright Data sub-skills"
+  default_prompt: "Use $brightdata to route a Bright Data setup, CLI, search, scrape, or MCP task to the right sub-skill."

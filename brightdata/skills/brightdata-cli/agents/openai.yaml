@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bright Data CLI"
+  short_description: "Use bdata commands safely"
+  default_prompt: "Use $brightdata-cli to choose and run the right Bright Data CLI command safely."

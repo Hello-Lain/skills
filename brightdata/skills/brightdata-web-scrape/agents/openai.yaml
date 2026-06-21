@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bright Data Web Scrape"
+  short_description: "Scrape known URLs via bdata"
+  default_prompt: "Use $brightdata-web-scrape to scrape known URLs with Bright Data CLI into markdown, HTML, JSON, or screenshots."

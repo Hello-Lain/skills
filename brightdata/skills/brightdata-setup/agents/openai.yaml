@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bright Data Setup"
+  short_description: "Install/auth Bright Data CLI"
+  default_prompt: "Use $brightdata-setup to configure Bright Data CLI auth, zones, and local readiness safely."
