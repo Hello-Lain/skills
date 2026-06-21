@@ -1,0 +1,34 @@
+version: 1
+id: "work_20260621_debug_skill"
+slug: "20260621-debug-skill"
+title: "debug-skill"
+created_at: "2026-06-21T03:54:20+08:00"
+updated_at: "2026-06-21T04:09:40+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T03:54:20+08:00"
+    event: "confirmed_spec_created"
+    artifact: "spec.md"
+  - at: "2026-06-21T04:01:01+08:00"
+    event: "spec_refined"
+    artifact: "spec.md"
+    note: "Added concrete Hermes component reuse plan and acceptance checks."
+  - at: "2026-06-21T04:09:40+08:00"
+    event: "plan_created"
+    artifact: "plan.md"

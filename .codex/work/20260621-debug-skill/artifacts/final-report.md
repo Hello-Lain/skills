@@ -1,0 +1,49 @@
+# Final Report
+
+Verdict: PASS
+
+- Mode: primary-agent
+- Status: COMPLETE
+- Plan path: `/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/plan.md`
+- Tasks completed: 5/5
+- Files changed:
+  - `debug-skill/SKILL.md`
+  - `debug-skill/agents/openai.yaml`
+  - `debug-skill/scripts/skill_audit_core.py`
+  - `debug-skill/references/hermes-reuse.md`
+  - `debug-skill/references/report-template.md`
+  - `.codex/work/20260621-debug-skill/manifest.yaml`
+  - `.codex/work/20260621-debug-skill/plan.md`
+  - `.codex/work/20260621-debug-skill/execution/tasks.json`
+  - `.codex/work/20260621-debug-skill/artifacts/task1-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task2-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task3-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task4-verification.md`
+  - `.codex/work/20260621-debug-skill/artifacts/rework-guidance.md`
+  - `.codex/work/20260621-debug-skill/artifacts/review.md`
+  - `.codex/work/20260621-debug-skill/artifacts/final-report.md`
+- Verification commands and outcomes:
+  - `python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-debug-skill/plan.md --mode light` -> `VALID`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-debug-skill/plan.md` -> wrote `execution/tasks.json`
+  - `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/debug-skill` -> `Skill is valid!`
+  - `python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py` -> passed
+  - `python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test` -> `SELF_TEST_OK`
+  - `python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --skill context-engineering` -> parsed target skill and returned advisory size result
+  - `python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --report-skeleton context-engineering` -> produced report skeleton
+- Review verdict: PASS
+- Rework cycles: 2
+- Rework summary: Fixed `IndentationError` in `debug-skill/scripts/skill_audit_core.py`; then added standalone `Verdict: PASS` to `final-report.md` because Task 5 is a review-role output artifact.
+- Artifact paths:
+  - `.codex/work/20260621-debug-skill/artifacts/task1-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task2-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task3-execution.md`
+  - `.codex/work/20260621-debug-skill/artifacts/task4-verification.md`
+  - `.codex/work/20260621-debug-skill/artifacts/rework-guidance.md`
+  - `.codex/work/20260621-debug-skill/artifacts/rework-guidance-2.md`
+  - `.codex/work/20260621-debug-skill/artifacts/review.md`
+  - `.codex/work/20260621-debug-skill/artifacts/final-report.md`
+- Blockers or risks:
+  - No blocker.
+  - Future audits still need live web/GitHub search for defect-specific reuse recommendations.
+  - Helper cannot access hidden model reasoning; trace evidence remains conversation/artifact based.
+- Raw data omitted: full Hermes source, raw diffs, and long command output.

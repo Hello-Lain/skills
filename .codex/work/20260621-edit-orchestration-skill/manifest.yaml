@@ -1,0 +1,28 @@
+version: 1
+id: "work_20260621_edit_orchestration_skill"
+slug: "20260621-edit-orchestration-skill"
+title: "Edit Orchestration Skill"
+created_at: "2026-06-21T02:36:52+08:00"
+updated_at: "2026-06-21T02:44:33+08:00"
+stage: "plan"
+owner_skill: "spec2plan"
+canonical:
+  idea: null
+  spec: "spec.md"
+  plan: "plan.md"
+lineage:
+  idea: null
+  spec: null
+  plan: "spec.md"
+source:
+  created_by: "interview-me"
+  user_prompt_hash: null
+locks:
+  canonical_idea: null
+  canonical_spec: "spec.md"
+  canonical_plan: "plan.md"
+history:
+  - at: "2026-06-21T02:36:52+08:00"
+    event: "created confirmed spec from interview"
+  - at: "2026-06-21T02:44:33+08:00"
+    event: "created implementation plan from confirmed spec"

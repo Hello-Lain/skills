@@ -25,6 +25,17 @@ Before editing, create a small probe that can fail:
 
 If the control does not fail and no waste is observable, do not add guidance for that issue.
 
+## Probe Templates
+
+Use the smallest probe set that matches the edit:
+
+- Trigger probe: a matching user request must select the skill.
+- Non-trigger probe: an adjacent but out-of-scope request must not select it.
+- Reference-loading probe: a task needing one reference/script loads only that resource.
+- Validation-skip probe: a tempting success path still runs validators or records a blocker.
+- Description shortcut probe: metadata-only reading must not imply workflow steps; `description` names triggers/exclusions, not process.
+- Context-waste probe: baseline loads duplicated examples, schemas, prompts, or rare debug detail that the patch routes out of always-loaded context.
+
 ## GREEN
 
 Patch the smallest wording/structure that addresses the observed failure:

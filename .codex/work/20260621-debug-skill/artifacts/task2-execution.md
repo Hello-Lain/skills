@@ -1,0 +1,21 @@
+# Task 2 Execution
+
+- Task: Implement Hermes adapter core and reuse reference.
+- Hermes source: `/tmp/hermes-agent-self-evolution`, commit `0a929e3`.
+- Files created:
+  - `debug-skill/scripts/skill_audit_core.py`
+  - `debug-skill/references/hermes-reuse.md`
+- Adapted concepts:
+  - `EvalExample` / `EvalDataset` -> `SkillAuditExample` / `SkillAuditDataset`
+  - `load_skill` / `find_skill` / `reassemble_skill` patterns -> Codex skill parser helpers
+  - `ConstraintResult` -> Codex skill structure, size, line-count, and growth checks
+  - `FitnessScore` -> quality-weighted candidate score
+  - external importer secret filtering -> `redact_text`
+- Rejected as required dependencies:
+  - `dspy`
+  - `gepa`
+  - `openai`
+  - Hermes runtime
+- Verification:
+  - `python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py`
+  - `python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test`

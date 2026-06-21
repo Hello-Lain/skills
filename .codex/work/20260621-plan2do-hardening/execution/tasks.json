@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Add execution compiler and validator",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "Both scripts exist, parse CLI args, fail closed on missing files, and are readable by `py_compile`.",
+      "verification": "python -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py",
+      "pre_check_commands": "test ! -e /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py && test ! -e /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py",
+      "post_check_commands": "python -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py",
+      "files_likely_touched": [
+        "/data/lcq/.codex/skills/plan2do/scripts/compile_execution.py",
+        "/data/lcq/.codex/skills/plan2do/scripts/validate_execution.py"
+      ],
+      "writable_scope": [
+        "/data/lcq/.codex/skills/plan2do/scripts/"
+      ],
+      "output_artifact": ".codex/work/20260621-plan2do-hardening/artifacts/task1-scripts.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task1-scripts.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 2,
+      "title": "Add failure and review references",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "References exist and define failure classes, next actions, review checks, and PASS/FAIL conditions.",
+      "verification": "rg \"VERIFY_FAILED|REVIEW_FAILED|SCOPE_VIOLATION|Verdict: PASS|Verdict: FAIL|over-engineering\" /data/lcq/.codex/skills/plan2do/references",
+      "pre_check_commands": "test ! -e /data/lcq/.codex/skills/plan2do/references/failure-policy.md && test ! -e /data/lcq/.codex/skills/plan2do/references/review-rubric.md",
+      "post_check_commands": "rg \"VERIFY_FAILED|REVIEW_FAILED|SCOPE_VIOLATION|Verdict: PASS|Verdict: FAIL|over-engineering\" /data/lcq/.codex/skills/plan2do/references",
+      "files_likely_touched": [
+        "/data/lcq/.codex/skills/plan2do/references/failure-policy.md",
+        "/data/lcq/.codex/skills/plan2do/references/review-rubric.md"
+      ],
+      "writable_scope": [
+        "/data/lcq/.codex/skills/plan2do/references/"
+      ],
+      "output_artifact": ".codex/work/20260621-plan2do-hardening/artifacts/task2-references.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task2-references.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 3,
+      "title": "Link scripts and references from skill docs",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`SKILL.md` mentions the scripts and references; `execution-contract.md` requires compile before non-trivial execution and validate before final success.",
+      "verification": "rg \"compile_execution.py|validate_execution.py|failure-policy.md|review-rubric.md|execution/tasks.json\" /data/lcq/.codex/skills/plan2do/SKILL.md /data/lcq/.codex/skills/plan2do/references/execution-contract.md",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py && test -f /data/lcq/.codex/skills/plan2do/references/failure-policy.md",
+      "post_check_commands": "rg \"compile_execution.py|validate_execution.py|failure-policy.md|review-rubric.md|execution/tasks.json\" /data/lcq/.codex/skills/plan2do/SKILL.md /data/lcq/.codex/skills/plan2do/references/execution-contract.md",
+      "files_likely_touched": [
+        "/data/lcq/.codex/skills/plan2do/SKILL.md",
+        "/data/lcq/.codex/skills/plan2do/references/execution-contract.md"
+      ],
+      "writable_scope": [
+        "/data/lcq/.codex/skills/plan2do/SKILL.md",
+        "/data/lcq/.codex/skills/plan2do/references/execution-contract.md"
+      ],
+      "output_artifact": ".codex/work/20260621-plan2do-hardening/artifacts/task3-doc-links.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task3-doc-links.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Validate behavior with passing and failing fixtures",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Compile command writes `execution/tasks.json`; passing fixture returns `VALID`; failing fixture returns nonzero with actionable errors.",
+      "verification": "python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md && python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/pass-fixture",
+      "pre_check_commands": "python -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py",
+      "post_check_commands": "python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md && python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/pass-fixture",
+      "files_likely_touched": [
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/"
+      ],
+      "writable_scope": [
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/"
+      ],
+      "output_artifact": ".codex/work/20260621-plan2do-hardening/artifacts/task4-validation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task4-validation.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 5,
+      "title": "Review and final acceptance",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Review artifact has `Verdict: PASS`; final report has `Status: COMPLETE`; all validation commands pass.",
+      "verification": "rg \"Verdict: PASS\" /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md && rg \"Status: COMPLETE\" /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/final-report.md",
+      "pre_check_commands": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/plan2do",
+      "post_check_commands": "rg \"Verdict: PASS\" /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md && rg \"Status: COMPLETE\" /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/final-report.md",
+      "files_likely_touched": [
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md",
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md",
+        "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/"
+      ],
+      "output_artifact": ".codex/work/20260621-plan2do-hardening/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

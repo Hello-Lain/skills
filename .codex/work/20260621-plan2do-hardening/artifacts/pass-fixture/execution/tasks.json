@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/tmp/pass-fixture/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/pass-fixture",
+  "task_count": 1,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Pass fixture task",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "verification": "fixture verification",
+      "output_artifact": "artifacts/task1-execution.md",
+      "estimated_scope": "XS"
+    }
+  ]
+}

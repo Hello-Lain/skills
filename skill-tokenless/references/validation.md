@@ -7,6 +7,7 @@ Load before editing and before final reporting.
 Before editing, record what must survive:
 
 - Triggers and exclusions.
+- Discovery surface: frontmatter and UI metadata trigger the skill but do not encode workflow steps.
 - Main workflow steps.
 - Who performs each phase: main agent, subagent, script, user.
 - Required files/resources and when to load them.
@@ -58,7 +59,8 @@ Include:
 - Files changed.
 - Line/word delta.
 - Preserved gates.
-- RED/GREEN, micro-test, or Scenario Gate result; if skipped, why.
+- RED/GREEN, micro-test, or Scenario Gate result.
+- Skipped RED reason, if no RED probe ran.
 - Validator result.
 - Cleanup result.
 - Diff review summary.

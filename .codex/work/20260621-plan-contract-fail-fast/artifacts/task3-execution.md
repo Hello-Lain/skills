@@ -1,0 +1,21 @@
+# Task 3 Execution
+
+- Task: Add `plan2do` compile-time fail-fast.
+- Files changed:
+  - `plan2do/scripts/compile_execution.py`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task3.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json`
+- Change summary: Added the same review-role output artifact semantic check to `compile_execution.py` before compiled task state is written.
+- RED command: `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/bad-fixture-before-task3.json`
+- RED outcome before patch: wrote a task JSON file, exit `0`.
+- Verification commands after patch:
+  - `python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/bad-fixture-after-task3.json`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md`
+- Outcomes:
+  - `py_compile`: passed.
+  - Bad fixture: failed with Task 1, `Output artifact`, expected repair, exit `1`.
+  - Valid fixture: wrote `valid-fixture-tasks.json`, exit `0`.
+  - Current plan: wrote `execution/tasks.json`, exit `0`.
+- Cleanup: Removed temporary RED files `bad-fixture-before-task3.json` and `valid-fixture-before-task3.json`; no bad-fixture output was written after patch.

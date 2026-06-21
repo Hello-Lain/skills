@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures",
+  "task_count": 1,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Review with review artifact output",
+      "role": "review",
+      "wave": 1,
+      "dependencies": [],
+      "status": "pending",
+      "acceptance_criteria": "Review artifact contains `Verdict: PASS`.",
+      "verification": "python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py",
+      "post_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py",
+      "files_likely_touched": [
+        ".codex/work/20260621-plan-contract-fail-fast/review.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-plan-contract-fail-fast/review.md"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/review.md",
+      "estimated_scope": "XS"
+    }
+  ]
+}

@@ -24,16 +24,16 @@ After `$skill-creator` drafts or updates a skill, run this as the final design p
 
 1. Inspect: target `SKILL.md`, `agents/openai.yaml`, references, scripts, `git status`, line counts, word counts.
 2. Behavior Lock: capture triggers/exclusions, workflow, tools, scripts, approvals, validation, output schema, safety/security, fallbacks. Use `references/validation.md` for the full checklist.
-3. RED before material edits: for new or materially changed skills, prove the current/unguided version fails or wastes context. Use `references/testing.md`.
+3. RED before material edits: for new or materially changed skills, prove the current/unguided version fails or wastes context; include a description shortcut probe when metadata changes. Use `references/testing.md`.
 4. Find waste: repeated purpose text, long examples, tables, subagent-only blocks, rare API/debug detail, duplicated schemas/templates, verbose prompts.
 5. Rewrite:
-   - frontmatter: trigger conditions only, concise, searchable.
+   - frontmatter: trigger conditions only, concise, searchable; no workflow summary.
    - body: contract, routing, workflow, gates, validation summary.
    - references: detailed contracts, scenario probes, schemas, templates, API notes, examples.
    - `agents/openai.yaml`: short `short_description`; one-sentence `default_prompt` mentioning `$skill-name`.
 6. GREEN/REFACTOR for material edits: run scenario or micro-tests from `references/testing.md`; patch real failures; retest once or record blocker.
 7. Validate: run `quick_validate.py`, counts, grep gates, explicit cleanup command, diff review. Use `references/validation.md`.
-8. Report: changed files, line/word delta, preserved gates, RED/GREEN or Scenario Gate result, validation result, residual risks.
+8. Report: changed files, line/word delta, preserved gates, RED/GREEN or Scenario Gate result, skipped RED reason if any, validation result, residual risks.
 
 ## Compression Patterns
 

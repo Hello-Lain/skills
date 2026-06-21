@@ -1,0 +1,49 @@
+# Final Report
+
+- Mode: primary-agent
+- Status: COMPLETE
+- Plan path: `/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md`
+- Tasks completed: 5/5
+- Files changed:
+  - `spec2plan/scripts/validate_plan_contract.py`
+  - `plan2do/scripts/compile_execution.py`
+  - `.codex/work/20260621-plan-contract-fail-fast/manifest.yaml`
+  - `.codex/work/20260621-plan-contract-fail-fast/plan.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/execution/tasks.json`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task1.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task2.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task3.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task4.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/context-task5.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/review.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/final-report.md`
+- Verification commands and outcomes:
+  - `python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md --mode light` -> `VALID`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md` -> wrote `execution/tasks.json`
+  - `python3 -m py_compile /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py && python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py && python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py` -> passed
+  - `python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md --mode light` -> failed as expected with Task 1, `Output artifact`, and repair guidance
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/bad-fixture-after-task4.json` -> failed as expected with Task 1, `Output artifact`, and repair guidance; no output JSON created
+  - `python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --mode light` -> `VALID`
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json` -> wrote task state
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast` -> `VALID`
+- Review verdict: PASS
+- Rework cycles: 0
+- Artifact paths:
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/review.md`
+  - `.codex/work/20260621-plan-contract-fail-fast/artifacts/final-report.md`
+- Blockers or risks:
+  - No blocker.
+  - Residual risk: review artifact semantic rule is duplicated across `spec2plan` and `plan2do`; v2 can extract a shared contract helper or schema.
+  - Context artifact hard-failure remains out of scope for v1.
+- Raw data omitted: raw full git diff, full command output, and stale failed patch output.

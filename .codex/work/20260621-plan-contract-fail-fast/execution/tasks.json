@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Add fail-fast regression fixtures",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`bad-review-artifact-plan.md` exists and contains a review task outputting `artifacts/final-report.md`; `valid-review-artifact-plan.md` exists and contains a review task outputting `review.md`; task artifact records fixture intent.",
+      "verification": "test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md && test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md",
+      "pre_check_commands": "test -d /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast",
+      "post_check_commands": "test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md && test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md",
+      "files_likely_touched": [
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/bad-review-artifact-plan.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/task1-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Add spec2plan semantic validation",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Bad fixture fails `validate_plan_contract.py` with task number, `Output artifact`, and repair guidance; valid fixture passes; current canonical plan passes.",
+      "verification": "python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --mode light && python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md --mode light",
+      "pre_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py",
+      "post_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py && python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --mode light && python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md --mode light",
+      "files_likely_touched": [
+        "spec2plan/scripts/validate_plan_contract.py",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md"
+      ],
+      "writable_scope": [
+        "spec2plan/scripts/validate_plan_contract.py",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/task2-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 3,
+      "title": "Add plan2do compile-time fail-fast",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Bad fixture fails `compile_execution.py` before creating a task state; valid fixture compiles to a temporary output; error mentions task number, `Output artifact`, and repair guidance.",
+      "verification": "python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json",
+      "pre_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py",
+      "post_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py && python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/fixtures/valid-review-artifact-plan.md --output /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json",
+      "files_likely_touched": [
+        "plan2do/scripts/compile_execution.py",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json"
+      ],
+      "writable_scope": [
+        "plan2do/scripts/compile_execution.py",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/valid-fixture-tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/task3-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Validate integrated plan execution",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "This plan validates; this plan compiles into `execution/tasks.json`; bad fixture fails both fail-fast scripts; valid fixture passes both scripts; task artifact records command outcomes.",
+      "verification": "python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md --mode light && python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md --mode light && python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/plan.md",
+      "files_likely_touched": [
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md",
+        ".codex/work/20260621-plan-contract-fail-fast/manifest.yaml",
+        ".codex/work/20260621-plan-contract-fail-fast/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md",
+        ".codex/work/20260621-plan-contract-fail-fast/manifest.yaml",
+        ".codex/work/20260621-plan-contract-fail-fast/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "Review and final acceptance",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`.codex/work/20260621-plan-contract-fail-fast/review.md` contains `Verdict: PASS`; `.codex/work/20260621-plan-contract-fail-fast/artifacts/final-report.md` records mode, status, files, commands, review, rework cycles, and risks; final execution validator passes.",
+      "verification": "python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/artifacts/task4-verification.md",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast",
+      "files_likely_touched": [
+        ".codex/work/20260621-plan-contract-fail-fast/review.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/final-report.md",
+        ".codex/work/20260621-plan-contract-fail-fast/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-plan-contract-fail-fast/review.md",
+        ".codex/work/20260621-plan-contract-fail-fast/artifacts/final-report.md",
+        ".codex/work/20260621-plan-contract-fail-fast/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-plan-contract-fail-fast/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-plan-contract-fail-fast/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

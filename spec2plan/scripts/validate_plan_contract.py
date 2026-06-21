@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import subprocess
 import sys
@@ -14,6 +15,7 @@ REQUIRED_HEADINGS = (
     "Spec Summary",
     "Domain Language Check",
     "Current Context",
+    "Implementation Map",
     "Assumptions",
     "User Inputs Needed",
     "Proposed Approach",
@@ -32,6 +34,7 @@ REQUIRED_HEADINGS = (
     "Abort Criteria",
     "Risks",
     "Open Questions",
+    "Plan Self-Review",
     "Execution Decision",
 )
 
@@ -60,12 +63,22 @@ TASK_BLOCK_RE = re.compile(r"(?ms)^\s*#{3,}\s*Task\s+\d+\s*:.+?(?=^\s*#{3,}\s*Ta
 FIELD_RE = re.compile(r"(?ms)^\s*-\s*([^:\n]+?)\s*:\s*(.*?)(?=^\s*-\s*[^:\n]+?\s*:|\Z)")
 XL_RE = re.compile(r"(?mi)Estimated scope:\s*XL\b")
 CODE_RE = re.compile(r"`([^`]+)`")
+PATHISH_RE = re.compile(r"(?:^|[\s`])(?:\.?/?[\w.-]+/[\w./*{}-]+|[\w.-]+\.(?:py|ts|tsx|js|jsx|rs|go|java|md|yaml|yml|json|toml|sql|sh|txt))(?:[\s`]|$)")
+COMMANDISH_RE = re.compile(r"(?i)\b(?:python|pytest|npm|pnpm|yarn|uv|cargo|go test|make|just|ruff|mypy|tsc|eslint|docker|kubectl|terraform|git|bash|sh)\b")
+PLACEHOLDER_RE = re.compile(
+    r"(?i)\b(?:tbd|todo|later|as needed|relevant files?|appropriate tests?|etc\.?)\b|相关|必要时|适当"
+)
 VALID_ROLES = {"coding", "devops", "review", "consult", "sa"}
 TASK_REQUIRED_FIELDS = (
     "Worker role",
     "Wave",
     "Acceptance criteria",
     "Verification",
+    "Concrete edits",
+    "Interfaces / contracts changed",
+    "Test cases",
+    "Pre-check commands",
+    "Post-check commands",
     "Dependencies",
     "Files likely touched",
     "Writable scope",
@@ -73,6 +86,9 @@ TASK_REQUIRED_FIELDS = (
     "Estimated scope",
 )
 EXEC_REQUIRED_FIELDS = ("Worker role", "Wave", "Verification", "Writable scope", "Output artifact")
+COMMAND_FIELDS = ("verification", "pre-check commands", "post-check commands")
+IMPLEMENTATION_MAP_LABELS = ("Files", "Symbols / APIs", "Tests", "Commands", "Data / migration impact")
+SELF_REVIEW_PHRASES = ("writable scope", "coverage", "unknown", "rollback", "Task 1")
 
 
 def has_heading(text: str, heading: str) -> bool:
@@ -119,10 +135,18 @@ def task_errors(text: str) -> list[str]:
             value = fields.get(field.lower(), "")
             if _empty_or_placeholder(value):
                 errors.append(f"{label} has non-executable {field}")
+        for field in COMMAND_FIELDS:
+            value = fields.get(field, "")
+            if value and not _has_command_or_exception(value):
+                errors.append(f"{label} {field} must include an exact command or a concrete not-runnable/manual-check reason")
+        for field_name, value in fields.items():
+            if _has_placeholder(value):
+                errors.append(f"{label} has placeholder language in {field_name}: {_first_placeholder(value)}")
         errors.extend(_output_artifact_errors(fields.get("output artifact", ""), label))
         role = fields.get("worker role", "").strip().lower()
         if role and role not in VALID_ROLES:
             errors.append(f"{label} has unknown Worker role: {role}")
+        errors.extend(_review_output_artifact_errors(fields, label))
     if XL_RE.search(task_section):
         errors.append("XL tasks are not allowed")
     errors.extend(_wave_overlap_errors(task_blocks))
@@ -134,6 +158,19 @@ def _task_fields(block: str) -> dict[str, str]:
 def _empty_or_placeholder(value: str) -> bool:
     stripped = re.sub(r"\s+", " ", value.strip()).strip("` ").lower()
     return not stripped or stripped in {"tbd", "todo", "unknown", "not specified", "n/a", "na"}
+
+def _has_placeholder(value: str) -> bool:
+    return bool(PLACEHOLDER_RE.search(value))
+
+def _first_placeholder(value: str) -> str:
+    match = PLACEHOLDER_RE.search(value)
+    return match.group(0) if match else ""
+
+def _has_command_or_exception(value: str) -> bool:
+    lower = value.lower()
+    if any(phrase in lower for phrase in ("not runnable", "not applicable", "manual check", "manual verification", "no command")):
+        return True
+    return bool(CODE_RE.search(value) or COMMANDISH_RE.search(value))
 
 def _scope_paths(value: str) -> list[str]:
     paths = [path.strip() for path in CODE_RE.findall(value) if path.strip()]
@@ -159,10 +196,82 @@ def _output_artifact_errors(value: str, task_label: str) -> list[str]:
             errors.append(f"{task_label} Output artifact must include a parent directory: {path_text}")
             continue
         if path.is_absolute():
+            errors.append(f"{task_label} Output artifact must be repo-relative under .codex/work/: {path_text}")
             continue
         first = path.parts[0] if path.parts else ""
-        if first not in {".codex", ".spec2plan"}:
-            errors.append(f"{task_label} Output artifact should live under .codex/ or .spec2plan/: {path_text}")
+        second = path.parts[1] if len(path.parts) > 1 else ""
+        if (first, second) != (".codex", "work"):
+            errors.append(f"{task_label} Output artifact should live under .codex/work/: {path_text}")
+    return errors
+
+def _review_output_artifact_errors(fields: dict[str, str], task_label: str) -> list[str]:
+    role = fields.get("worker role", "").strip().lower()
+    if role != "review":
+        return []
+
+    errors: list[str] = []
+    task_text = "\n".join(fields.values())
+    for path_text in _scope_paths(fields.get("output artifact", "")):
+        if _is_review_artifact_path(path_text) or _requires_standalone_verdict(task_text):
+            continue
+        errors.append(
+            f"{task_label} review Output artifact must be .codex/work/<topic>/review*.md "
+            f"or task text must explicitly require a standalone Verdict: PASS or Verdict: FAIL in that artifact: {path_text}"
+        )
+    return errors
+
+def _is_review_artifact_path(path_text: str) -> bool:
+    path = Path(path_text)
+    return (
+        not path.is_absolute()
+        and len(path.parts) >= 3
+        and path.parts[0] == ".codex"
+        and path.parts[1] == "work"
+        and path.name.startswith("review")
+        and path.suffix == ".md"
+    )
+
+def _requires_standalone_verdict(text: str) -> bool:
+    return bool(
+        re.search(r"(?is)\bstandalone\b.*\bVerdict\s*:\s*PASS\b.*\bVerdict\s*:\s*FAIL\b", text)
+        or re.search(r"(?is)\bVerdict\s*:\s*PASS\b.*\bVerdict\s*:\s*FAIL\b.*\bstandalone\b", text)
+    )
+
+def implementation_map_errors(text: str) -> list[str]:
+    errors: list[str] = []
+    body = section_text(text, "Implementation Map")
+    for label in IMPLEMENTATION_MAP_LABELS:
+        if not re.search(rf"(?mi)^\s*-\s*{re.escape(label)}\s*:", body):
+            errors.append(f"Implementation Map missing label: {label}")
+    if _has_placeholder(body):
+        errors.append(f"Implementation Map has placeholder language: {_first_placeholder(body)}")
+    return errors
+
+def micro_step_errors(text: str) -> list[str]:
+    errors: list[str] = []
+    body = section_text(text, "Step-by-Step Plan")
+    step_lines = [
+        line.strip()
+        for line in body.splitlines()
+        if re.match(r"^\s*(?:[-*]|\d+[.)])\s+\S+", line)
+    ]
+    if not step_lines:
+        return ["Step-by-Step Plan must include bullet or numbered micro-steps"]
+    for index, line in enumerate(step_lines, 1):
+        if _has_placeholder(line):
+            errors.append(f"Step {index} has placeholder language: {_first_placeholder(line)}")
+        if not (CODE_RE.search(line) or PATHISH_RE.search(line) or COMMANDISH_RE.search(line)):
+            errors.append(f"Step {index} lacks exact path, symbol/API, command, or artifact anchor")
+    return errors
+
+def self_review_errors(text: str) -> list[str]:
+    errors: list[str] = []
+    body = section_text(text, "Plan Self-Review")
+    for phrase in SELF_REVIEW_PHRASES:
+        if phrase.lower() not in body.lower():
+            errors.append(f"Plan Self-Review missing check topic: {phrase}")
+    if _has_placeholder(body):
+        errors.append(f"Plan Self-Review has placeholder language: {_first_placeholder(body)}")
     return errors
 
 
@@ -233,6 +342,22 @@ def synthesizer_match_errors(plan_path: Path, plan_text: str) -> list[str]:
         return ["plan.md must match subagents/synthesizer.md artifact body exactly"]
     return []
 
+def execution_compile_errors(plan_path: Path) -> list[str]:
+    compiler = Path(__file__).resolve().parents[2] / "plan2do" / "scripts" / "compile_execution.py"
+    if not compiler.is_file():
+        return [f"missing plan2do compiler for execution compatibility check: {compiler}"]
+
+    try:
+        spec = importlib.util.spec_from_file_location("_plan2do_compile_execution", compiler)
+        if spec is None or spec.loader is None:
+            return [f"cannot load plan2do compiler: {compiler}"]
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.compile_plan(plan_path)
+    except Exception as exc:
+        return [f"plan2do compile compatibility failed: {exc}"]
+    return []
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a spec2plan plan contract.")
@@ -264,7 +389,11 @@ def main() -> int:
             errors.append(f"missing {name}")
 
     errors.extend(task_errors(text))
+    errors.extend(implementation_map_errors(text))
+    errors.extend(micro_step_errors(text))
+    errors.extend(self_review_errors(text))
     errors.extend(handoff_errors(text))
+    errors.extend(execution_compile_errors(args.plan_path))
 
     if args.mode == "heavy":
         errors.extend(subagent_errors(args.plan_path))

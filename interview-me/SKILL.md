@@ -13,7 +13,7 @@ description: Interview users one question at a time to turn a chosen direction w
 - Require explicit approval before treating a restatement or spec as authoritative; an explicit `yes` to the restatement authorizes writing the final spec and saving it to the default workspace.
 - Requires a live user. In non-interactive/autonomous contexts, stop and report missing requirements instead of guessing.
 - If the user explicitly chooses speed, a short pass, or "don't overthink it", use Fast Spec Mode.
-- Do not announce that the skill is being used; start with the interview output.
+- In final/user-facing interview output, do not announce that the skill is being used; start with the interview output. This does not override higher-priority system requirements for commentary-channel progress updates.
 
 ## Use / Do Not Use
 

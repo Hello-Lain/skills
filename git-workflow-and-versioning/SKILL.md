@@ -16,6 +16,7 @@ MIT-derived workflow from addyosmani/agent-skills. Keep this entrypoint lean; pr
 
 ## Use
 Read `references/upstream.md` for branch/commit/release workflows.
+Read `references/worktrees.md` before detecting, creating, using, or removing git worktrees.
 
 Use `$conductor` first when the problem is multi-session routing, sidecars, Handoff Capsules, context isolation, dependency waves, or hard-gate coordination. This skill owns only real Git workflow/versioning hygiene.
 

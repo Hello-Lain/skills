@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debug Skill"
+  short_description: "Audit real skill execution quality"
+  default_prompt: "Use $debug-skill to audit a Codex skill execution trace and recommend evidence-backed improvements."

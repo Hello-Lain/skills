@@ -194,5 +194,5 @@ Proceed now per user request.
 - Verification: Run plan validator, skill validator, counts, grep gates, explicit cleanup command, diff review.
 - Remaining risks: Mock/documentation validation only; no live subagent pressure run unless later requested.
 - Next action: Validate plan, then patch `skill-tokenless`.
-- Suggested skills: `spec2plan`, `skill-tokenless`, `apply-patch`, `git-workflow-and-versioning`.
+- Suggested skills: `spec2plan`, `skill-tokenless`, `edit-orchestration`, `git-workflow-and-versioning`.
 - Redactions / omitted raw data: No secrets or private logs included.

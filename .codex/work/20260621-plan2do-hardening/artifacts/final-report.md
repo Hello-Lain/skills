@@ -1,0 +1,50 @@
+# Plan2Do Hardening Final Report
+
+- Mode: primary-agent
+- Status: COMPLETE
+- Plan path: /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md
+- Tasks completed: 5/5
+- Files changed:
+  - /data/lcq/.codex/skills/plan2do/SKILL.md
+  - /data/lcq/.codex/skills/plan2do/references/execution-contract.md
+  - /data/lcq/.codex/skills/plan2do/references/failure-policy.md
+  - /data/lcq/.codex/skills/plan2do/references/review-rubric.md
+  - /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py
+  - /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/execution/tasks.json
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/
+- Verification commands and outcomes:
+  - `python /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md --mode light`: passed with `VALID`.
+  - `python -m py_compile /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py`: passed.
+  - `python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/plan.md`: passed and preserved existing task status.
+  - `python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/pass-fixture`: passed with `VALID`.
+  - `python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/fail-fixture`: expected failure with actionable errors.
+  - `python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/plan2do`: passed with `Skill is valid!`.
+  - `python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening`: passed with `VALID`.
+  - `git diff --check -- plan2do .codex/work/20260621-plan2do-hardening`: passed.
+- Review verdict: PASS
+- Rework cycles: 1 focused correction before final review.
+- Rework evidence:
+  - Fixed invalid plan placeholder language before execution.
+  - Fixed compiler status preservation to avoid accidental reset of completed execution state.
+- Artifact paths:
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/context-task1.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/context-task2.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/context-task3.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/context-task5.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task1-scripts.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task1-verification.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task2-references.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task2-verification.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task3-doc-links.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task3-verification.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task4-validation.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/artifacts/task4-verification.md
+  - /data/lcq/.codex/skills/.codex/work/20260621-plan2do-hardening/review.md
+- Blockers or risks:
+  - No current blocker.
+  - Parser is intentionally narrow to `spec2plan` task Markdown.
+  - Validator checks evidence completeness, not deep semantic correctness.
+- Raw data omitted: raw command output and full diffs are not duplicated here.

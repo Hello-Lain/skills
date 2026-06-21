@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate",
+  "task_count": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Split context policy into entrypoint and references",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "- `context-engineering/SKILL.md` keeps core rule, mode choice, artifact decision rule, escalation triggers, reference routing, and gate command examples.\n  - `context-engineering/references/modes.md` preserves Source Hierarchy, Context Starvation Guard, Decision Packet, Context Capsule, compaction safety, conflict handling.\n  - `context-engineering/references/artifact-policy.md` states wave-pack default and task-pack escalation triggers.\n  - `context-engineering/references/replay.md` documents `plan-contract-fail-fast` replay decision.",
+      "verification": "- `python3 - <<'PY'` char-count snippet confirms `context-engineering/SKILL.md` is below `10000`.\n  - Manual review compares removed policy areas against new references.",
+      "pre_check_commands": "- `git status --short -- context-engineering .codex/work/20260621-context-engineering-gate`\n  - `sed -n '1,260p' /data/lcq/.codex/skills/context-engineering/SKILL.md`",
+      "post_check_commands": "- `python3 - <<'PY'\nfrom pathlib import Path\np=Path(\"/data/lcq/.codex/skills/context-engineering/SKILL.md\")\nprint(len(p.read_text()))\nassert len(p.read_text()) < 10000\nPY`",
+      "files_likely_touched": [
+        "context-engineering/SKILL.md",
+        "context-engineering/references/modes.md",
+        "context-engineering/references/artifact-policy.md",
+        "context-engineering/references/replay.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task1.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md"
+      ],
+      "writable_scope": [
+        "context-engineering/SKILL.md",
+        "context-engineering/references/modes.md",
+        "context-engineering/references/artifact-policy.md",
+        "context-engineering/references/replay.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task1.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 2,
+      "title": "Add deterministic context gate",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "- CLI supports `--self-test` and direct scenario flags.\n  - Direct outputs include `internal`, `wave-pack`, `task-pack`, `decision-packet`, `capsule`, `compact-request`.\n  - Self-test covers routine, multi-task plan, failure, decision-critical, and high-pressure phase-boundary cases.\n  - Script has no third-party imports.",
+      "verification": "- `python3 -m py_compile /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`\n  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --self-test`",
+      "pre_check_commands": "- `test ! -e /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py || sed -n '1,260p' /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`",
+      "post_check_commands": "- `python3 -m py_compile /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`\n  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --self-test`",
+      "files_likely_touched": [
+        "context-engineering/scripts/context_gate.py",
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task2.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md"
+      ],
+      "writable_scope": [
+        "context-engineering/scripts/context_gate.py",
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task2.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "Validate skill package and replay behavior",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "- `quick_validate.py` passes.\n  - `context_gate.py --self-test` passes.\n  - `py_compile` passes.\n  - Character count is below 10,000.\n  - Replay reference and self-test confirm wave-pack default for normal plan execution.",
+      "verification": "- `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/context-engineering`\n  - `python3 -m py_compile /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`\n  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --self-test`\n  - `python3 - <<'PY'\nfrom pathlib import Path\np=Path(\"/data/lcq/.codex/skills/context-engineering/SKILL.md\")\nprint(len(p.read_text()))\nassert len(p.read_text()) < 10000\nPY`",
+      "pre_check_commands": "- `find /data/lcq/.codex/skills/context-engineering -maxdepth 3 -type f | sort`",
+      "post_check_commands": "- `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/context-engineering`\n  - `python3 -m py_compile /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`\n  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --self-test`",
+      "files_likely_touched": [
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task3.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md",
+        "context-engineering/agents/openai.yaml"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-context-engineering-gate/artifacts/context-task3.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md",
+        "context-engineering/agents/openai.yaml"
+      ],
+      "output_artifact": ".codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Review and final execution report",
+      "role": "review",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Review artifact has a terminal verdict, final report lists changed files and command outcomes, and execution validation passes.",
+      "verification": "- `git diff -- context-engineering .codex/work/20260621-context-engineering-gate`\n  - `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate`",
+      "pre_check_commands": "- `git diff --stat -- context-engineering .codex/work/20260621-context-engineering-gate`",
+      "post_check_commands": "- `python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate`",
+      "files_likely_touched": [
+        ".codex/work/20260621-context-engineering-gate/review.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-context-engineering-gate/review.md",
+        ".codex/work/20260621-context-engineering-gate/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260621-context-engineering-gate/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

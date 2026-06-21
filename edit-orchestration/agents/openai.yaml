@@ -1,0 +1,4 @@
+interface:
+  display_name: "Edit Orchestration"
+  short_description: "Canonical manual edit routing, patch grammar, tooling, and diff gates."
+  default_prompt: "Use this skill when editing files; select the lightest safe route, use apply_patch grammar when fast path applies, prepare helper tools only after selection, inspect diff, verify."

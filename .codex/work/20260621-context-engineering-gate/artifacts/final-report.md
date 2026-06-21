@@ -1,0 +1,42 @@
+# Final Report
+
+- Mode: primary-agent
+- Status: COMPLETE
+- Plan path: `/data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/plan.md`
+- Tasks completed: 4 of 4
+- Files changed:
+  - `context-engineering/SKILL.md`
+  - `context-engineering/references/modes.md`
+  - `context-engineering/references/artifact-policy.md`
+  - `context-engineering/references/replay.md`
+  - `context-engineering/scripts/context_gate.py`
+  - `.codex/work/20260621-context-engineering-gate/manifest.yaml`
+  - `.codex/work/20260621-context-engineering-gate/plan.md`
+  - `.codex/work/20260621-context-engineering-gate/execution/tasks.json`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/context-task1.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/context-task2.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/context-task3.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md`
+  - `.codex/work/20260621-context-engineering-gate/review.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/final-report.md`
+- Verification:
+  - `python3 /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/plan.md --mode light`: passed; `VALID`.
+  - `python3 /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260621-context-engineering-gate/plan.md`: passed; created `execution/tasks.json`.
+  - `python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/context-engineering`: passed; `Skill is valid!`.
+  - `python3 -m py_compile /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py`: passed.
+  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --self-test`: passed; `SELF-TEST PASS`.
+  - `python3 /data/lcq/.codex/skills/context-engineering/scripts/context_gate.py --json --phase implement --plan-tasks 5`: returned `wave-pack`.
+  - `python3 - <<'PY' ...`: passed; `context-engineering/SKILL.md` length is `6709`.
+- Review verdict: PASS.
+- Rework cycles: 1 plan compile repair; no implementation rework cycle.
+- Artifact paths:
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task1-execution.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task2-execution.md`
+  - `.codex/work/20260621-context-engineering-gate/artifacts/task3-verification.md`
+  - `.codex/work/20260621-context-engineering-gate/review.md`
+- Blockers: none.
+- Residual risks:
+  - Upstream workflows may still ask for per-task packs; this skill now gives a deterministic gate and policy to push back.
+- Raw data omitted: full diffs and raw command output are omitted from this report; use git diff and artifacts for details.

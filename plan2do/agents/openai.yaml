@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan2Do"
+  short_description: "Execute plans with quality gates"
+  default_prompt: "Use $plan2do to execute the current plan.md with review and rework gates."

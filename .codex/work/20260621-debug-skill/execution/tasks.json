@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Scaffold skill and workspace artifacts",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`debug-skill/SKILL.md` exists; `debug-skill/agents/openai.yaml` exists; `.codex/work/20260621-debug-skill/artifacts/` exists; task artifact records scaffold command and output summary.",
+      "verification": "test -f /data/lcq/.codex/skills/debug-skill/SKILL.md && test -f /data/lcq/.codex/skills/debug-skill/agents/openai.yaml && test -d /data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts",
+      "pre_check_commands": "test ! -e /data/lcq/.codex/skills/debug-skill",
+      "post_check_commands": "test -f /data/lcq/.codex/skills/debug-skill/SKILL.md && test -f /data/lcq/.codex/skills/debug-skill/agents/openai.yaml",
+      "files_likely_touched": [
+        "debug-skill/SKILL.md",
+        "debug-skill/agents/openai.yaml",
+        ".codex/work/20260621-debug-skill/artifacts/task1-execution.md"
+      ],
+      "writable_scope": [
+        "debug-skill/",
+        ".codex/work/20260621-debug-skill/artifacts/task1-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-debug-skill/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/task1-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Implement Hermes adapter core and reuse reference",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`debug-skill/scripts/skill_audit_core.py` has self-testable parser/data/constraint/fitness helpers; `debug-skill/references/hermes-reuse.md` maps Hermes files to Codex adaptations and rejected components; task artifact records copied/adapted provenance.",
+      "verification": "python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test",
+      "pre_check_commands": "test -d /tmp/hermes-agent-self-evolution || git clone --depth=1 https://github.com/NousResearch/hermes-agent-self-evolution.git /tmp/hermes-agent-self-evolution",
+      "post_check_commands": "python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test",
+      "files_likely_touched": [
+        "debug-skill/scripts/skill_audit_core.py",
+        "debug-skill/references/hermes-reuse.md",
+        ".codex/work/20260621-debug-skill/artifacts/task2-execution.md"
+      ],
+      "writable_scope": [
+        "debug-skill/scripts/skill_audit_core.py",
+        "debug-skill/references/hermes-reuse.md",
+        ".codex/work/20260621-debug-skill/artifacts/task2-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-debug-skill/artifacts/task2-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/task2-execution.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "Author debug-skill workflow and report template",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`debug-skill/SKILL.md` frontmatter triggers skill audits; body instructs evidence inventory, execution trace reconstruction, scoring, reuse search, Hermes candidate generation, and no auto-apply default; `debug-skill/references/report-template.md` contains the fixed report format; `debug-skill/agents/openai.yaml` reflects the skill.",
+      "verification": "python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/debug-skill",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/debug-skill/SKILL.md && test -f /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/debug-skill",
+      "files_likely_touched": [
+        "debug-skill/SKILL.md",
+        "debug-skill/references/report-template.md",
+        "debug-skill/agents/openai.yaml",
+        ".codex/work/20260621-debug-skill/artifacts/task3-execution.md"
+      ],
+      "writable_scope": [
+        "debug-skill/SKILL.md",
+        "debug-skill/references/report-template.md",
+        "debug-skill/agents/openai.yaml",
+        ".codex/work/20260621-debug-skill/artifacts/task3-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260621-debug-skill/artifacts/task3-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/task3-execution.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 4,
+      "title": "Validate implementation against spec acceptance checks",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Validation commands pass; a report skeleton for `context-engineering` can be generated without Hermes runtime; task artifact records command outcomes.",
+      "verification": "python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/debug-skill && python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --report-skeleton context-engineering",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/debug-skill/references/report-template.md && test -f /data/lcq/.codex/skills/debug-skill/references/hermes-reuse.md",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/debug-skill && python3 -m py_compile /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --self-test && python3 /data/lcq/.codex/skills/debug-skill/scripts/skill_audit_core.py --report-skeleton context-engineering",
+      "files_likely_touched": [
+        ".codex/work/20260621-debug-skill/artifacts/task4-verification.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-debug-skill/artifacts/task4-verification.md"
+      ],
+      "output_artifact": ".codex/work/20260621-debug-skill/artifacts/task4-verification.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/task4-verification.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "Review, finalize artifacts, and validate execution",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`.codex/work/20260621-debug-skill/artifacts/review.md` contains `Verdict: PASS`; `.codex/work/20260621-debug-skill/artifacts/final-report.md` records mode, status, files, commands, review, and risks; `validate_execution.py` passes after compiled tasks are complete.",
+      "verification": "python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-debug-skill",
+      "pre_check_commands": "test -f /data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/task4-verification.md",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260621-debug-skill",
+      "files_likely_touched": [
+        ".codex/work/20260621-debug-skill/artifacts/review.md",
+        ".codex/work/20260621-debug-skill/artifacts/final-report.md",
+        ".codex/work/20260621-debug-skill/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260621-debug-skill/artifacts/review.md",
+        ".codex/work/20260621-debug-skill/artifacts/final-report.md",
+        ".codex/work/20260621-debug-skill/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260621-debug-skill/artifacts/final-report.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260621-debug-skill/artifacts/final-report.md",
+      "estimated_scope": "S"
+    }
+  ]
+}
