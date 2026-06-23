@@ -1,0 +1,4 @@
+interface:
+  display_name: "Structural Edit"
+  short_description: "Structure-first edit routing with hard stops."
+  default_prompt: "Use $structural-edit to route a manual file edit through generator-owned or structural tools before any text fallback."

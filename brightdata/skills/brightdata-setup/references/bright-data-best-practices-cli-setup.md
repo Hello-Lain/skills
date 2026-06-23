@@ -97,7 +97,7 @@ Before the CLI, skills required:
 - `BRIGHTDATA_UNLOCKER_ZONE` — Web Unlocker zone name (also used as SERP fallback)
 - `BRIGHTDATA_SERP_ZONE` — (optional) dedicated SERP zone; preferred over the unlocker zone for `bdata search`
 
-These are still honored by legacy `curl`-based paths documented in each skill's `bright-data-best-practices-patterns.md`. The CLI path is preferred; env vars are retained for environments where Node/CLI aren't available.
+These are still honored by legacy `curl`-based paths documented in `../../brightdata-web-search/references/search-patterns.md` and `../../brightdata-web-scrape/references/scrape-patterns.md`. The CLI path is preferred; env vars are retained for environments where Node/CLI aren't available.
 
 Mapping:
 

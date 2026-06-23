@@ -9,6 +9,7 @@ Use this for every generated or hardened `plan.md`.
 - `## Non-Goals`
 - `## Evidence Inspected`
 - `## Spec Summary`
+- `## Upstream Coverage`
 - `## Domain Language Check`
 - `## Current Context`
 - `## Implementation Map`
@@ -50,7 +51,9 @@ If a section does not apply, write `Not applicable` with a one-line reason. Do n
 - Require backups or reversible migrations for schema/data changes.
 - Reject vague execution language. Do not write `TBD`, `TODO`, `later`, `as needed`, `relevant files`, `appropriate tests`, `etc.`, `相关`, `必要时`, or `适当` in executable fields.
 - If a fact is unknown, put it under `Open Questions` or `Assumptions` and state why repo evidence cannot answer it.
+- Preserve all downstream-relevant facts from upstream direction/spec artifacts. If a fact is omitted or deferred, record the reason in `Upstream Coverage` instead of silently dropping it.
 - Before final handoff, run `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`. This validator must also pass `plan2do/scripts/compile_execution.py` compatibility. If it fails, revise the plan from the exact validator errors and rerun until it passes, or stop with the blocking errors. Never hand off an invalid canonical plan.
+- When upgrading a legacy plan that predates `Upstream Coverage`, use `references/legacy-upstream-coverage-template.md` instead of inventing a minimal placeholder.
 
 ## Skill Production Plans
 
@@ -75,6 +78,17 @@ Before `Task Breakdown`, anchor the plan to concrete repo evidence:
 - Tests: exact test files, suites, or new test locations.
 - Commands: exact pre-check and post-check commands, or why not runnable yet.
 - Data / migration impact: data touched, migration/backfill needs, or `Not applicable` with reason.
+
+## Upstream Coverage
+
+After `Spec Summary`, show how this plan preserves and expands upstream artifacts:
+
+- Source artifacts: exact upstream paths such as `idea.md`, `spec.md`, issue docs, or external requirements.
+- Carried forward: problem, user, success criteria, scope boundaries, constraints, assumptions, risks, domain terms, and explicit decisions preserved for execution.
+- Added planning detail: files, symbols, commands, task splits, rollout, rollback, monitoring, and new operational detail introduced in the plan.
+- Dropped / deferred upstream details: only items that truly do not matter for execution, each with a reason.
+
+Use `None` when nothing was dropped or deferred.
 
 ## Task Breakdown Rules
 

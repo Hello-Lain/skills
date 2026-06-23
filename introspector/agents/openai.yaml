@@ -1,0 +1,4 @@
+interface:
+  display_name: "Introspector"
+  short_description: "Neutral global-optimum review skill"
+  default_prompt: "Use $introspector to audit this idea, spec, plan, or framework design for global optimality."

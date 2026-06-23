@@ -29,6 +29,18 @@ npm install -g @brightdata/mcp
 API_TOKEN=your_token npx @brightdata/mcp
 ```
 
+## Local Extract Adapter
+
+Use this Codex-local adapter when the MCP client lacks server-initiated sampling and `extract` fails with `sampling/createMessage`.
+
+```toml
+[mcp_servers.brightdata]
+command = "node"
+args = ["/data/lcq/.codex/skills/brightdata/adapters/brightdata-mcp-extract-adapter.mjs"]
+```
+
+The adapter proxies all Bright Data MCP traffic to upstream `@brightdata/mcp`, intercepts only `tools/call` for `extract`, scrapes via Bright Data `/request`, then calls the local OpenAI-compatible endpoint for JSON conversion. Keep `API_TOKEN` and `GROUPS` in the MCP env block.
+
 ## Verify
 
 Ask for a simple Bright Data MCP search. The tool registry should expose at least:
@@ -47,4 +59,5 @@ Optional but useful:
 
 - No tools: check token, MCP URL, network, and client reconnect.
 - Search/scrape tool missing: reconnect the MCP server; avoid enabling Pro/platform groups unless the user explicitly asks.
+- `extract` reports `sampling/createMessage`: switch to the local extract adapter, then restart Codex/MCP.
 - Auth errors: regenerate token from the Bright Data dashboard.

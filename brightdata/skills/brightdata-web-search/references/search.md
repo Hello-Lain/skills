@@ -17,13 +17,13 @@ For raw REST Discover, skip the CLI gate and verify `BRIGHTDATA_API_TOKEN` plus 
 
 ```bash
 if ! command -v bdata >/dev/null 2>&1; then
-    echo "bdata CLI not installed — see bright-data-best-practices-cli-setup.md"
+    echo "bdata CLI not installed — see ../../brightdata-setup/references/bright-data-best-practices-cli-setup.md"
 elif ! bdata zones >/dev/null 2>&1; then
     echo "bdata not authenticated — run: bdata login  (or: bdata login --device for SSH)"
 fi
 ```
 
-Halt and route to `bright-data-best-practices-cli-setup.md` if a selected CLI surface fails either check. Do **not** block REST Discover just because `bdata` is missing.
+Halt and route to `../../brightdata-setup/references/bright-data-best-practices-cli-setup.md` if a selected CLI surface fails either check. Do **not** block REST Discover just because `bdata` is missing.
 
 ## Pick your path
 

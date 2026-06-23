@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Scaffold structural-edit workspace and metadata",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`structural-edit/` exists with `SKILL.md`, `agents/`, `references/`, and `scripts/`; `.codex/work/20260623-structural-edit/manifest.yaml` records canonical `plan.md`; no unrelated files are touched.",
+      "verification": "python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/structural-edit",
+      "pre_check_commands": "test ! -e /data/lcq/.codex/skills/structural-edit",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/structural-edit",
+      "files_likely_touched": [
+        "structural-edit/",
+        ".codex/work/20260623-structural-edit/manifest.yaml"
+      ],
+      "writable_scope": [
+        "structural-edit/",
+        ".codex/work/20260623-structural-edit/manifest.yaml"
+      ],
+      "output_artifact": ".codex/work/20260623-structural-edit/artifacts/task1-scaffold.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/artifacts/task1-scaffold.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Implement route and toolchain scripts",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Route classifier covers Python, JS/TS, JSON, YAML, Markdown, generated-output, Java/OpenRewrite, and strict text fallback; self-check reports per-tool readiness; prep script enforces user-root-only install roots; manifest helper emits stable JSON/summary.",
+      "verification": "`python3 structural-edit/scripts/prepare_structural_tools.py --list`; `python3 structural-edit/scripts/self_check_structural_tools.py --tool ast-grep --json`; `python3 structural-edit/scripts/manifest_report.py --help`",
+      "pre_check_commands": "python3 structural-edit/scripts/self_check_structural_tools.py --help",
+      "post_check_commands": "python3 structural-edit/scripts/prepare_structural_tools.py --list",
+      "files_likely_touched": [
+        "structural-edit/scripts/prepare_structural_tools.py",
+        "structural-edit/scripts/self_check_structural_tools.py",
+        "structural-edit/scripts/route_decision.py",
+        "structural-edit/scripts/manifest_report.py"
+      ],
+      "writable_scope": [
+        "structural-edit/scripts/"
+      ],
+      "output_artifact": ".codex/work/20260623-structural-edit/artifacts/task2-toolchain.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/artifacts/task2-toolchain.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "Write skill contracts and migrate edit-orchestration",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`structural-edit/SKILL.md` is concise and authoritative; required references exist; `edit-orchestration` no longer claims patch-first default authority and clearly delegates to `structural-edit`; rollback path is documented.",
+      "verification": "`python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/structural-edit`; `python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/edit-orchestration`",
+      "pre_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/edit-orchestration",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/structural-edit && python3 .system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/edit-orchestration",
+      "files_likely_touched": [
+        "structural-edit/SKILL.md",
+        "structural-edit/agents/openai.yaml",
+        "structural-edit/references/",
+        "edit-orchestration/SKILL.md",
+        "edit-orchestration/agents/openai.yaml",
+        "edit-orchestration/references/route-matrix.md",
+        "edit-orchestration/references/tooling.md"
+      ],
+      "writable_scope": [
+        "structural-edit/",
+        "edit-orchestration/SKILL.md",
+        "edit-orchestration/agents/openai.yaml",
+        "edit-orchestration/references/route-matrix.md",
+        "edit-orchestration/references/tooling.md"
+      ],
+      "output_artifact": ".codex/work/20260623-structural-edit/artifacts/task3-migration.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/artifacts/task3-migration.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 4,
+      "title": "Add scenario validation and draft production artifacts",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Scenario validator passes the required cases; production report draft exists and passes draft validation; execution/tasks state exists; pre-review readiness passes.",
+      "verification": "`python3 structural-edit/scripts/validate_structural_routes.py`; `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260623-structural-edit/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft`; `python3 plan2do/scripts/pre_review_ready.py .codex/work/20260623-structural-edit --stage draft --require-production-report --require-final-report`",
+      "pre_check_commands": "python3 plan2do/scripts/compile_execution.py .codex/work/20260623-structural-edit/plan.md",
+      "post_check_commands": "python3 structural-edit/scripts/validate_structural_routes.py",
+      "files_likely_touched": [
+        "structural-edit/scripts/validate_structural_routes.py",
+        ".codex/work/20260623-structural-edit/artifacts/production-report.md",
+        ".codex/work/20260623-structural-edit/artifacts/final-report.md",
+        ".codex/work/20260623-structural-edit/execution/tasks.json"
+      ],
+      "writable_scope": [
+        "structural-edit/scripts/validate_structural_routes.py",
+        ".codex/work/20260623-structural-edit/artifacts/",
+        ".codex/work/20260623-structural-edit/execution/"
+      ],
+      "output_artifact": ".codex/work/20260623-structural-edit/artifacts/task4-validation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/artifacts/task4-validation.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 5,
+      "title": "Review, finalize reports, and validate execution",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Reviewer report is saved and validated; production report final validation passes; execution validator passes; final report records blocker/fallback evidence for unavailable `codex2codex` subagent route.",
+      "verification": "`python3 reviewer/scripts/validate_review_report.py .codex/work/20260623-structural-edit/review.md`; `python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260623-structural-edit/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final`; `python3 plan2do/scripts/validate_execution.py .codex/work/20260623-structural-edit`",
+      "pre_check_commands": "python3 reviewer/scripts/validate_review_report.py --self-test",
+      "post_check_commands": "python3 plan2do/scripts/validate_execution.py .codex/work/20260623-structural-edit",
+      "files_likely_touched": [
+        ".codex/work/20260623-structural-edit/review.md",
+        ".codex/work/20260623-structural-edit/artifacts/production-report.md",
+        ".codex/work/20260623-structural-edit/artifacts/final-report.md",
+        ".codex/work/20260623-structural-edit/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260623-structural-edit/review.md",
+        ".codex/work/20260623-structural-edit/artifacts/",
+        ".codex/work/20260623-structural-edit/execution/"
+      ],
+      "output_artifact": ".codex/work/20260623-structural-edit/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260623-structural-edit/review.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

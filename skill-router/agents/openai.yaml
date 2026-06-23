@@ -1,0 +1,6 @@
+interface:
+  display_name: "Skill Router"
+  short_description: "Resolve skill/tool route conflicts deterministically"
+  default_prompt: "Use $skill-router to choose one route for these conflicting Codex skills/tools and persist the policy."
+policy:
+  allow_implicit_invocation: true

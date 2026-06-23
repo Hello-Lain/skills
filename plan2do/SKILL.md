@@ -23,10 +23,11 @@ Execute a `spec2plan` `plan.md` to completion. Own mode selection, context hygie
 ## Intake
 
 1. Locate the `plan.md`: use the user-provided path, or infer the current `.codex/work/<yyyyMMdd>-<topic>/plan.md` only when unambiguous.
-2. Rehydrate the plan source-of-truth: `Goal`, `Task Breakdown`, `Step-by-Step Plan`, `Validation Plan`, `Rollback / Recovery Plan`, `Abort Criteria`, and `Execution Handoff`.
-3. Confirm each executable task has acceptance criteria, verification, writable scope, output artifact, and dependency order.
-4. For non-trivial plans, compile the plan with `scripts/compile_execution.py` and use `execution/tasks.json` as the execution checklist.
-5. Stop before edits if the plan is invalid, ambiguous, or conflicts with the latest user instruction.
+2. Rehydrate the plan source-of-truth: `Goal`, `Spec Summary`, `Upstream Coverage`, `Task Breakdown`, `Step-by-Step Plan`, `Validation Plan`, `Rollback / Recovery Plan`, `Abort Criteria`, and `Execution Handoff`.
+3. Re-read upstream artifacts named in `Upstream Coverage` and `Execution Handoff -> Authoritative artifacts` when they exist; execution must not rely on the plan alone if those artifacts carry binding facts.
+4. Confirm each executable task has acceptance criteria, verification, writable scope, output artifact, and dependency order.
+5. For non-trivial plans, compile the plan with `scripts/compile_execution.py` and use `execution/tasks.json` as the execution checklist.
+6. Stop before edits if the plan is invalid, ambiguous, or conflicts with the latest user instruction.
 
 ## Self-Bootstrap
 
@@ -65,6 +66,7 @@ Completion requires:
 - pre-review readiness passes before launching final reviewer when the plan has `execution/tasks.json`;
 - reviewer verdict consumed consistently: `PASS` allows completion, `REVISE` triggers bounded rework and focused recheck, and `BLOCK` stops immediately;
 - no known functional gaps, material regressions, or unnecessary architecture complexity;
+- no implementation decision contradicts preserved upstream facts unless the change is explicitly recorded in plan/review artifacts;
 - final report with mode, tasks, changed files, verification, review verdict, rework cycles, artifacts, blockers, and omitted raw data.
 - `scripts/validate_execution.py <plan-workspace>` passes when `execution/tasks.json` exists.
 

@@ -46,10 +46,10 @@ If verification fails, read `bright-data-best-practices-cli-setup.md`.
 
 | Need | Reference |
 | --- | --- |
-| General CLI commands, config, budget, zones | `brightdata-cli.md` |
-| Search Google/Bing/Yandex or Discover semantic results | `search.md`, `discover-api.md` |
-| Scrape a known URL as markdown/HTML/JSON/screenshot | `scrape.md` |
-| MCP tool/server setup or tool selection | `bright-data-mcp.md`, `bright-data-mcp-mcp-setup.md`, `bright-data-mcp-mcp-tools.md` |
+| General CLI commands, config, budget, zones | `../../brightdata-cli/references/brightdata-cli.md` |
+| Search Google/Bing/Yandex or Discover semantic results | `../../brightdata-web-search/references/search.md`, `../../brightdata-web-search/references/discover-api.md` |
+| Scrape a known URL as markdown/HTML/JSON/screenshot | `../../brightdata-web-scrape/references/scrape.md` |
+| MCP tool/server setup or tool selection | `../../brightdata-mcp-tools/references/bright-data-mcp.md`, `../../brightdata-mcp-tools/references/bright-data-mcp-mcp-setup.md`, `../../brightdata-mcp-tools/references/bright-data-mcp-mcp-tools.md` |
 
 ## Default Flow
 

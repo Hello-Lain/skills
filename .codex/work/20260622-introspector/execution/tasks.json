@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260622-introspector",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "生成执行状态与上下文包",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "`execution/tasks.json` 存在且能反映本计划任务；`artifacts/context-wave1.md` 存在并指向权威源。",
+      "verification": "python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md",
+      "pre_check_commands": "python /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md --mode light",
+      "post_check_commands": "python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md",
+      "files_likely_touched": [
+        ".codex/work/20260622-introspector/execution/tasks.json",
+        ".codex/work/20260622-introspector/artifacts/context-wave1.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-introspector/execution/",
+        ".codex/work/20260622-introspector/artifacts/context-wave1.md"
+      ],
+      "output_artifact": ".codex/work/20260622-introspector/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/task1-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "创建 skill 骨架与 UI 元数据",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`introspector/` 目录存在；`SKILL.md` frontmatter 通过 `quick_validate.py`；`agents/openai.yaml` 包含 display name、short description、default prompt。",
+      "verification": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/introspector",
+      "pre_check_commands": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/init_skill.py --help",
+      "post_check_commands": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/introspector",
+      "files_likely_touched": [
+        "introspector/SKILL.md",
+        "introspector/agents/openai.yaml",
+        "introspector/references/"
+      ],
+      "writable_scope": [
+        "introspector/"
+      ],
+      "output_artifact": ".codex/work/20260622-introspector/artifacts/task2-skill-scaffold.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/task2-skill-scaffold.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "写主入口与引用文档 contract",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "主入口紧凑；`references/workflow.md`、`references/report-schema.md`、`references/calibration-harness.md`、`references/validation.md` 覆盖 spec 核心要求；`SKILL.md` 明确何时 route 到这些引用。",
+      "verification": "rg \"evidence acquisition|falsifier|delta review|verdict stability|block|reviewer\" /data/lcq/.codex/skills/introspector /data/lcq/.codex/skills/introspector/references",
+      "pre_check_commands": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/introspector",
+      "post_check_commands": "rg \"objective extraction|framing audit|evidence acquisition|strongest defense|verification|final verdict|delta review|verdict stability\" /data/lcq/.codex/skills/introspector",
+      "files_likely_touched": [
+        "introspector/SKILL.md",
+        "introspector/references/workflow.md",
+        "introspector/references/report-schema.md",
+        "introspector/references/calibration-harness.md",
+        "introspector/references/validation.md"
+      ],
+      "writable_scope": [
+        "introspector/SKILL.md",
+        "introspector/references/"
+      ],
+      "output_artifact": ".codex/work/20260622-introspector/artifacts/task3-contract.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/task3-contract.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 4,
+      "title": "产出生产门控与场景验证草案",
+      "role": "coding",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "`production-report.md` 草案存在并通过 draft validator；scenario gate 写明 RED/GREEN；task verification artifact 记录命令与结果。",
+      "verification": "python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft",
+      "pre_check_commands": "python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/introspector",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft",
+      "files_likely_touched": [
+        ".codex/work/20260622-introspector/artifacts/production-report.md",
+        ".codex/work/20260622-introspector/artifacts/task4-verification.md",
+        ".codex/work/20260622-introspector/artifacts/task4-execution.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-introspector/artifacts/production-report.md",
+        ".codex/work/20260622-introspector/artifacts/task4-verification.md",
+        ".codex/work/20260622-introspector/artifacts/task4-execution.md"
+      ],
+      "output_artifact": ".codex/work/20260622-introspector/artifacts/task4-validation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/task4-validation.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "最终 reviewer gate 与收尾验证",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "readiness 通过；最终 reviewer 报告 `PASS`；production report final validator 通过；`validate_execution.py` 返回 `VALID`；`artifacts/final-report.md` 与 `review-introspector-final.md` 存在。",
+      "verification": "python3 /data/lcq/.codex/skills/reviewer/scripts/validate_review_report.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/review-introspector-final.md --root /data/lcq/.codex/skills && python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py /data/lcq/.codex/skills/.codex/work/20260622-introspector --stage final --require-production-report --require-final-report && python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector",
+      "pre_check_commands": "python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py /data/lcq/.codex/skills/.codex/work/20260622-introspector --stage draft --require-production-report --require-final-report",
+      "post_check_commands": "python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final && python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector",
+      "files_likely_touched": [
+        ".codex/work/20260622-introspector/review-introspector-final.md",
+        ".codex/work/20260622-introspector/artifacts/production-report.md",
+        ".codex/work/20260622-introspector/artifacts/review.md",
+        ".codex/work/20260622-introspector/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-introspector/review-introspector-final.md",
+        ".codex/work/20260622-introspector/artifacts/production-report.md",
+        ".codex/work/20260622-introspector/artifacts/review.md",
+        ".codex/work/20260622-introspector/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260622-introspector/review-introspector-final.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-introspector/review-introspector-final.md",
+      "estimated_scope": "M"
+    }
+  ]
+}

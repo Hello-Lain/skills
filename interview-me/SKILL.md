@@ -8,6 +8,7 @@ description: Interview users one question at a time to turn a chosen direction w
 ## Contract
 
 - Extract intent, then produce a confirmed markdown spec downstream skills can consume.
+- If the interview starts from `idea.md` or a confirmed direction artifact, read it first and preserve all downstream-relevant facts. The final `spec.md` must be a strict enrichment of the approved direction, not a shorter rewrite.
 - Do not plan, code, or write tasks before spec confirmation.
 - Ask one focused question at a time. Include a guess and why the question matters.
 - Require explicit approval before treating a restatement or spec as authoritative; an explicit `yes` to the restatement authorizes writing the final spec and saving it to the default workspace.
@@ -129,6 +130,8 @@ An explicit `yes` to this restatement means:
 ### 5. Produce The Spec
 
 Before finalizing, read `references/spec-quality-rubric.md`, use its template, and fix any failing gate. Include only details supported by the interview; mark unresolved items as assumptions or open questions.
+
+If `idea.md` or another upstream direction artifact exists, the spec must explicitly carry forward the chosen direction, success criteria, constraints, `Not Doing` boundaries, and hidden assumptions that still matter. If any upstream detail is deferred, dropped, or superseded, say so in the spec and explain why.
 
 For codebase work, inspect relevant files before finalizing Commands, Project Structure, Testing Strategy, or integration constraints. Reference concrete paths when useful.
 

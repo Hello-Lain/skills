@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Harden parent route",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "Parent no longer says “MCP only when needed”; reliable MCP tools and CLI fallback criteria are clear.",
+      "verification": "python3 .system/skill-creator/scripts/quick_validate.py brightdata",
+      "pre_check_commands": "git diff --stat -- brightdata/SKILL.md",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py brightdata",
+      "files_likely_touched": [
+        "brightdata/SKILL.md"
+      ],
+      "writable_scope": [
+        "brightdata/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task1-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task1-execution.md",
+      "estimated_scope": "XS"
+    },
+    {
+      "number": 2,
+      "title": "Harden MCP child and refs",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "MCP guidance names reliable tools, gates `extract`, removes narrow `web_data_*` recommendation, and separates runtime from material validation.",
+      "verification": "python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-mcp-tools",
+      "pre_check_commands": "git diff --stat -- brightdata/skills/brightdata-mcp-tools",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-mcp-tools",
+      "files_likely_touched": [
+        "brightdata/skills/brightdata-mcp-tools/SKILL.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp-mcp-tools.md"
+      ],
+      "writable_scope": [
+        "brightdata/skills/brightdata-mcp-tools/"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task2-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task2-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 3,
+      "title": "Add research/RAG guidance",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Research/RAG guidance covers multi-angle Discover, dedupe/rank, quality gates, provenance, and scrape-after-discover without Pro/platform/browser scope.",
+      "verification": "python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-web-search && python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-web-scrape",
+      "pre_check_commands": "git diff --stat -- brightdata/skills/brightdata-web-search brightdata/skills/brightdata-web-scrape",
+      "post_check_commands": "python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-web-search && python3 .system/skill-creator/scripts/quick_validate.py brightdata/skills/brightdata-web-scrape",
+      "files_likely_touched": [
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp-research-rag.md",
+        "brightdata/skills/brightdata-web-search/SKILL.md",
+        "brightdata/skills/brightdata-web-scrape/SKILL.md"
+      ],
+      "writable_scope": [
+        "listed files only."
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task3-execution.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task3-execution.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Verify and smoke",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "Validators pass; smoke artifact records successful reliable tools and `extract` status; diff matches spec exclusions.",
+      "verification": "commands in `Validation Plan`.",
+      "pre_check_commands": "`tool_search` for `search_engine_batch`; `mcp__brightdata.session_stats`",
+      "post_check_commands": "validators and git diff inspection.",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/mcp-smoke.md",
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task4-verification.md"
+      ],
+      "writable_scope": [
+        "plan workspace artifacts only."
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task4-verification.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/task4-verification.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "Production gate and review",
+      "role": "review",
+      "wave": 3,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Production report draft and final validate; reviewer report is PASS; execution validator passes.",
+      "verification": "`validate_skill_production.py`, `pre_review_ready.py`, `validate_review_report.py`, `validate_execution.py`.",
+      "pre_check_commands": "python3 skill-tokenless/scripts/validate_skill_production.py ... --stage draft",
+      "post_check_commands": "python3 skill-tokenless/scripts/validate_skill_production.py ... --stage final",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/production-report.md",
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/artifacts/final-report.md",
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/review-implementation.md",
+        ".codex/work/20260622-brightdata-mcp-routing-hardening/execution/tasks.json"
+      ],
+      "writable_scope": [
+        "plan workspace artifacts only."
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-routing-hardening/review-implementation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-routing-hardening/review-implementation.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

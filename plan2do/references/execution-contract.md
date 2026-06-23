@@ -31,6 +31,7 @@ TASK:
 AUTHORITATIVE SOURCES:
 - User goal:
 - Plan sections:
+- Upstream artifacts:
 - Files/tests/configs:
 - Existing pattern:
 
@@ -49,6 +50,7 @@ Store the chosen pack under the path above. If a task-level pack is skipped beca
 Continue only when the plan has:
 
 - `Task Breakdown` with `### Task N`;
+- `Upstream Coverage`;
 - dependency order or waves;
 - `Writable scope`;
 - `Verification`;
@@ -57,6 +59,8 @@ Continue only when the plan has:
 - validation, rollback, abort, risk, and handoff sections.
 
 If the plan is missing executable fields, run the upstream plan validator when available or stop with `PLAN_INVALID`.
+
+If `Upstream Coverage` or `Execution Handoff` names authoritative upstream artifacts, read them before editing. Treat silent drift from those artifacts as `CONTEXT_CONFLICT` until the plan or review artifacts explain the change.
 
 For non-trivial primary-agent execution, run:
 
@@ -96,6 +100,7 @@ Rules:
 
 - Work one task or coherent task group at a time.
 - Rehydrate current source files before edits.
+- Rehydrate authoritative upstream artifacts before tasks that change user-visible behavior, scope boundaries, constraints, or acceptance logic.
 - Use `apply_patch` for manual edits.
 - Do not touch files outside writable scope without updating the execution note and confirming the scope is still safe.
 - Preserve unrelated dirty work.
@@ -222,6 +227,7 @@ Before reporting success:
 - Confirm every required task is complete or explicitly blocked.
 - Confirm verification passed or has a concrete blocker.
 - Confirm review is `Verdict: PASS` for non-trivial plans or explicitly exempted with reason.
+- Confirm the implementation still matches the preserved upstream facts recorded in `Upstream Coverage`, or that any justified divergence is explicitly documented in execution/review artifacts.
 - Confirm no unresolved failure class remains.
 - Confirm artifacts exist for execution, verification, review, rework cycles, and final report.
 - Confirm verification evidence is machine-visible: either a nonempty `artifacts/*verification*.md` file such as `artifacts/task5-verification.md` or `artifacts/<task>-verification.md`, or a final-report line beginning with `Verification` such as `Verification: <commands/outcomes>` or `- Verification: <commands/outcomes>`.

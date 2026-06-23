@@ -11,6 +11,7 @@ Run this before treating a spec as final.
 - Acceptance checks cannot be run or judged by a future agent.
 - Unresolved guesses are written as facts.
 - The user did not explicitly approve the restated intent.
+- A confirmed upstream direction loses downstream-relevant facts without an explicit defer/drop/supersede reason.
 
 ## Upgrade Rules
 
@@ -22,6 +23,7 @@ Run this before treating a spec as final.
 
 ## Minimum Final Spec
 
+- Upstream Context: source artifacts, chosen direction, and anything intentionally deferred.
 - Objective: who, what, why.
 - Users: primary user first.
 - Problem: current pain and trigger.
@@ -38,6 +40,11 @@ Run this before treating a spec as final.
 
 ```markdown
 # Spec: [Name]
+
+## Upstream Context
+- Source artifact(s): [e.g. `.codex/work/.../idea.md`, user notes, issue]
+- Chosen direction to preserve: [approved direction summary]
+- Deferred / dropped upstream details: [None, or explicit item + reason]
 
 ## Objective
 [What we are building, for whom, and why.]

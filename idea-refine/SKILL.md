@@ -43,12 +43,20 @@ Before saving, read the shared artifact contract at `/data/lcq/.codex/skills/spe
 
 The final direction is invalid unless the Mandatory Exit Gate passes. Do not produce a final recommended direction, artifact, or save handoff while any required gate item is missing.
 
-The final output is a markdown one-pager saved by default (after user confirmation) to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md`, with `manifest.yaml` updated per the shared artifact contract. It contains:
-- Problem Statement
-- Recommended Direction
-- Key Assumptions
+The final output is a structured markdown direction packet saved by default (after user confirmation) to `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md`, with `manifest.yaml` updated per the shared artifact contract. A short executive summary is optional, but the canonical artifact must preserve the full decision context rather than collapsing it into a lossy one-pager.
+
+Minimum sections:
+- How Might We / Problem Statement
+- Target User and Success Criteria
+- Why Now / Binding Constraints
+- Variations (5-8)
+- Clustered Directions (2-3)
+- Stress-tests for each direction
+- Hidden Assumptions and Validation Ideas
+- Recommended Direction and Rationale
 - MVP Scope
 - Not Doing list
+- Downstream Handoff Notes: facts `interview-me` must preserve, open questions, and any intentionally deferred detail with reason
 
 ## Detailed Instructions
 
@@ -192,6 +200,7 @@ Final output is invalid if it omits any of these sections:
 - Stress-tests
 - Assumptions
 - Not Doing
+- Downstream Handoff Notes
 - Save-confirm question
 
 Fail closed. A partial final answer that sounds polished but skips the gate is a skill failure. Do not compensate by saying "can add later"; complete the missing gate item first.

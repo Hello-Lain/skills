@@ -38,3 +38,25 @@ Q: What current auth pain should disappear after this work?
 GUESS: Duplicated token/session logic, because "clean up auth" usually points to change-risk rather than a new feature.
 UNLOCKS: Whether the spec should target module boundaries, bug risk, test coverage, or developer ergonomics.
 ```
+
+## Direction-Derived Spec
+
+If `interview-me` starts from a saved `idea.md`, the final `spec.md` should preserve and expand it explicitly:
+
+```markdown
+## Upstream Context
+- Source artifact(s): `.codex/work/20260623-local-restaurant-regulars/idea.md`
+- Chosen direction to preserve: keep known regulars ordering direct with near-zero restaurant effort
+- Deferred / dropped upstream details: pricing deferred because packaging is still open; no direction detail dropped
+
+## Objective
+Help independent restaurant owners retain repeat customers through direct reorders so they reduce commission paid to delivery platforms.
+
+## Success Criteria
+- A future agent can verify direct reorder flow works end to end.
+- The spec keeps v1 scoped away from discovery marketplace and delivery logistics.
+
+## Constraints
+- No custom driver network in v1.
+- Restaurant-side setup must stay near-zero.
+```

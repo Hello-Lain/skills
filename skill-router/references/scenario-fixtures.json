@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "fixtures": [
+    {
+      "id": "brightdata-known-url-scrape-mcp",
+      "prompt": "Use Bright Data MCP to scrape a known URL that may have anti-bot protection.",
+      "expected_policy_id": "sr-001-brightdata-known-url-scrape-mcp",
+      "expected_primary_route": "skill:brightdata-mcp-tools"
+    },
+    {
+      "id": "repo-symbol-impact",
+      "prompt": "Find what changing this repository symbol would affect.",
+      "expected_policy_id": "sr-009-codegraph-leanctx",
+      "expected_primary_route": "skill:codegraph-project-reader"
+    },
+    {
+      "id": "python-import-failure",
+      "prompt": "Tests fail with ModuleNotFoundError while running pytest.",
+      "expected_policy_id": "sr-006-python-env-interrupt",
+      "expected_primary_route": "skill:uv-mirror-env"
+    },
+    {
+      "id": "overengineering-review",
+      "prompt": "Review this diff for over-engineering and what we can delete.",
+      "expected_policy_id": "sr-015-overengineering-review",
+      "expected_primary_route": "skill:ponytail-review"
+    },
+    {
+      "id": "execute-plan",
+      "prompt": "Execute this existing plan.md and finish the work.",
+      "expected_policy_id": "sr-003-plan-execution",
+      "expected_primary_route": "skill:plan2do"
+    },
+    {
+      "id": "multi-agent-no-delegation",
+      "prompt": "Do a multi-agent implementation, but no explicit delegation approval is present.",
+      "expected_policy_id": "sr-011-agent-manager-mode-gate",
+      "expected_primary_route": "blocked:no-safe-route"
+    },
+    {
+      "id": "stale-plan-grill",
+      "prompt": "Use $plan-grill to harden this plan.",
+      "expected_policy_id": "sr-014-stale-plan-grill",
+      "expected_primary_route": "skill:spec2plan"
+    },
+    {
+      "id": "stale-plan-grill-repeat",
+      "prompt": "Use $plan-grill to harden this plan again.",
+      "expected_policy_id": "sr-014-stale-plan-grill",
+      "expected_primary_route": "skill:spec2plan"
+    },
+    {
+      "id": "manual-edit",
+      "prompt": "Modify files by applying a patch.",
+      "expected_policy_id": "sr-013-manual-file-edit",
+      "expected_primary_route": "skill:structural-edit"
+    },
+    {
+      "id": "openai-docs-mcp-missing",
+      "prompt": "Answer how to use the latest OpenAI API docs when OpenAI docs MCP is unavailable.",
+      "expected_policy_id": "sr-016-openai-docs-missing-mcp",
+      "expected_primary_route": "skill:openai-docs"
+    },
+    {
+      "id": "soft-hook-conflict",
+      "prompt": "A request matches reviewer and ponytail-review; choose one route before acting.",
+      "expected_policy_id": "sr-018-global-soft-hook",
+      "expected_primary_route": "skill:skill-router"
+    }
+  ]
+}

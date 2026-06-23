@@ -10,15 +10,16 @@ Collect content from known URLs through Bright Data CLI.
 
 ## Workflow
 
-1. Confirm Bright Data setup exists; if not, use `../brightdata-setup/SKILL.md`.
-2. If URLs are unknown, use `../brightdata-web-search/SKILL.md` first.
-3. Read `references/scrape.md` for the core scrape workflow and command shape.
-4. Read only the needed detail:
+1. If `mcp__brightdata` tools are available and shell reproducibility is not required, prefer `../brightdata-mcp-tools/SKILL.md` for one URL (`scrape_as_markdown`/`scrape_as_html`), 2-5 URLs (`scrape_batch`), one-page JSON via conditional `extract` or scrape+local parse fallback, and MCP usage tracking (`session_stats`).
+2. Confirm Bright Data setup exists; if not, use `../brightdata-setup/SKILL.md`.
+3. If URLs are unknown, use `../brightdata-web-search/SKILL.md` first; for research/RAG source discovery, pair it with `../brightdata-mcp-tools/references/bright-data-mcp-research-rag.md` before scraping.
+4. Read `references/scrape.md` for the core scrape workflow and command shape.
+5. Read only the needed detail:
    - `references/scrape-flags.md` for output formats, screenshots, waits, geo, concurrency, or headers.
    - `references/scrape-patterns.md` for batching, pagination, retries, dedupe, and content normalization.
    - `references/scrape-examples.md` for concrete command examples.
-5. Choose the smallest output format that satisfies the task: markdown for reading, HTML for structure, JSON when supported/needed, screenshot for visual evidence.
-6. Save bulky outputs to files when useful; summarize results without dumping large page content into the final answer.
+6. Choose the smallest output format that satisfies the task: markdown for reading, HTML for structure, JSON when supported/needed, screenshot for visual evidence.
+7. Save bulky outputs to files when useful; summarize results without dumping large page content into the final answer.
 
 ## Boundaries
 

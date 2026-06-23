@@ -45,10 +45,10 @@ Use this v2 section order for final reviewer output. The labels `Review Mode`, `
   Revision: <concrete instruction>
 
 ## Recheck Plan
-- <what to inspect or run after revision>
+- <what to inspect or run after revision; for PASS, name the main surfaces checked enough to justify convergence>
 
 ## Residual Risks
-- <remaining uncertainty or "None known">
+- <remaining uncertainty, route-limited evidence gaps, or "None known">
 ```
 
 Rules:

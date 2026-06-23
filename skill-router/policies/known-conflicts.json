@@ -1,0 +1,1346 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-06-23",
+  "policies": [
+    {
+      "id": "sr-001-brightdata-known-url-scrape-mcp",
+      "status": "active",
+      "category": "router-child-overlap",
+      "triggers": [
+        "Bright Data",
+        "brightdata",
+        "Web Unlocker",
+        "known URL scrape",
+        "anti-bot",
+        "CAPTCHA"
+      ],
+      "conditions": [
+        "The request explicitly names Bright Data or requires anti-bot/structured page extraction.",
+        "Bright Data MCP tools or MCP-first workflow is available or requested."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "brightdata-mcp-tools"
+      },
+      "why": "Bright Data MCP is the most specific route for agent-layer Bright Data scrape/extract/search workflows; the parent skill only routes when child selection is unclear.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata"
+          },
+          "reason": "Parent router is less specific after MCP workflow is clear."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-web-scrape"
+          },
+          "reason": "CLI scrape is fallback when MCP is unavailable or CLI is explicitly requested."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "web.run"
+          },
+          "reason": "Generic browsing does not provide Bright Data anti-bot or structured extraction routing."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-web-scrape"
+          },
+          "condition": "Bright Data MCP is unavailable but local bdata CLI is configured."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-setup"
+          },
+          "condition": "Bright Data auth, zone, budget, or CLI/MCP setup is missing."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "brightdata/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "brightdata/skills/brightdata-mcp-tools/SKILL.md"
+        },
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not run live scrape/search solely to prove routing.",
+        "Respect current network and tool availability."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy from skill-router v1 acceptance checks."
+    },
+    {
+      "id": "sr-002-planning-requirements-spec",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "idea",
+        "requirements",
+        "spec",
+        "plan",
+        "PRD",
+        "rough concept",
+        "implementation plan"
+      ],
+      "conditions": [
+        "The task is planning/specification, not execution.",
+        "Requirements are clear enough to become an executable plan.",
+        "No explicit hybrid team plugin workflow is required."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "spec2plan"
+      },
+      "why": "Use spec2plan for clear requirements-to-plan conversion; use interview/idea skills only before requirements are stable.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-spec-workflow"
+          },
+          "reason": "Hybrid team workflow is plugin-specific and should not displace local spec2plan unless requested."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-brainstorm"
+          },
+          "reason": "Only for rough concepts targeting the hybrid team `.codex/specs` workflow."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "plan2do"
+          },
+          "reason": "Execution skill, not plan creation."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "interview-me"
+          },
+          "condition": "Who, why, success criteria, scope, or constraints are missing."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "idea-refine"
+          },
+          "condition": "Direction is still uncertain and needs option exploration."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "spec2plan/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "interview-me/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "idea-refine/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not spawn workers while only planning unless explicit delegation is authorized."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-003-plan-execution",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "execute plan.md",
+        "implement plan.md",
+        "finish plan",
+        "plan2do",
+        "complete tasks"
+      ],
+      "conditions": [
+        "An existing plan artifact is the execution source.",
+        "The user asks to implement, execute, finish, or complete the plan."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "plan2do"
+      },
+      "why": "plan2do owns execution of existing plan.md artifacts with verification, review, bounded rework, and artifact reporting.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "spec2plan"
+          },
+          "reason": "Planning is already complete unless the plan is invalid or missing."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-coordination"
+          },
+          "reason": "Worker coordination requires explicit delegation and file-disjoint scopes."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "reason": "Use only when orchestration becomes long/noisy/risky or multi-branch, not for normal plan execution."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "spec2plan"
+          },
+          "condition": "The plan is missing, stale, contradictory, or not executable."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "condition": "A dedicated acceptance review is requested after implementation."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "plan2do/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "spec2plan/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Preserve unrelated user changes; do not spawn agents unless explicitly requested."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-004-generic-review",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "review",
+        "audit",
+        "critique",
+        "quality gate",
+        "PASS",
+        "REVISE",
+        "BLOCK"
+      ],
+      "conditions": [
+        "The user asks for a general artifact/code/spec/plan/workflow review.",
+        "The request is not specifically over-engineering-only or skill-execution trace debugging."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "reviewer"
+      },
+      "why": "reviewer owns generic quality gates, evidence receipts, lite/heavy routing, and PASS/REVISE/BLOCK verdicts.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "ponytail-review"
+          },
+          "reason": "Use only for over-engineering/deletion-focused diff review."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "debug-skill"
+          },
+          "reason": "Use only for auditing whether a skill execution helped or harmed."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-review-cycle"
+          },
+          "reason": "Use only inside the hybrid Codex team workflow."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "ponytail-review"
+          },
+          "condition": "The requested review criterion is over-engineering or deletion only."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "debug-skill"
+          },
+          "condition": "The artifact is a skill execution trace or skill behavior audit."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "reviewer/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "ponytail/skills/ponytail-review/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "debug-skill/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Heavy review defaults to isolation only when subagent delegation is allowed by current policy."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-005-skill-audit-debug",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "skill execution trace",
+        "did this skill help",
+        "debug skill",
+        "skill audit",
+        "Hermes-style"
+      ],
+      "conditions": [
+        "The artifact under review is skill behavior, skill execution quality, or a skill optimization candidate."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "debug-skill"
+      },
+      "why": "debug-skill owns evidence-backed audits of whether a specified skill helped or harmed a task.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "reason": "Generic artifact review is fallback; debug-skill has the domain-specific trace rubric."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "skill-tokenless"
+          },
+          "reason": "Tokenless optimizes or gates skill changes after audit findings exist."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "skill-creator"
+          },
+          "reason": "Creator edits skills; it does not audit live execution traces by default."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "condition": "A generic PASS/REVISE/BLOCK gate is requested for the audit report."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "skill-tokenless"
+          },
+          "condition": "The accepted fix is a skill token/cost/production-gate update."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "debug-skill/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "skill-tokenless/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": ".system/skill-creator/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not modify the audited skill unless the user separately requests implementation."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-006-python-env-interrupt",
+      "status": "active",
+      "category": "mandatory-interrupt",
+      "triggers": [
+        "ModuleNotFoundError",
+        "ImportError",
+        "missing package",
+        "uv",
+        "pip resolver",
+        "broken .venv",
+        "CUDA ABI",
+        "missing CLI"
+      ],
+      "conditions": [
+        "A Python environment, dependency, import, resolver, interpreter, or binary wheel blocker appears while coding/testing/running scripts."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "uv-mirror-env"
+      },
+      "why": "uv-mirror-env is a mandatory interrupt for Python env/dependency blockers and must repair the environment before ordinary debug or TDD continues.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "debugging-and-error-recovery"
+          },
+          "reason": "Generic debugging resumes after env repair."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "test-driven-development"
+          },
+          "reason": "TDD cannot prove behavior while dependencies/imports are broken."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "pip install directly"
+          },
+          "reason": "Skill requires uv-managed, mirror-aware recovery workflow."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "debugging-and-error-recovery"
+          },
+          "condition": "The env is repaired and failures persist."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "test-driven-development"
+          },
+          "condition": "Behavior change or regression tests are needed after repair."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "uv-mirror-env/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "debugging-and-error-recovery/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "test-driven-development/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not ask the user before local safe uv repair paths are exhausted."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-007-context-handoff-compression",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "context",
+        "handoff",
+        "compact",
+        "compression",
+        "stale context",
+        "memory",
+        "session transfer"
+      ],
+      "conditions": [
+        "The request concerns context quality, task switching, compaction, handoff, or token-saving reply style."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "context-engineering"
+      },
+      "why": "context-engineering governs context quality and compaction decisions; handoff and caveman are narrower child routes.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "handoff"
+          },
+          "reason": "Use only when the requested output is a handoff document."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "caveman"
+          },
+          "reason": "Use only for terse reply/token-saving style, not context governance."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "reason": "Use only when session orchestration/firewalling is required."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "handoff"
+          },
+          "condition": "The user asks to produce a handoff artifact."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "caveman"
+          },
+          "condition": "The user asks for terse mode, token savings, or compressed responses."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "context-engineering/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "handoff/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "caveman/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Summaries are navigation, not evidence; re-read authoritative files for risky decisions."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-008-git-conductor",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "git",
+        "commit",
+        "branch",
+        "worktree",
+        "PR",
+        "release",
+        "multi-session",
+        "orchestration",
+        "conductor"
+      ],
+      "conditions": [
+        "The request asks for concrete git state work such as dirty-tree inspection, commit, branch, worktree, PR, release, tag, version bump, or history organization.",
+        "The primary goal is not context isolation or multi-session orchestration."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "git-workflow-and-versioning"
+      },
+      "why": "git-workflow-and-versioning owns concrete git hygiene, commits, branches, worktrees, PRs, tags, releases, and history organization.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "reason": "Conductor owns context/firewall/orchestration, not ordinary git operations."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "raw git commands without git skill"
+          },
+          "reason": "Git hygiene matters when changing repo state."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "condition": "Work becomes long, noisy, multi-turn, parallel, risky, dependency-heavy, or multi-branch."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "git-workflow-and-versioning/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "conductor/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Never commit, branch, or rewrite history without explicit user request."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-009-codegraph-leanctx",
+      "status": "active",
+      "category": "same-capability-tools",
+      "triggers": [
+        "symbol",
+        "call graph",
+        "callers",
+        "callees",
+        "impact analysis",
+        "blast radius",
+        "repo understanding",
+        "read file",
+        "search repo"
+      ],
+      "conditions": [
+        "The request asks about code structure, symbol flow, callers/callees, impact, or broad repo understanding."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "codegraph-project-reader"
+      },
+      "why": "CodeGraph owns indexed code intelligence for symbol/call/impact questions; lean-ctx remains the cached read/search/shell support route.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "mcp",
+            "name": "mcp__lean_ctx"
+          },
+          "reason": "lean-ctx is support/fallback for source reads/search, not primary graph reasoning when CodeGraph applies."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "rg/cat loops"
+          },
+          "reason": "Broad grep/read loops duplicate indexed codegraph work."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "mcp",
+            "name": "mcp__lean_ctx"
+          },
+          "condition": "CodeGraph is unavailable, stale for edited files, or the task is only cached read/search/shell."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "rg"
+          },
+          "condition": "No indexed code or lean-ctx tool is available."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "codegraph-project-reader/SKILL.md"
+        },
+        {
+          "type": "session",
+          "value": "lean-ctx tool metadata in active session"
+        }
+      ],
+      "safety_notes": [
+        "After edits, respect codegraph staleness banners and re-read changed files if needed."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-010-web-brightdata",
+      "status": "active",
+      "category": "same-capability-tools",
+      "triggers": [
+        "web search",
+        "browse",
+        "latest",
+        "citation",
+        "official docs",
+        "SERP",
+        "scrape",
+        "Discover"
+      ],
+      "conditions": [
+        "The request needs external web information and may match generic web browsing or Bright Data."
+      ],
+      "primary_route": {
+        "kind": "tool",
+        "name": "web.run"
+      },
+      "why": "Generic official-source browsing and citations use web.run unless the user explicitly asks Bright Data or anti-bot/structured SERP/scrape is required.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata"
+          },
+          "reason": "Bright Data is over-specific for ordinary browsing/citation tasks without anti-bot or SERP/extraction requirements."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-web-search"
+          },
+          "reason": "Use only when Bright Data SERP/Search API or Discover is requested/needed."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-web-search"
+          },
+          "condition": "SERP API, Discover, anti-bot search, or Bright Data is explicitly requested."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "openai-docs"
+          },
+          "condition": "The topic is OpenAI products/APIs/Codex docs."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "brightdata/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": ".system/openai-docs/SKILL.md"
+        },
+        {
+          "type": "session",
+          "value": "web.run tool metadata in active session"
+        }
+      ],
+      "safety_notes": [
+        "Use primary/official sources for technical docs; browse when facts may have changed."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-011-agent-manager-mode-gate",
+      "status": "active",
+      "category": "mode-gated-tool",
+      "triggers": [
+        "multi-agent",
+        "subagent",
+        "parallel workers",
+        "delegate",
+        "team coordination",
+        "agent manager"
+      ],
+      "conditions": [
+        "A request would spawn or coordinate agents but the user has not explicitly authorized delegation in the current task."
+      ],
+      "primary_route": {
+        "kind": "blocked",
+        "name": "no-safe-route"
+      },
+      "why": "Multi-agent spawning is mode/tool gated and requires explicit user delegation; planning may prepare scopes but must not launch workers.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-coordination"
+          },
+          "reason": "Requires explicit delegation and file-disjoint worker scopes."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "reason": "Can route orchestration but does not override missing spawn authorization."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "multi-agent spawn"
+          },
+          "reason": "Forbidden without explicit delegation."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "spec2plan"
+          },
+          "condition": "Prepare a worker-ready plan without spawning agents."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "codex-agent-team:team-coordination"
+          },
+          "condition": "The user explicitly authorizes multi-agent delegation."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "conductor/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "/data/lcq/.codex/plugins/cache/sample-codex-agent-team/codex-agent-team/0.1.0/skills/team-coordination/SKILL.md"
+        },
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "State the blocker rather than silently downgrading to spawned work."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-012-local-read-search-shell",
+      "status": "active",
+      "category": "same-capability-tools",
+      "triggers": [
+        "read file",
+        "cat",
+        "head",
+        "tail",
+        "grep",
+        "rg",
+        "shell",
+        "bash",
+        "ls",
+        "find"
+      ],
+      "conditions": [
+        "The active session exposes lean-ctx tools and the task is local read/search/tree/shell rather than file modification."
+      ],
+      "primary_route": {
+        "kind": "mcp",
+        "name": "mcp__lean_ctx"
+      },
+      "why": "lean-ctx is the mandated compact route for cached reads, searches, trees, and shell commands when available.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "functions.exec_command"
+          },
+          "reason": "Use only when lean-ctx is unavailable or raw PTY/escalation behavior is specifically required."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "cat/grep/find loops"
+          },
+          "reason": "Use lean-ctx equivalents for token savings and cached context."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "functions.exec_command"
+          },
+          "condition": "lean-ctx is unavailable or the command needs PTY/session semantics not supported by lean-ctx."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "session",
+          "value": "lean-ctx tool metadata in active session"
+        },
+        {
+          "type": "path",
+          "value": "/data/lcq/.codex/AGENTS.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not use shell commands to edit files; route edit decisions to structural-edit and strict text fallback execution to apply_patch."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-013-manual-file-edit",
+      "status": "active",
+      "category": "same-capability-tools",
+      "triggers": [
+        "edit file",
+        "modify file",
+        "create file",
+        "delete file",
+        "move file",
+        "apply patch"
+      ],
+      "conditions": [
+        "The task requires manual file creation, modification, move, or delete."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "structural-edit"
+      },
+      "why": "structural-edit is the default manual edit decision route; apply_patch is the strict text fallback and execution tool only when structural-edit allows it.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "shell redirection"
+          },
+          "reason": "Shell writes can bypass patch grammar, anchors, and diff safety."
+        },
+        {
+          "route": {
+            "kind": "mcp",
+            "name": "mcp__lean_ctx"
+          },
+          "reason": "lean-ctx replaces read/search/shell only, not manual writes."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "functions.apply_patch"
+          },
+          "condition": "structural-edit classifies the edit as tiny, unique, low-risk strict text fallback."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "project generator"
+          },
+          "condition": "The project owns the output via a generator or formatter."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "structural-edit/SKILL.md"
+        },
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "Preserve unrelated dirty work and inspect diffs after edits.",
+        "Run structural-edit route classification before choosing apply_patch for manual edits."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-23",
+      "review_notes": "Repaired by validate_fixtures.py --repair-known-drift."
+    },
+    {
+      "id": "sr-014-stale-plan-grill",
+      "status": "active",
+      "category": "stale-route",
+      "triggers": [
+        "$plan-grill",
+        "plan-grill",
+        "harden plan",
+        "plan review route"
+      ],
+      "conditions": [
+        "A route names `$plan-grill`, but no active skill named `plan-grill` exists in the session skill list."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "spec2plan"
+      },
+      "why": "`$plan-grill` is a stale route name; spec2plan replaces planning-and-task-breakdown and plan hardening for executable plans.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "plan-grill"
+          },
+          "reason": "Missing from active skills."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "conductor"
+          },
+          "reason": "Conductor may mention the stale route but should not be selected when the target skill is absent."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "condition": "The user only asks to review an existing plan, not convert or harden it."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "plan2do"
+          },
+          "condition": "The user asks to execute the plan."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "conductor/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "spec2plan/SKILL.md"
+        },
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not create or install a missing skill just to satisfy a stale route name."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-015-overengineering-review",
+      "status": "active",
+      "category": "same-domain-skills",
+      "triggers": [
+        "over-engineering",
+        "what can we delete",
+        "simplify review",
+        "needless abstraction",
+        "yagni",
+        "ponytail-review"
+      ],
+      "conditions": [
+        "The requested review criterion is specifically over-engineering, deletion, simplification, or YAGNI."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "ponytail-review"
+      },
+      "why": "ponytail-review owns diff-focused over-engineering/deletion review and complements correctness review.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "reason": "Generic correctness/security review is fallback, not primary for deletion-focused review."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "ponytail"
+          },
+          "reason": "Parent mode is broader; child review skill owns diff review."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "reviewer"
+          },
+          "condition": "Correctness, security, tests, or artifact acceptance must also be quality-gated."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "ponytail-audit"
+          },
+          "condition": "The user asks for whole-repo over-engineering audit instead of diff review."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "ponytail/skills/ponytail-review/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "ponytail/SKILL.md"
+        },
+        {
+          "type": "path",
+          "value": "reviewer/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Do not apply simplifications unless the user asks for implementation."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-016-openai-docs-missing-mcp",
+      "status": "active",
+      "category": "missing-tool",
+      "triggers": [
+        "OpenAI API",
+        "Codex docs",
+        "ChatGPT",
+        "Responses API",
+        "OpenAI docs MCP",
+        "latest OpenAI docs"
+      ],
+      "conditions": [
+        "The request asks about OpenAI products/APIs/Codex docs and OpenAI docs MCP tools are unavailable or not exposed in the active tool list."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "openai-docs"
+      },
+      "why": "openai-docs owns OpenAI product/API/Codex documentation routing; if docs MCP is unavailable, fallback browsing must stay on official OpenAI domains.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "generic web search"
+          },
+          "reason": "OpenAI docs require official sources unless the user requests otherwise."
+        },
+        {
+          "route": {
+            "kind": "skill",
+            "name": "brightdata-web-search"
+          },
+          "reason": "Bright Data is not required for official OpenAI docs unless explicitly requested."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "tool",
+            "name": "web.run official OpenAI domains"
+          },
+          "condition": "OpenAI docs MCP is unavailable or insufficient."
+        },
+        {
+          "route": {
+            "kind": "blocked",
+            "name": "missing-official-source"
+          },
+          "condition": "Neither docs MCP nor official OpenAI browsing is available."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": ".system/openai-docs/SKILL.md"
+        },
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "Browse for current OpenAI product facts; restrict fallback to official OpenAI domains."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-017-duplicate-name-resolution",
+      "status": "active",
+      "category": "duplicate-name",
+      "triggers": [
+        "duplicate skill name",
+        "same skill name",
+        "plugin skill collision",
+        "ambiguous skill"
+      ],
+      "conditions": [
+        "Two or more active skills or tools share an apparent name or capability and no more specific policy matches."
+      ],
+      "primary_route": {
+        "kind": "blocked",
+        "name": "no-safe-route"
+      },
+      "why": "Exact duplicate names are unsafe to auto-resolve without a source locator, plugin prefix, or user-named target.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "unqualified duplicate"
+          },
+          "reason": "Unqualified duplicate can load the wrong workflow."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "plugin-prefixed skill"
+          },
+          "condition": "A fully-qualified plugin skill name is available and matches the user request."
+        },
+        {
+          "route": {
+            "kind": "blocked",
+            "name": "ask-user-for-source"
+          },
+          "condition": "No source locator or prefix disambiguates the duplicate."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "spec",
+          "value": ".codex/work/20260622-skill-router/spec.md"
+        }
+      ],
+      "safety_notes": [
+        "Ask for disambiguation instead of guessing when exact duplicate names remain."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Initial policy."
+    },
+    {
+      "id": "sr-018-global-soft-hook",
+      "status": "active",
+      "category": "fallback-policy",
+      "triggers": [
+        "multiple skills match",
+        "multiple tools match",
+        "skill conflict",
+        "tool conflict",
+        "stale route",
+        "missing MCP",
+        "mode-gated tool",
+        "parent child overlap"
+      ],
+      "conditions": [
+        "More than one skill/tool plausibly matches the same request, or routing involves stale routes, missing MCP tools, mode-gated tool calls, duplicate names, or parent/child skill overlap.",
+        "No higher-priority current instruction already resolves the conflict."
+      ],
+      "primary_route": {
+        "kind": "skill",
+        "name": "skill-router"
+      },
+      "why": "Global soft hook makes conflict routing deterministic without adding overhead to single clear skill/tool matches.",
+      "suppressed": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "first-matching-skill"
+          },
+          "reason": "First-match behavior can load the wrong workflow when candidates conflict."
+        },
+        {
+          "route": {
+            "kind": "tool",
+            "name": "ad-hoc-tool-choice"
+          },
+          "reason": "Ad hoc tool selection can bypass saved governance policy."
+        }
+      ],
+      "fallbacks": [
+        {
+          "route": {
+            "kind": "skill",
+            "name": "most-specific-applicable-skill"
+          },
+          "condition": "Only one skill/tool clearly matches."
+        },
+        {
+          "route": {
+            "kind": "blocked",
+            "name": "no-safe-route"
+          },
+          "condition": "All candidate routes are blocked by tool availability, approval mode, safety, or missing requirements."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "path",
+          "value": "/data/lcq/.codex/AGENTS.md"
+        },
+        {
+          "type": "path",
+          "value": "skill-router/references/global-hook-snippet.md"
+        },
+        {
+          "type": "path",
+          "value": "skill-router/SKILL.md"
+        }
+      ],
+      "safety_notes": [
+        "Soft hook is advisory and must not override system/developer/user instructions or current tool constraints.",
+        "Do not invoke skill-router for single clear matches."
+      ],
+      "created_at": "2026-06-22",
+      "updated_at": "2026-06-22",
+      "review_notes": "Added in v2 after user approved global soft hook."
+    }
+  ]
+}

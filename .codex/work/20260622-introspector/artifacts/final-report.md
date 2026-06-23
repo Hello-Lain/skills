@@ -1,0 +1,13 @@
+# Final Report
+
+- Mode: primary-agent
+- Status: COMPLETE
+- Plan path: `/data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md`
+- Tasks completed: `1`, `2`, `3`, `4`, `5`
+- Files changed: `introspector/SKILL.md`, `introspector/agents/openai.yaml`, `introspector/references/workflow.md`, `introspector/references/report-schema.md`, `introspector/references/calibration-harness.md`, `introspector/references/validation.md`
+- Verification: `python /data/lcq/.codex/skills/.system/skill-creator/scripts/quick_validate.py /data/lcq/.codex/skills/introspector` -> `Skill is valid!`; `python /data/lcq/.codex/skills/spec2plan/scripts/validate_plan_contract.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md --mode light` -> `VALID`; `python /data/lcq/.codex/skills/plan2do/scripts/compile_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/plan.md` -> `execution/tasks.json updated`; `python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py /data/lcq/.codex/skills/.codex/work/20260622-introspector --stage draft --require-production-report --require-final-report` -> `READY`; `python3 /data/lcq/.codex/skills/reviewer/scripts/validate_review_report.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/review-introspector-final.md --root /data/lcq/.codex/skills` -> `VALID`; `python3 /data/lcq/.codex/skills/skill-tokenless/scripts/validate_skill_production.py /data/lcq/.codex/skills/.codex/work/20260622-introspector/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final` -> `VALID`; `python3 /data/lcq/.codex/skills/plan2do/scripts/pre_review_ready.py /data/lcq/.codex/skills/.codex/work/20260622-introspector --stage final --require-production-report --require-final-report` -> `READY`; `python /data/lcq/.codex/skills/plan2do/scripts/validate_execution.py /data/lcq/.codex/skills/.codex/work/20260622-introspector` -> `VALID`
+- Review verdict: `PASS`
+- Rework cycles: `0`
+- Artifact paths: `.codex/work/20260622-introspector/artifacts/context-wave1.md`, `.codex/work/20260622-introspector/artifacts/task1-execution.md`, `.codex/work/20260622-introspector/artifacts/task2-skill-scaffold.md`, `.codex/work/20260622-introspector/artifacts/task3-contract.md`, `.codex/work/20260622-introspector/artifacts/task4-verification.md`, `.codex/work/20260622-introspector/artifacts/task5-verification.md`, `.codex/work/20260622-introspector/artifacts/production-report.md`, `.codex/work/20260622-introspector/review-introspector-final.md`
+- Blockers or risks: no known blocking validators; residual risk remains that v1 calibration is document-level and reviewer isolation is inline-heavy.
+- Raw data omitted: raw grep output and validator stdout not duplicated here

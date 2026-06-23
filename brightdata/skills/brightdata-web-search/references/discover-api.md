@@ -50,7 +50,7 @@ advanced parameters such as `mode`.
 
 Setup gate first:
 ```bash
-command -v bdata >/dev/null 2>&1 || echo "CLI missing — see bright-data-best-practices-cli-setup.md"
+command -v bdata >/dev/null 2>&1 || echo "CLI missing — see ../../brightdata-setup/references/bright-data-best-practices-cli-setup.md"
 bdata zones >/dev/null 2>&1 || echo "not authenticated — run: bdata login"
 ```
 

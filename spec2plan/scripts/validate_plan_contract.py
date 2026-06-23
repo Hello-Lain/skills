@@ -13,6 +13,7 @@ REQUIRED_HEADINGS = (
     "Non-Goals",
     "Evidence Inspected",
     "Spec Summary",
+    "Upstream Coverage",
     "Domain Language Check",
     "Current Context",
     "Implementation Map",
@@ -88,6 +89,12 @@ TASK_REQUIRED_FIELDS = (
 EXEC_REQUIRED_FIELDS = ("Worker role", "Wave", "Verification", "Writable scope", "Output artifact")
 COMMAND_FIELDS = ("verification", "pre-check commands", "post-check commands")
 IMPLEMENTATION_MAP_LABELS = ("Files", "Symbols / APIs", "Tests", "Commands", "Data / migration impact")
+UPSTREAM_COVERAGE_LABELS = (
+    "Source artifacts",
+    "Carried forward",
+    "Added planning detail",
+    "Dropped / deferred upstream details",
+)
 SELF_REVIEW_PHRASES = ("writable scope", "coverage", "unknown", "rollback", "Task 1")
 
 
@@ -247,6 +254,28 @@ def implementation_map_errors(text: str) -> list[str]:
         errors.append(f"Implementation Map has placeholder language: {_first_placeholder(body)}")
     return errors
 
+def upstream_coverage_errors(text: str) -> list[str]:
+    errors: list[str] = []
+    body = section_text(text, "Upstream Coverage")
+    for label in UPSTREAM_COVERAGE_LABELS:
+        if not re.search(rf"(?mi)^\s*-\s*{re.escape(label)}\s*:", body):
+            errors.append(f"Upstream Coverage missing label: {label}")
+    if _has_placeholder(body):
+        errors.append(f"Upstream Coverage has placeholder language: {_first_placeholder(body)}")
+    source_value = _label_value(body, "Source artifacts")
+    carried_value = _label_value(body, "Carried forward")
+    added_value = _label_value(body, "Added planning detail")
+    dropped_value = _label_value(body, "Dropped / deferred upstream details")
+    if source_value and not (CODE_RE.search(source_value) or PATHISH_RE.search(source_value)):
+        errors.append("Upstream Coverage Source artifacts must include exact artifact paths or references")
+    if _empty_or_placeholder(carried_value):
+        errors.append("Upstream Coverage Carried forward must name preserved upstream facts")
+    if _empty_or_placeholder(added_value):
+        errors.append("Upstream Coverage Added planning detail must name new execution detail")
+    if not dropped_value:
+        errors.append("Upstream Coverage Dropped / deferred upstream details must say `None` or list item + reason")
+    return errors
+
 def micro_step_errors(text: str) -> list[str]:
     errors: list[str] = []
     body = section_text(text, "Step-by-Step Plan")
@@ -293,6 +322,13 @@ def _wave_overlap_errors(task_blocks: list[str]) -> list[str]:
                 errors.append(f"same-wave Writable scope overlap: {path} in {prior} and {task_label}")
             owners[key] = task_label
     return errors
+
+def _label_value(body: str, label: str) -> str:
+    match = re.search(
+        rf"(?ms)^\s*-\s*{re.escape(label)}\s*:\s*(.*?)(?=^\s*-\s*[^:\n]+?\s*:|\Z)",
+        body,
+    )
+    return match.group(1).strip() if match else ""
 
 
 def subagent_errors(plan_path: Path) -> list[str]:
@@ -390,6 +426,7 @@ def main() -> int:
 
     errors.extend(task_errors(text))
     errors.extend(implementation_map_errors(text))
+    errors.extend(upstream_coverage_errors(text))
     errors.extend(micro_step_errors(text))
     errors.extend(self_review_errors(text))
     errors.extend(handoff_errors(text))

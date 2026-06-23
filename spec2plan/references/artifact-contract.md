@@ -105,6 +105,26 @@ Prefer reusing an existing topic workspace when moving from idea to spec to plan
 
 Do not duplicate a topic into a new workspace when a matching workspace path is provided or can be unambiguously inferred from the input artifact path.
 
+## Information Preservation And Enrichment
+
+The canonical artifact chain is:
+
+```text
+idea.md -> spec.md -> plan.md -> artifacts/*
+```
+
+Every downstream artifact must be a strict enrichment of its direct upstream input for all facts that still matter downstream.
+
+Rules:
+
+- Read the direct lineage source before drafting the downstream artifact.
+- When the workspace already contains earlier canonical artifacts, inspect them too before dropping, reframing, or narrowing any user-confirmed fact.
+- Carry forward every downstream-relevant fact from upstream artifacts: problem, target user, why now, success criteria, chosen direction, scope in/out, constraints, assumptions, risks, domain terms, acceptance checks, explicit decisions, and explicit `Not Doing` boundaries.
+- Add stage-specific specificity rather than rewriting a shorter summary. `spec.md` should close questions and add requirement detail beyond `idea.md`; `plan.md` should add concrete files, symbols, commands, tasks, rollback, and validation detail beyond `spec.md`; execution artifacts should add actual commands, edits, outcomes, and verdicts beyond `plan.md`.
+- If a downstream artifact omits, defers, or supersedes an upstream detail, record that explicitly with a reason such as `not needed for planning`, `superseded by confirmed user answer`, or `moved to open question`.
+- Never silently narrow scope, loosen a constraint, remove a risk, or discard an assumption that still matters downstream.
+- When upstream artifacts conflict, resolve the conflict explicitly in the downstream artifact instead of silently picking one version.
+
 ## Conflict Rules
 
 No skill may silently overwrite a canonical artifact.

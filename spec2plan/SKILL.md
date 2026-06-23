@@ -18,6 +18,8 @@ Turn a spec into an executable `plan.md`. Treat the plan as the source for codex
 - Always read `references/plan-contract.md` before drafting or validating a plan.
 - Before saving a plan or plan-adjacent artifact, read the shared artifact contract at `references/artifact-contract.md`.
 - Read `references/discovery-routing.md` when the source artifact's maturity is ambiguous or the request may be an idea, direction, or incomplete spec rather than planning-ready requirements.
+- Use `references/legacy-upstream-coverage-template.md` when hardening an older plan or migrating a pre-contract artifact that lacks `Upstream Coverage`.
+- If the source spec is in a shared topic workspace, also read the linked upstream `idea.md` and `manifest.yaml` before planning when they exist.
 - For plans that create or materially update skills, include the Skill Production Gate from `skill-tokenless/references/skill-production-gate.md` as an executable task and final acceptance gate.
 - For `heavy`, also read `references/heavy-mode.md` and load `$codex2codex` from `/data/lcq/.codex/skills/codex2codex`.
 - Validate with `scripts/validate_plan_contract.py <plan.md> --mode light|heavy`; this hard gate also checks `plan2do/scripts/compile_execution.py` compatibility.
@@ -38,6 +40,7 @@ idea-refine -> interview-me -> spec2plan
 - If the input is an unconfirmed idea one-pager, weak direction, competing options, or a premature solution, do not draft a plan. Route through Discovery Routing to `idea-refine` or `interview-me` unless the user explicitly accepts recorded assumptions and asks to proceed.
 - If requirements are mostly clear but not stored as a formal spec, ask only for the missing planning-critical facts or record explicit assumptions before planning.
 - Do not hide unresolved product-direction or spec-quality gaps as implementation assumptions.
+- Do not compress away approved direction rationale, scope boundaries, constraints, risks, or `Not Doing` decisions. Translate them into executable boundaries.
 
 ## Output
 
@@ -51,13 +54,14 @@ idea-refine -> interview-me -> spec2plan
 
 ## Light Workflow
 
-1. Read the spec plus enough nearby code/docs to avoid invented assumptions.
-2. Map implementation evidence first: files, symbols/APIs, tests, commands, data impact, dependencies, vertical slices, task sizes, validation, risks, open questions, and safe parallel waves.
-3. Main agent writes the plan directly.
-4. Run `scripts/validate_plan_contract.py <plan.md> --mode light`, including execution compiler compatibility.
-5. If validation fails, patch the draft from the validator errors and rerun step 4. Repeat until `VALID`, or stop with the exact blocking errors.
-6. Run reviewer-lite on the validated plan before reporting it as handoff-ready when the plan will drive downstream execution. On `REVISE`, patch the plan, rerun the validator, and request focused recheck for at most three total self-repair cycles; on `BLOCK`, stop with the blocker.
-7. Report path, validation status, reviewer-lite verdict when run, key risks/open questions, and that implementation was not executed.
+1. Read the spec, linked upstream artifacts, and enough nearby code/docs to avoid invented assumptions.
+2. Write `Upstream Coverage` first: source artifacts, facts carried forward, planning detail added here, and any dropped/deferred upstream details with reasons.
+3. Map implementation evidence first: files, symbols/APIs, tests, commands, data impact, dependencies, vertical slices, task sizes, validation, risks, open questions, and safe parallel waves.
+4. Main agent writes the plan directly.
+5. Run `scripts/validate_plan_contract.py <plan.md> --mode light`, including execution compiler compatibility.
+6. If validation fails, patch the draft from the validator errors and rerun step 5. Repeat until `VALID`, or stop with the exact blocking errors.
+7. Run reviewer-lite on the validated plan before reporting it as handoff-ready when the plan will drive downstream execution. On `REVISE`, patch the plan, rerun the validator, and request focused recheck for at most three total self-repair cycles; on `BLOCK`, stop with the blocker.
+8. Report path, validation status, reviewer-lite verdict when run, key risks/open questions, and that implementation was not executed.
 
 ## Heavy Workflow
 
@@ -82,6 +86,7 @@ idea-refine -> interview-me -> spec2plan
 ## Planning Rules
 
 - Use the upstream planning pattern: dependency graph first, then vertical slices, then checkpoints.
+- Add an `Upstream Coverage` section after `Spec Summary`: source artifacts, carried-forward facts, planning detail newly added here, and dropped/deferred upstream details with reasons.
 - Add an `Implementation Map` before tasking: concrete files, symbols/APIs, tests, commands, and data/migration impact.
 - Prefer `S`/`M` tasks. Split `XL`; split `L` unless it is one coherent slice.
 - Assign `Wave` so dependencies run earlier and same-wave implementation tasks do not overlap writable paths.

@@ -236,3 +236,26 @@ The interesting tension: variations 1 and 5 fix the *output* problem (nothing ch
 7. **The "Not Doing" list does real work.** It's specific and reasoned. Each item is something you might *want* to do but shouldn't yet.
 
 8. **The skill adapts to context.** A codebase-aware example references actual architecture. A process idea generates zero-cost experiments instead of products. The framework stays the same but the output matches the domain.
+
+## Artifact-Ready Direction Handoff
+
+When the session is ready to hand off to `interview-me`, the saved `idea.md` should preserve enough detail that the next skill expands it instead of rewriting a shorter version.
+
+Minimal downstream handoff shape:
+
+```markdown
+## Downstream Handoff Notes
+- Canonical artifact: `.codex/work/20260623-local-restaurant-regulars/idea.md`
+- Next skill: `interview-me`
+- Preserve downstream:
+  - target user = independent restaurant owner with repeat customers
+  - success = direct reorder rate from regulars, reduced delivery-platform commissions
+  - chosen direction = retention/reorder tool, not marketplace discovery
+  - constraints = zero restaurant-side management, no custom delivery network in v1
+  - not doing = new-customer discovery, driver logistics, co-op marketplace complexity
+- Open questions for spec:
+  - how regulars are identified and onboarded
+  - what direct reorder channel is default in v1
+- Deferred detail:
+  - pricing model deferred until spec because it changes packaging, not direction
+```

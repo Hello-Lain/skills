@@ -10,7 +10,7 @@ Review artifacts on demand. Use the cheapest safe route first, but do not weaken
 Core rule:
 
 ```text
-Review from evidence, not vibes. Run preflight, choose lite/heavy/blocked, derive the rubric, then issue exactly one top-level verdict: PASS, REVISE, or BLOCK.
+Review from evidence, not vibes. Treat the artifact as a candidate, optimize for the source goal over preserving the presented design, run preflight, choose lite/heavy/blocked, derive the rubric, complete bounded issue discovery, then issue exactly one top-level verdict: PASS, REVISE, or BLOCK.
 ```
 
 ## Workflow
@@ -20,9 +20,13 @@ Review from evidence, not vibes. Run preflight, choose lite/heavy/blocked, deriv
 3. Rehydrate source evidence in order: latest user goal, applicable `AGENTS.md`, upstream artifact, relevant `SKILL.md` and linked contracts, current files/tests/commands needed to judge material claims, readiness evidence when reviewing plan2do/skill-production results, then external sources only when current/niche/high-stakes or requested.
 4. Build a compact review packet with goal, stage, artifact path/content, source list, constraints, validators, allowed commands, requested focus/options, and route.
 5. Derive rubric before findings.
-6. Review source alignment and intrinsic quality separately.
-7. Return the v2 report shape from `references/review-report-template.md`.
-8. Validate saved reports with `python3 reviewer/scripts/validate_review_report.py <report.md>`.
+6. Reconstruct the source goal in your own words and audit artifact framing for bias, incompleteness, misplaced optimization, or polished but weakly grounded claims.
+7. Run bounded issue discovery before deciding: scan every material rubric surface available in the selected route, record all discovered critical/major findings, separate direct evidence from inference when material, then decide whether convergence, escalation, or `BLOCK` is justified.
+8. Review source alignment and intrinsic quality separately.
+9. Return the v2 report shape from `references/review-report-template.md`.
+10. Validate saved reports with `python3 reviewer/scripts/validate_review_report.py <report.md>`.
+
+Finding one obvious issue is not enough to stop the first pass. Continue through the remaining high-value risk surfaces unless evidence is missing, the route must escalate, a requested cap applies only to minor/nit output, or review conditions require `BLOCK`.
 
 ## Route Preflight
 
@@ -32,7 +36,7 @@ Classify route as `lite`, `heavy`, or `blocked` and state one reason.
 - `heavy`: artifact is non-trivial or risky, including code behavior, security/privacy/data, research novelty, spec/plan/execution acceptance, cross-file impact, adversarial review, failed prior review, unclear source authority, or explicit isolated review request.
 - `blocked`: required evidence or mandatory isolation is unavailable, source authority conflicts, or review conditions are unsafe.
 
-Lite reviews stay inline by default and avoid broad file reads. Heavy reviews default to an isolated reviewer subagent when tooling is available; inline heavy requires an explicit fallback reason in `Mode Decision`. A transient subagent wait, provider fluctuation, or temporary network interruption is not a valid inline fallback reason while the subagent is still healthy or making progress. If `mandatory-isolation` is requested, run even a lite packet in a reviewer subagent when tooling is available; return `BLOCK` if mandatory isolation cannot be satisfied.
+Lite reviews stay inline by default and avoid broad file reads. Heavy reviews default to an isolated reviewer subagent when tooling is available; inline heavy requires an explicit fallback reason in `Mode Decision`. Harness policy forbidding subagent spawn without explicit delegation is a valid inline-heavy fallback reason unless `mandatory-isolation` was requested. A transient subagent wait, provider fluctuation, or temporary network interruption is not a valid inline fallback reason while the subagent is still healthy or making progress. If `mandatory-isolation` is requested, run even a lite packet in a reviewer subagent when tooling is available; return `BLOCK` if mandatory isolation cannot be satisfied.
 
 Every report must include `Review Mode` and `Review Route`.
 
@@ -85,6 +89,8 @@ Use exactly one top-level verdict:
 - `REVISE`: at least one major finding, or several minor findings that reduce usability.
 - `BLOCK`: at least one critical finding, missing evidence required for judgment, unsafe review conditions, or artifact cannot be reviewed reliably.
 
+A `PASS` requires convergence: state in `Residual Risks` or `Recheck Plan` which major surfaces were checked, what route-limited uncertainty remains, and why no known critical or major findings remain. `REVISE` and `BLOCK` must include all known critical/major findings discovered during the bounded pass, not only the first one.
+
 Severity:
 
 - `critical`: unsafe, misleading, unexecutable, directionally wrong, or source contract violation that invalidates the artifact.
@@ -109,7 +115,7 @@ Report adversarial findings as normal findings with evidence. If no issue is fou
 
 ## Recheck Loop
 
-After `REVISE`, the consumer may patch or rerun the upstream skill, then ask for one focused recheck. Inspect only changed evidence plus original critical/major findings unless the new diff expands scope. Stop after two unresolved cycles with `BLOCK` or explicit user decision.
+After `REVISE`, the consumer may patch or rerun the upstream skill, then ask for one focused recheck. Inspect changed evidence plus original critical/major findings, and widen again only when the new diff expands scope or introduces a new material risk surface. Stop after two unresolved cycles with `BLOCK` or explicit user decision.
 
 ## Rubric Routing
 

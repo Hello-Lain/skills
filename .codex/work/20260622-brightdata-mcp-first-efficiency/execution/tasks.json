@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "status": "compiled",
+  "plan_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/plan.md",
+  "workspace": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency",
+  "task_count": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Validate current MCP tools",
+      "role": "coding",
+      "wave": 1,
+      "dependencies": [],
+      "status": "complete",
+      "acceptance_criteria": "Validation artifact records `session_stats` before and after, `discover`, `search_engine_batch`, `scrape_batch`, `extract`, `web_data_github_repository_file`, success checks, failures, fallback decisions, and one observed efficiency or stability signal.",
+      "verification": "Manual check `test -s .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md && grep -E \"discover|search_engine_batch|scrape_batch|extract|web_data_github_repository_file|session_stats\" .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md`.",
+      "pre_check_commands": "`git status --short`.",
+      "post_check_commands": "`test -s .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md && grep -E \"fallback|efficiency|stability\" .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md`.",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 2,
+      "title": "Patch Bright Data MCP-first guidance",
+      "role": "coding",
+      "wave": 2,
+      "dependencies": [
+        1
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Scoped files mention current MCP-first routing, tool choice, output checks, fallback rules, validation matrix, v1 exclusions, and search/scrape child redirects without removing unrelated existing guidance.",
+      "verification": "Manual grep `grep -R \"MCP-first\\\\|session_stats\\\\|web_data_github_repository_file\\\\|scrape_batch\\\\|fallback\" brightdata/SKILL.md brightdata/skills/brightdata-mcp-tools brightdata/skills/brightdata-web-search/SKILL.md brightdata/skills/brightdata-web-scrape/SKILL.md`.",
+      "pre_check_commands": "`git diff -- brightdata/SKILL.md brightdata/skills/brightdata-mcp-tools/SKILL.md brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp.md brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp-mcp-tools.md brightdata/skills/brightdata-web-search/SKILL.md brightdata/skills/brightdata-web-scrape/SKILL.md`.",
+      "post_check_commands": "`grep -R \"MCP-first\\\\|session_stats\\\\|web_data_github_repository_file\\\\|scrape_batch\\\\|fallback\" brightdata/SKILL.md brightdata/skills/brightdata-mcp-tools brightdata/skills/brightdata-web-search/SKILL.md brightdata/skills/brightdata-web-scrape/SKILL.md`.",
+      "files_likely_touched": [
+        "brightdata/SKILL.md",
+        "brightdata/skills/brightdata-mcp-tools/SKILL.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp-mcp-tools.md",
+        "brightdata/skills/brightdata-web-search/SKILL.md",
+        "brightdata/skills/brightdata-web-scrape/SKILL.md"
+      ],
+      "writable_scope": [
+        "brightdata/SKILL.md",
+        "brightdata/skills/brightdata-mcp-tools/SKILL.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp.md",
+        "brightdata/skills/brightdata-mcp-tools/references/bright-data-mcp-mcp-tools.md",
+        "brightdata/skills/brightdata-web-search/SKILL.md",
+        "brightdata/skills/brightdata-web-scrape/SKILL.md"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/task2-skill-edits.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/task2-skill-edits.md",
+      "estimated_scope": "M"
+    },
+    {
+      "number": 3,
+      "title": "Run Skill Production Gate draft",
+      "role": "coding",
+      "wave": 3,
+      "dependencies": [
+        2
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Production report cites behavior lock, RED evidence from prior underuse, GREEN evidence from live MCP validation and grep checks, changed files, preserved gates, risks, reviewer status, and draft validator pass.",
+      "verification": "`python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft`.",
+      "pre_check_commands": "`test -s .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/mcp-validation.md`.",
+      "post_check_commands": "`python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md --root /data/lcq/.codex/skills --stage draft && python3 plan2do/scripts/pre_review_ready.py .codex/work/20260622-brightdata-mcp-first-efficiency --stage draft --require-production-report --require-final-report`.",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/execution/tasks.json"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/execution/tasks.json"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 4,
+      "title": "Run final reviewer gate",
+      "role": "review",
+      "wave": 4,
+      "dependencies": [
+        3
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Review report follows reviewer v2 template, validates with `validate_review_report.py`, and contains top-level `Verdict: PASS` before final completion.",
+      "verification": "`python3 reviewer/scripts/validate_review_report.py .codex/work/20260622-brightdata-mcp-first-efficiency/review.md`.",
+      "pre_check_commands": "`python3 plan2do/scripts/pre_review_ready.py .codex/work/20260622-brightdata-mcp-first-efficiency --stage draft --require-production-report --require-final-report`.",
+      "post_check_commands": "`python3 reviewer/scripts/validate_review_report.py .codex/work/20260622-brightdata-mcp-first-efficiency/review.md && grep -q \"Verdict: PASS\" .codex/work/20260622-brightdata-mcp-first-efficiency/review.md`.",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/review.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/review.md"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-first-efficiency/review.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/review.md",
+      "estimated_scope": "S"
+    },
+    {
+      "number": 5,
+      "title": "Run debug-skill audit and final validation",
+      "role": "review",
+      "wave": 5,
+      "dependencies": [
+        4
+      ],
+      "status": "complete",
+      "acceptance_criteria": "Debug-skill review names evidence, workflow compliance incidents if any, user-visible impact, suggested skill fixes, final production gate passes, execution validator passes, and final report states `Status: COMPLETE`.",
+      "verification": "`python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final && python3 plan2do/scripts/validate_execution.py .codex/work/20260622-brightdata-mcp-first-efficiency`.",
+      "pre_check_commands": "`grep -q \"Verdict: PASS\" .codex/work/20260622-brightdata-mcp-first-efficiency/review.md`.",
+      "post_check_commands": "`python3 skill-tokenless/scripts/validate_skill_production.py .codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md --root /data/lcq/.codex/skills --stage final && python3 plan2do/scripts/validate_execution.py .codex/work/20260622-brightdata-mcp-first-efficiency`.",
+      "files_likely_touched": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/review-debug-skill.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/execution/tasks.json",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/final-report.md"
+      ],
+      "writable_scope": [
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/review-debug-skill.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/production-report.md",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/execution/tasks.json",
+        ".codex/work/20260622-brightdata-mcp-first-efficiency/artifacts/final-report.md"
+      ],
+      "output_artifact": ".codex/work/20260622-brightdata-mcp-first-efficiency/review-debug-skill.md",
+      "output_artifact_path": "/data/lcq/.codex/skills/.codex/work/20260622-brightdata-mcp-first-efficiency/review-debug-skill.md",
+      "estimated_scope": "S"
+    }
+  ]
+}

@@ -13,13 +13,13 @@ Before any scrape, verify the CLI is installed and authenticated:
 
 ```bash
 if ! command -v bdata >/dev/null 2>&1; then
-    echo "bdata CLI not installed — see bright-data-best-practices-cli-setup.md"
+    echo "bdata CLI not installed — see ../../brightdata-setup/references/bright-data-best-practices-cli-setup.md"
 elif ! bdata zones >/dev/null 2>&1; then
     echo "bdata not authenticated — run: bdata login  (or: bdata login --device for SSH)"
 fi
 ```
 
-If either check fails, halt and route the user to `bright-data-best-practices-cli-setup.md`. Do not attempt the legacy `curl` fallback silently — ask the user first.
+If either check fails, halt and route the user to `../../brightdata-setup/references/bright-data-best-practices-cli-setup.md`. Do not attempt the legacy `curl` fallback silently — ask the user first.
 
 ## Pick your path
 

@@ -58,14 +58,14 @@ Route to spec2plan when:
 - Recommended direction.
 - Rejected alternatives or tradeoffs.
 - Key assumptions and risks.
-- Enough context for `interview-me` to ask requirement questions.
+- Enough context for `interview-me` to ask requirement questions without shrinking or re-guessing the chosen direction.
 
 `interview-me` exits with:
 
 - Confirmed spec.
 - Explicit scope and non-goals.
 - Success criteria and constraints.
-- Enough detail for `spec2plan` to produce tasks without inventing requirements.
+- Enough detail for `spec2plan` to produce tasks without inventing requirements or silently dropping upstream decisions.
 
 `spec2plan` exits with:
 
@@ -91,3 +91,6 @@ When handing off, state:
 - Which skill should run next.
 - What artifact the next skill should produce.
 - Any assumptions, risks, or open questions that must carry forward.
+- Exact artifact path when one exists, such as `.codex/work/<yyyyMMdd>-<topic-slug>/idea.md` or `spec.md`.
+- Which upstream facts are mandatory to preserve downstream.
+- Any deferred or dropped upstream detail, with reason.
